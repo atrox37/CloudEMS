@@ -47,14 +47,14 @@ defineExpose({
   display: flex;
   align-items: center;
   .dialog-head-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 3px;
+    width: 0.2rem;
+    height: 0.2rem;
+    margin-right: 0.03rem;
   }
   .dialog-head-title {
     font-weight: 700;
-    font-size: 18px;
-    line-height: 20px;
+    font-size: 0.18rem;
+    line-height: 0.2rem;
     letter-spacing: 0%;
     color: rgba(245, 247, 255, 1);
   }
@@ -67,7 +67,7 @@ defineExpose({
 }
 :deep(.el-overlay) {
   position: absolute !important;
-  top: -20px;
-  left: -20px;
+  top: -0.2rem;
+  left: -0.2rem;
 }
 </style>

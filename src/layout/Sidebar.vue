@@ -39,7 +39,7 @@
               <span>{{ child.meta.title }}</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else :index="item.meta.activeNav" class="sidebar__menu-item">
+          <el-menu-item v-else-if="typeof item.meta.isSubMenu === 'boolean'" :index="item.meta.activeNav" class="sidebar__menu-item">
             <img
               v-if="item.meta.icon"
               :src="item.meta.icon"

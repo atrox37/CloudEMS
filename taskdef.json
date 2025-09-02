@@ -1,7 +1,7 @@
 {
   "containerDefinitions": [
     {
-      "name": "edge-ems",
+      "name": "cloud-ems",
       "image": "985539760410.dkr.ecr.us-east-2.amazonaws.com/edge-ems:latest",
       "cpu": 0,
       "portMappings": [

@@ -7,6 +7,9 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
+// 存储所有pending的请求
+const pendingRequests = new Map()
+
 // 定义响应数据的通用接口
 export interface ApiResponse<T = any> {
   code: number // 响应状态码
@@ -56,6 +59,21 @@ const alarmService = axios.create({
  * 在发送请求之前做一些统一处理
  */
 const requestInterceptor = (config: any) => {
+  // 生成请求的唯一标识
+  const requestKey = `${config.method}-${config.url}`
+
+  // 如果存在相同的pending请求，取消它
+  if (pendingRequests.has(requestKey)) {
+    const cancelToken = pendingRequests.get(requestKey)
+    cancelToken.cancel('请求被取消')
+    pendingRequests.delete(requestKey)
+  }
+
+  // 创建新的cancelToken
+  const cancelToken = axios.CancelToken.source()
+  config.cancelToken = cancelToken.token
+  pendingRequests.set(requestKey, cancelToken)
+
   // 从localStorage获取token并添加到请求头
   const userStore = useUserStore()
   const token = userStore.token
@@ -119,6 +137,10 @@ const processQueue = (error: any, token: string | null = null) => {
 const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '') => {
   // 响应成功时的处理
   const responseSuccessHandler = (response: any) => {
+    // 请求完成后，从pendingRequests中移除
+    const requestKey = `${response.config.method}-${response.config.url}`
+    pendingRequests.delete(requestKey)
+
     console.log(
       `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
       response,
@@ -140,7 +162,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       return response
     } else {
       // 业务逻辑错误
-      const errorMessage = data.message || 'Request failed'
+      let errorMessage = data.message || 'Request failed'
 
       // 根据不同的业务状态码进行处理
       switch (data.code) {
@@ -148,18 +170,22 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           // 未授权，清除token并跳转到登录页
           const userStore = useUserStore()
           userStore.clearUserData()
-          ElMessage.error('Login expired, please log in again')
+          errorMessage = 'Login expired, please log in again'
+          // ElMessage.error('Login expired, please log in again')
           // 跳转到登录页
           window.location.href = '/login'
           break
         case 403:
-          ElMessage.error('No permission to access this resource')
+          // ElMessage.error('No permission to access this resource')
+          errorMessage = 'No permission to access this resource'
           break
         case 404:
-          ElMessage.error('Requested resource not found')
+          // ElMessage.error('Requested resource not found')
+          errorMessage = 'Requested resource not found'
           break
         case 500:
-          ElMessage.error('Internal server error')
+          // ElMessage.error('Internal server error')
+          errorMessage = 'Internal server error'
           break
         default:
           if (customConfig.showErrorMessage !== false) {
@@ -167,13 +193,25 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           }
       }
       console.log('errorMessage', response)
-      // ElMessage.error(response.data.message || errorMessage)
+      ElMessage.error(response.data.message || errorMessage)
       return Promise.reject(new Error(errorMessage))
     }
   }
 
   // 响应失败时的处理
   const responseErrorHandler = async (error: any) => {
+    // 如果是取消请求的错误，不显示错误信息
+    if (axios.isCancel(error)) {
+      console.log(`${logPrefix}[请求已取消] ${error.message}`)
+      return Promise.reject(error)
+    }
+
+    // 请求完成后，从pendingRequests中移除
+    const requestKey = `${error.config?.method}-${error.config?.url}`
+    if (requestKey) {
+      pendingRequests.delete(requestKey)
+    }
+
     console.error(`${logPrefix}[响应错误]`, error)
 
     const originalRequest = error.config
@@ -439,6 +477,14 @@ const defaultRequest = new Request(service)
 
 // 创建端口6002的请求实例
 const alarmRequest = new Request(alarmService)
+
+// 取消所有pending请求的方法
+export const cancelAllPendingRequests = () => {
+  pendingRequests.forEach((cancelToken) => {
+    cancelToken.cancel('路由切换，请求被取消')
+  })
+  pendingRequests.clear()
+}
 
 // 导出请求实例和封装的方法
 export { service, alarmService, defaultRequest, alarmRequest }

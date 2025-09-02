@@ -2,23 +2,23 @@
   &.is-message-box {
     // background-color: rgba(84, 98, 140, 0.2);
     .el-message-box {
-      padding: 12px;
+      padding: 0.12rem;
       background-color: rgba(84, 98, 140, 0.2);
       .el-message-box__header {
-        font-size: 16px;
+        font-size: 0.16rem;
         font-weight: 700;
-        font-size: 18px;
-        max-width: 420px;
-        padding: 12px;
+        font-size: 0.18rem;
+        max-width: 4.2rem;
+        padding: 0.12rem;
         color: #fff;
         .el-message-box__title {
-          font-size: 18px;
-          line-height: 24px;
+          font-size: 0.18rem;
+          line-height: 0.24rem;
           color: #fff;
         }
         .el-message-box__headerbtn {
-          width: 40px;
-          height: 40px;
+          width: 0.40rem;
+          height: 0.4rem;
           .el-icon.el-message-box__close {
             color: #fff;
           }
@@ -26,34 +26,34 @@
       }
       .el-message-box__content {
         .el-message-box__container {
-          gap: 12px;
+          gap: 0.12rem;
           .el-icon.el-message-box__status {
             .el-message-box-icon--warning {
-              font-size: 24px;
+              font-size: 0.24rem;
             }
           }
           .el-message-box__message {
             color: #fff;
-            font-size: 16px;
-            line-height: 24px;
+            font-size: 0.16rem;
+            line-height: 0.24rem;
             font-weight: 400;
           }
         }
       }
       .el-message-box__btns {
-        padding-top: 12px;
+        padding-top: 0.12rem;
       }
     }
   }
 }
 .el-message {
-  gap: 8px !important;
-  padding: 11px 15px !important;
-  border-width: 1px !important;
-  border-radius: 4px !important;
+  gap: 0.08rem !important;
+  padding: 0.11rem 0.15rem !important;
+  border-width: 0.01rem !important;
+  border-radius: 0.04rem !important;
   // 调整第一条消息距离顶部的高度
   &:first-child {
-    top: 100px !important; // 可以根据需要调整这个值，比如 30px、50px 等
+    top: 1rem !important; // 可以根据需要调整这个值，比如 0.3rem、0.5rem 等
   }
   &.el-message--error {
     .el-message__content {
@@ -61,13 +61,13 @@
     }
   }
   .el-icon.el-message__icon {
-    font-size: 24px !important;
+    font-size: 0.24rem !important;
   }
   .el-message__content {
-    font-size: 14px !important;
+    font-size: 0.14rem !important;
     font-weight: 400 !important;
   }
   .el-icon.el-message__closeBtn {
-    font-size: 16px !important;
+    font-size: 0.16rem !important;
   }
 }

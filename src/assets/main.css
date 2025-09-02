@@ -98,8 +98,8 @@ ol {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0.08rem;
+  height: 0.08rem;
   background: transparent;
 }
 
@@ -109,8 +109,8 @@ ol {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(88, 114, 148, 0.4);
-  min-height: 8px;
-  min-width: 8px;
+  min-height: 0.08rem;
+  min-width: 0.08rem;
 }
 ::-webkit-scrollbar-button {
   display: none;

@@ -1,9 +1,7 @@
 import { markRaw, defineAsyncComponent } from 'vue'
 import type { RouteItem } from '@/types/menu'
 import homeIcon from '@/assets/icons/sidebar-home.svg'
-import devicesIcon from '@/assets/icons/sidebar-devices.svg'
-import alarmIcon from '@/assets/icons/sidebar-alarm.svg'
-import controlIcon from '@/assets/icons/sidebar-control.svg'
+import stationsIcon from '@/assets/icons/sidebar-stations.svg'
 import statisticsIcon from '@/assets/icons/sidebar-statistics.svg'
 import settingIcon from '@/assets/icons/sidebar-setting.svg'
 
@@ -23,222 +21,75 @@ export const dynamicRoutes: RouteItem[] = [
     },
   },
   {
-    path: '/devices',
-    name: 'devices',
+    path: '/stations',
+    name: 'stations',
+    component: () => import('@/views/Stations/index.vue'),
     meta: {
-      isSubMenu: true,
-      activeNav: '/devices',
-      icon: devicesIcon,
-      title: 'Devices',
+      isSubMenu: false,
+      activeNav: '/stations',
+      icon: stationsIcon,
+      title: 'Stations',
       roles: ['Admin', 'operator', 'Engineer'],
     },
-    children: [
-      {
-        path: 'devicesPV',
-        name: 'devicesPV',
-        redirect: '/devices/devicesPV/overview',
-        component: () => import('@/views/DevicesPV/index.vue'),
-        meta: {
-          title: 'PV',
-          activeNav: '/devices/devicesPV',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-        children: [
-          {
-            path: 'overview',
-            name: 'devicesPVOverview',
-            component: () => import('@/views/DevicesPV/PVOverview.vue'),
-            meta: {
-              activeNav: '/devices/devicesPV',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-          {
-            path: 'monitoring',
-            name: 'devicesPVMonitoring',
-            component: () => import('@/views/DevicesPV/PVValueMonitoring.vue'),
-            meta: {
-              activeNav: '/devices/devicesPV',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-        ],
-      },
-      {
-        path: 'deviceBattery',
-        name: 'deviceBattery',
-        component: () => import('@/views/DeviceBattery/index.vue'),
-        redirect: '/devices/deviceBattery/overview',
-        meta: {
-          title: 'Battery',
-          activeNav: '/devices/deviceBattery',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-        children: [
-          {
-            path: 'overview',
-            name: 'deviceBatteryOverview',
-            component: () => import('@/views/DeviceBattery/BatteryOverview.vue'),
-            meta: {
-              activeNav: '/devices/deviceBattery',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-          {
-            path: 'value',
-            name: 'deviceBatteryValue',
-            component: () => import('@/views/DeviceBattery/BatteryValue.vue'),
-            meta: {
-              activeNav: '/devices/deviceBattery',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-          {
-            path: 'management',
-            name: 'deviceBatteryManagement',
-            component: () => import('@/views/DeviceBattery/BatteryManagement.vue'),
-            meta: {
-              activeNav: '/devices/deviceBattery',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-        ],
-      },
-      {
-        path: 'dieselGenerator',
-        name: 'dieselGenerator',
-        component: () => import('@/views/DieselGenerator/index.vue'),
-        redirect: '/devices/dieselGenerator/overview',
-        meta: {
-          title: 'Diesel Generator',
-          activeNav: '/devices/dieselGenerator',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-        children: [
-          {
-            path: 'overview',
-            name: 'dieselGeneratorOverview',
-            component: () => import('@/views/DieselGenerator/DieselOverview.vue'),
-            meta: {
-              activeNav: '/devices/dieselGenerator',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-          {
-            path: 'monitoring',
-            name: 'dieselGeneratorMonitoring',
-            component: () => import('@/views/DieselGenerator/DieselValueMonitoring.vue'),
-            meta: {
-              activeNav: '/devices/dieselGenerator',
-              roles: ['Admin', 'operator', 'Engineer'],
-            },
-          },
-        ],
-      },
-      {
-        path: 'devicePCS',
-        name: 'devicePCS',
-        component: () => import('@/views/DevicePCS/index.vue'),
-        meta: {
-          title: 'PCS',
-          activeNav: '/devices/devicePCS',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-      {
-        path: 'devicemeter1',
-        name: 'devicemeter1',
-        component: () => import('@/views/DeviceMeter1/index.vue'),
-        meta: {
-          title: 'Meter1',
-          activeNav: '/devices/devicemeter1',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-      {
-        path: 'devicemeter2',
-        name: 'devicemeter2',
-        component: () => import('@/views/DeviceMeter2/index.vue'),
-        meta: {
-          title: 'Meter2',
-          activeNav: '/devices/devicemeter2',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-    ],
   },
   {
-    path: '/alarm',
-    name: 'alarm',
+    path: '/stationsDetail',
+    name: 'stationsDetail',
+    component: () => import('@/views/StationsDetail/index.vue'),
+    redirect: '/stationsDetail/overview',
     meta: {
-      isSubMenu: true,
-      activeNav: '/alarm',
-      icon: alarmIcon,
-      title: 'Alarm',
+      activeNav: '/stationsDetail',
       roles: ['Admin', 'operator', 'Engineer'],
     },
     children: [
       {
-        path: 'alarmCurrentRecords',
-        name: 'alarmCurrentRecords',
-        component: () => import('@/views/AlarmCurrentRecords/index.vue'),
+        path: 'overview',
+        name: 'Overview',
+        component: () => import('@/views/StationsDetail/Overview/index.vue'),
         meta: {
-          title: 'Current Records',
-          activeNav: '/alarm/alarmCurrentRecords',
+          title: 'Overview',
+          activeNav: '/stations',
           roles: ['Admin', 'operator', 'Engineer'],
         },
       },
       {
-        path: 'alarmHistoryRecords',
-        name: 'alarmHistoryRecords',
-        component: () => import('@/views/AlarmHistoryRecords/index.vue'),
-        meta: {
-          title: 'History Records',
-          activeNav: '/alarm/alarmHistoryRecords',
+        path:'performance',
+        name:'Performance',
+        component:()=>import('@/views/StationsDetail/Performance/index.vue'),
+        meta:{
+          title:'Performance',
+          activeNav:'/stations',
           roles: ['Admin', 'operator', 'Engineer'],
         },
       },
       {
-        path: 'ruleManagement',
-        name: 'ruleManagement',
-        component: () => import('@/views/RulesManagement/index.vue'),
-        meta: {
-          title: 'Rule Management',
-          activeNav: '/alarm/ruleManagement',
-          roles: ['Admin'],
-        },
+        path:'analytics',
+        name:'Analytics',
+        component:()=>import('@/views/StationsDetail/Analytics/index.vue'),
+        meta:{
+          title:'Analytics',
+          activeNav:'/stations',
+          roles: ['Admin', 'operator', 'Engineer'],
+        }
       },
-    ],
-  },
-  {
-    path: '/control',
-    name: 'control',
-    meta: {
-      title: 'Control',
-      isSubMenu: true,
-      activeNav: '/control',
-      icon: controlIcon,
-      roles: ['Admin', 'operator', 'Engineer'],
-    },
-    children: [
       {
-        path: 'controlRecord',
-        name: 'controlRecord',
-        component: () => import('@/views/ControlRecord/index.vue'),
-        meta: {
-          title: 'Control Record',
-          activeNav: '/control/controlRecord',
+        path:'maintenance',
+        name:'Maintenance',
+        component:()=>import('@/views/StationsDetail/Maintenance/index.vue'),
+        meta:{
+          title:'Maintenance',
+          activeNav:'/stations',
           roles: ['Admin', 'operator', 'Engineer'],
         },
       },
       {
-        path: 'controlManagement',
-        name: 'controlManagement',
-        component: () => import('@/views/ControlManagement/index.vue'),
-        meta: {
-          title: 'Control Management',
-          activeNav: '/control/controlManagement',
-          roles: ['Admin'],
+        path:'alerts',
+        name:'Alerts',
+        component:()=>import('@/views/StationsDetail/Alerts/index.vue'),
+        meta:{
+          title:'Alerts',
+          activeNav:'/stations',
+          roles: ['Admin', 'operator', 'Engineer'],
         },
       },
     ],
@@ -246,57 +97,14 @@ export const dynamicRoutes: RouteItem[] = [
   {
     path: '/statistics',
     name: 'statistics',
-    // component: () => import('@/views/Statistics/index.vue'),
-    redirect: '/statistics/overview',
+    component: () => import('@/views/Statistics/index.vue'),
     meta: {
-      isSubMenu: true,
-      title: 'Statistics',
+      isSubMenu: false,
       activeNav: '/statistics',
       icon: statisticsIcon,
+      title: 'Statistics', 
       roles: ['Admin', 'operator', 'Engineer'],
     },
-    children: [
-      {
-        path: 'overview',
-        name: 'statisticsOverview',
-        component: () => import('@/views/Statistics/Overview.vue'),
-        meta: {
-          title: 'Overview',
-          activeNav: '/statistics/overview',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-      {
-        path: 'curves',
-        name: 'statisticsCurves',
-        component: () => import('@/views/Statistics/Curves.vue'),
-        meta: {
-          title: 'Curves',
-          activeNav: '/statistics/curves',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-      {
-        path: 'operationLog',
-        name: 'statisticsOperationLog',
-        component: () => import('@/views/Statistics/OperationLog.vue'),
-        meta: {
-          title: 'Operation Log',
-          activeNav: '/statistics/operationLog',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-      {
-        path: 'runingLog',
-        name: 'statisticsRuningLog',
-        component: () => import('@/views/Statistics/RuningLog.vue'),
-        meta: {
-          title: 'Runing Log',
-          activeNav: '/statistics/runingLog',
-          roles: ['Admin', 'operator', 'Engineer'],
-        },
-      },
-    ],
   },
   {
     path: '/setting',
@@ -310,19 +118,9 @@ export const dynamicRoutes: RouteItem[] = [
     },
     children: [
       {
-        path: 'systemSetting',
-        name: 'systemSetting',
-        component: () => import('@/views/SystemSetting/index.vue'),
-        meta: {
-          title: 'System Setting',
-          activeNav: '/setting/systemSetting',
-          roles: ['Admin'],
-        },
-      },
-      {
         path: 'userManagement',
         name: 'userManagement',
-        component: () => import('@/views/UserManagement/index.vue'),
+        component: () => import('@/views/Setting/UserManagement/index.vue'),
         meta: {
           title: 'User Management',
           activeNav: '/setting/userManagement',
@@ -330,38 +128,55 @@ export const dynamicRoutes: RouteItem[] = [
         },
       },
       {
-        path: 'configuration',
-        name: 'configuration',
-        component: () => import('@/views/Configuration/index.vue'),
-        redirect: '/setting/configuration/channelConfiguration',
+        path: 'security',
+        name: 'security',
+        component: () => import('@/views/Setting/Security/index.vue'),
         meta: {
-          title: 'Configuration',
-          activeNav: '/setting/configuration',
+          title: 'Security',
+          activeNav: '/setting/security',
           roles: ['Admin'],
         },
-        children: [
-          {
-            path: 'channelConfiguration',
-            name: 'channelConfiguration',
-            component: () => import('@/views/Configuration/ChannelConfiguration.vue'),
-            meta: {
-              title: 'Channel Configuration',
-              activeNav: '/setting/configuration',
-              roles: ['Admin'],
-            },
-          },
-          {
-            path: 'modelConfiguration',
-            name: 'modelConfiguration',
-            component: () => import('@/views/Configuration/ModelConfiguration.vue'),
-            meta: {
-              title: 'Model Configuration',
-              activeNav: '/setting/configuration',
-              roles: ['Admin'],
-            },
-          },
-        ],
       },
+      {
+        path: 'notification',
+        name: 'notification',
+        component: () => import('@/views/Setting/Notification/index.vue'),
+        meta: {
+          title: 'Notification',
+          activeNav: '/setting/notification',
+          roles: ['Admin'],
+        }
+      },
+      {
+        path: 'systemAndGeneral',
+        name: 'systemAndGeneral',
+        component: () => import('@/views/Setting/SystemAndGeneral/index.vue'),
+        meta: {
+          title: 'System & General',
+          activeNav: '/setting/systemAndGeneral',
+          roles: ['Admin'],
+        }
+      },
+      {
+        path: 'apiManagement',
+        name: 'apiManagement',
+        component: () => import('@/views/Setting/ApiManagement/index.vue'),
+        meta: {
+          title: 'API Management',
+          activeNav: '/setting/apiManagement',
+          roles: ['Admin'],
+        }
+      },
+      {
+        path: 'helpAndDocumentation',
+        name: 'helpAndDocumentation',
+        component: () => import('@/views/Setting/HelpAndDocumentation/index.vue'),
+        meta: {
+          title: 'Help&Documentation',
+          activeNav: '/setting/helpAndDocumentation',
+          roles: ['Admin'],
+        }
+      }
     ],
   },
 ]

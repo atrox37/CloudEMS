@@ -8,43 +8,43 @@
       margin-bottom: $spacing-lg;
       display: flex;
       align-items: flex-start;
-      margin-bottom: 20px;
+      margin-bottom: 0.2rem;
       // &:last-child {
       //   margin-bottom: 0;
       // }
       // 标签
       .el-form-item__label {
         color: $text-color-primary;
-        font-size: 14px;
+        font-size: 0.14rem;
         font-family: Arimo sans-serif;
         padding: 0;
         margin-bottom: 0;
-        margin-right: 16px;
+        margin-right: 0.16rem;
         display: block;
         text-align: left;
         font-weight: 400;
-        line-height: 32px;
-        height: 32px;
+        line-height: 0.32rem;
+        height: 0.32rem;
 
         // 必填标记
         &::before {
           // display: none !important;
-          margin-right: 4px !important;
+          margin-right: 0.04rem !important;
         }
       }
 
       // 内容区域
       .el-form-item__content {
         flex: 1;
-        min-width: 240px;
+        min-width: 2.4rem;
         display: flex;
         align-items: center;
 
         // 验证错误信息
         .el-form-item__error {
           color: $danger-color;
-          padding-top: 2px;
-          font-size: 10px;
+          padding-top: 0.02rem;
+          font-size: 0.1rem;
           line-height: $line-height-normal;
           margin-top: $spacing-xs;
           display: block;
@@ -116,11 +116,11 @@
     &.el-form--inline {
       .el-form-item {
         display: inline-flex;
-        margin-bottom: 20px;
-        margin-right: 40px;
+        margin-bottom: 0.2rem;
+        margin-right: 0.4rem;
         .el-form-item__label {
           margin-bottom: 0;
-          margin-right: 16px;
+          margin-right: 0.16rem;
           white-space: nowrap;
         }
 
@@ -147,8 +147,8 @@
         align-items: flex-start;
 
         .el-form-item__label {
-          line-height: 22px;
-          margin-bottom: 9px;
+          line-height: 0.22rem;
+          margin-bottom: 0.09rem;
         }
 
         .el-form-item__content {
@@ -193,8 +193,8 @@
           top: 50%;
           right: $spacing-sm;
           transform: translateY(-50%);
-          width: 16px;
-          height: 16px;
+          width: 0.16rem;
+          height: 0.16rem;
           border-top-color: $primary-color;
           border-radius: 50%;
           animation: form-loading 1s linear infinite;
@@ -213,7 +213,7 @@
     gap: $spacing-sm;
 
     .el-button {
-      min-width: 80px;
+      min-width: 0.8rem;
     }
 
     // 左对齐操作

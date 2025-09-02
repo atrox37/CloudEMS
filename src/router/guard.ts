@@ -1,10 +1,14 @@
 import { router } from './index'
 import { useUserStore } from '@/stores/user'
 import { ensureRoutesInjected } from './injector'
+import { cancelAllPendingRequests } from '@/utils/request'
 
 const WHITE_LIST = ['/login']
 
 router.beforeEach(async (to, from, next) => {
+  // 取消所有pending的请求
+  cancelAllPendingRequests()
+
   const user = useUserStore()
 
   // 未登录：只允许进入白名单

@@ -1,5 +1,27 @@
 <template>
-  <div class="line-chart" ref="chartRef"></div>
+  <div class="line-chart">
+    <div class="line-chart-container" ref="chartRef"></div>
+    <div class="line-chart-toolbox">
+      <div class="line-chart-toolbox-item" @click="handleFullScreen">
+        <el-icon>
+          <ZoomIn />
+        </el-icon>
+      </div>
+      <div class="line-chart-toolbox-item" @click="handleExport">
+        <el-icon>
+          <Download />
+        </el-icon>
+      </div>
+    </div>
+    <FullSceenDialog ref="fullScreenDialogRef" title="Line Chart Full Screen" fullscreen :append-to-body="true"
+      :modal-append-to-body="true" :close-on-click-modal="false">
+      <template #dialog-body>
+        <div class="line-chart-full-screen">
+          <div class="line-chart-full-screen__container" ref="fullScreenChartRef"></div>
+        </div>
+      </template>
+    </FullSceenDialog>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -9,8 +31,14 @@ import { TooltipComponent, GridComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
+import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
+import * as XLSX from 'xlsx'
+import { ZoomIn, Download } from '@element-plus/icons-vue'
 
+const fullScreenDialogRef = ref()
+const fullScreenChartRef = ref<HTMLDivElement | null>(null)
 const globalStore = useGlobalStore()
+let fullScreenChartInstance: echarts.ECharts | null = null
 
 // 监听侧边栏折叠状态变化
 watch(
@@ -86,51 +114,60 @@ const props = defineProps<{
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
-// 自定义tooltip formatter，保证内容不换行错位
-function customTooltipFormatter(params: any) {
-  // params是一个数组，包含每个系列的当前点
-  // 统一设置tooltip的宽高
-  // 这里我们用内联样式设置宽高，内容用flex布局保证对齐
-  // 你可以根据需要调整宽高
-  const tooltipWidth = pxToResponsive(220)
-  const tooltipMinHeight = pxToResponsive(60)
+
+// 通用tooltip formatter，支持自定义大小
+function customTooltipFormatter(
+  params: any,
+  sizeConfig: {
+    width: number
+    minHeight: number
+    fontSize: number
+    itemFontSize: number
+    itemLineHeight: number
+    dotSize: number
+    gap: number
+  },
+) {
+  const { width, minHeight, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
   const name = params[0]?.axisValueLabel || params[0]?.name || ''
   let html = `
     <div style="
+      max-width:${width}px;
+      min-height:${minHeight}px;
       display:flex;
       flex-direction:column;
-      gap:${pxToResponsive(8)}px;
+      gap:${gap}px;
     ">
       <div style="
         color:rgba(255,255,255,0.85);
-        font-size:${pxToResponsive(14)}px;
+        font-size:${fontSize}px;
         font-family:Arimo;
         font-weight:600;
         width:100%;
-        margin-bottom:${pxToResponsive(4)}px;
+        margin-bottom:${gap / 2}px;
       ">${name}</div>
   `
   params.forEach((item: any) => {
-    // 颜色圆点
     html += `
       <div style="
         display:flex;
         align-items:center;
         justify-content:space-between;
-        font-size:${pxToResponsive(12)}px;
+        font-size:${itemFontSize}px;
         font-family:Arimo;
         color:rgba(255,255,255,0.85);
-        line-height:${pxToResponsive(18)}px;
-        margin-bottom:${pxToResponsive(2)}px;
+        line-height:${itemLineHeight}px;
+        margin-bottom:${gap / 4}px;
+        gap:${gap * 2}px;
       ">
-        <div style="display:flex;align-items:center;gap:${pxToResponsive(6)}px;">
+        <div style="display:flex;align-items:center;gap:${gap / 2}px;">
           <span style="
             display:inline-block;
-            width:${pxToResponsive(8)}px;
-            height:${pxToResponsive(8)}px;
+            width:${dotSize}px;
+            height:${dotSize}px;
             border-radius:50%;
             background:${item.color};
-            margin-right:${pxToResponsive(4)}px;
+            margin-right:${dotSize / 2}px;
           "></span>
           <span>${item.seriesName}</span>
         </div>
@@ -141,89 +178,85 @@ function customTooltipFormatter(params: any) {
   html += '</div>'
   return html
 }
-// 初始化echarts
-const initChart = () => {
-  if (!chartRef.value) return
-  if (chartInstance) {
-    chartInstance.dispose()
-  }
-  chartInstance = echarts.init(chartRef.value, {
-    renderer: 'canvas',
-    devicePixelRatio: window.devicePixelRatio,
-  })
 
-  // 获取x轴和y轴单位
+// 统一生成option的方法
+function getChartOption({
+  isFullScreen = false,
+  chartWidth = 600,
+}: {
+  isFullScreen?: boolean
+  chartWidth?: number
+}) {
+  // 配置参数
   const xUnit = props.xAxiosOption.xUnit || ''
   const yUnit = props.yAxiosOption.yUnit || ''
+  const dataCount = props.xAxiosOption.xAxiosData.length
 
-  // 计算总值用于背景柱
+  // 尺寸参数
+  const margin = isFullScreen ? pxToResponsive(200) : pxToResponsive(100)
+  const barSpacing = isFullScreen
+    ? Math.max(pxToResponsive(30), ((chartWidth - margin) * 0.1) / dataCount)
+    : Math.max(pxToResponsive(15), ((chartWidth - margin) * 0.1) / dataCount)
+  const barWidth = isFullScreen
+    ? Math.min(
+      pxToResponsive(120),
+      (chartWidth - margin - barSpacing * (dataCount - 1)) / dataCount,
+    )
+    : Math.min(pxToResponsive(60), (chartWidth - margin - barSpacing * (dataCount - 1)) / dataCount)
+
+  // 背景数据
   const totalData = props.xAxiosOption.xAxiosData.map((_, index) => {
     return props.series.reduce((sum, s) => sum + (s.data[index] || 0), 0)
   })
 
-  // 根据柱子数目自动计算bar宽度，使用pxToResponsive转换
-  const chartWidth = chartRef.value.clientWidth || 600
-  const dataCount = props.xAxiosOption.xAxiosData.length
-  const availableWidth = chartWidth - pxToResponsive(100) // 减去左右边距
-  const barSpacing = Math.max(pxToResponsive(15), (availableWidth * 0.1) / dataCount) // 柱子间距
-  const barWidth = Math.min(
-    pxToResponsive(60),
-    (availableWidth - barSpacing * (dataCount - 1)) / dataCount,
-  )
+  // Tooltip样式参数
+  const tooltipSize = isFullScreen
+    ? {
+      width: pxToResponsive(300),
+      minHeight: pxToResponsive(120),
+      fontSize: pxToResponsive(32),
+      itemFontSize: pxToResponsive(24),
+      itemLineHeight: pxToResponsive(32),
+      dotSize: pxToResponsive(20),
+      gap: pxToResponsive(16),
+    }
+    : {
+      width: pxToResponsive(220),
+      minHeight: pxToResponsive(100),
+      fontSize: pxToResponsive(14),
+      itemFontSize: pxToResponsive(12),
+      itemLineHeight: pxToResponsive(18),
+      dotSize: pxToResponsive(8),
+      gap: pxToResponsive(8),
+    }
 
-  const seriesData = [
-    // 透明背景系列
-    {
-      name: 'background',
-      type: 'bar',
-      barWidth: barWidth,
-      barGap: '-100%',
-      itemStyle: {
-        color: 'rgba(255,255,255,0)',
+  // legend/grid/axis样式参数
+  const legend = isFullScreen
+    ? {
+      icon: 'circle',
+      show: true,
+      type: 'plain',
+      orient: 'horizontal',
+      right: pxToResponsive(50),
+      top: pxToResponsive(30),
+      itemWidth: pxToResponsive(20),
+      itemHeight: pxToResponsive(20),
+      itemGap: pxToResponsive(40),
+      textStyle: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontSize: pxToResponsive(18),
+        fontFamily: 'Arimo',
+        fontWeight: 400,
       },
-      data: totalData,
-      showBackground: true,
-      backgroundStyle: {
-        color: 'rgba(252, 252, 253, 0.04)',
-      },
-      silent: true,
-      emphasis: { disabled: true },
-      tooltip: { show: false },
-      label: { show: false },
-      z: 0,
-    },
-    ...props.series.map((s) => ({
-      name: s.name,
-      type: 'line', // 改为线形图
-      data: s.data,
-      smooth: false, // 不使用平滑曲线，点与点之间直线连接
-      symbol: 'circle', // 数据点样式
-      symbolSize: pxToResponsive(0), // 数据点大小
-      lineStyle: {
-        color: s.color,
-        width: pxToResponsive(4), // 线条宽度
-      },
-      itemStyle: {
-        color: s.color,
-        borderColor: s.color,
-        borderWidth: 2,
-      },
-      emphasis: {
-        focus: 'series',
-        scale: false,
-      },
-      z: 1, // 线条在背景之上
-    })),
-  ]
-
-  chartInstance.setOption({
-    legend: {
+      data: props.series.map((s) => s.name),
+    }
+    : {
       icon: 'circle',
       show: true,
       type: 'plain',
       orient: 'horizontal',
       right: 0,
-      top: 0,
+      top: pxToResponsive(10),
       itemWidth: pxToResponsive(12),
       itemHeight: pxToResponsive(12),
       itemGap: pxToResponsive(25),
@@ -234,48 +267,51 @@ const initChart = () => {
         fontWeight: 400,
       },
       data: props.series.map((s) => s.name),
-    },
-    grid: {
+    }
+
+  const grid = isFullScreen
+    ? {
+      left: pxToResponsive(50),
+      right: pxToResponsive(50),
+      top: pxToResponsive(80),
+      bottom: pxToResponsive(50),
+      containLabel: true,
+    }
+    : {
       left: 0,
       right: 0,
       top: pxToResponsive(45),
       bottom: pxToResponsive(10),
       containLabel: true,
-    },
-    tooltip: {
-      trigger: 'axis',
-      confine: true,
-      backgroundColor: '#3f4f75',
-      borderColor: 'rgba(255,255,255,0.12)',
-      borderWidth: pxToResponsive(1),
-      padding: [pxToResponsive(10), pxToResponsive(16), pxToResponsive(10), pxToResponsive(16)],
-      extraCssText: `
-        border-radius: ${pxToResponsive(8)}px;
-        box-shadow: 0 ${pxToResponsive(4)}px ${pxToResponsive(16)}px 0 rgba(0,0,0,0.12);
-        min-width: ${pxToResponsive(220)}px;
-        max-width: ${pxToResponsive(220)}px;
-        min-height: ${pxToResponsive(60)}px;
-      `,
-      textStyle: {
+    }
+
+  const xAxis = isFullScreen
+    ? {
+      type: 'category',
+      name: xUnit,
+      nameTextStyle: {
+        color: 'rgba(255, 255, 255, 0.6)',
         fontFamily: 'Arimo',
         fontWeight: 400,
-        fontSize: pxToResponsive(12),
-        color: 'rgba(255,255,255,0.85)',
-        lineHeight: pxToResponsive(18),
+        fontSize: pxToResponsive(16),
+        padding: [pxToResponsive(15), 0, 0, 0],
       },
-      axisPointer: {
-        type: 'shadow',
-        shadowStyle: {
-          color: 'rgba(79, 173, 247, 0.08)',
-        },
-        lineStyle: {
-          width: pxToResponsive(1),
-        },
+      data: props.xAxiosOption.xAxiosData,
+      axisTick: {
+        alignWithLabel: true,
+        lineStyle: { color: '#fff' },
       },
-      // 使用自定义formatter
-      formatter: customTooltipFormatter,
-    },
-    xAxis: {
+      axisLine: { show: false },
+      axisLabel: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontFamily: 'Arimo',
+        fontWeight: 400,
+        fontSize: pxToResponsive(16),
+      },
+      splitLine: { show: false },
+      boundaryGap: true,
+    }
+    : {
       type: 'category',
       name: xUnit,
       nameTextStyle: {
@@ -297,11 +333,40 @@ const initChart = () => {
         fontWeight: 400,
         fontSize: pxToResponsive(12),
       },
-      splitLine: { show: false }, // 清除x轴网格线
-      // 控制柱体居中的关键配置
+      splitLine: { show: false },
       boundaryGap: true,
-    },
-    yAxis: {
+    }
+
+  const yAxis = isFullScreen
+    ? {
+      type: 'value',
+      name: yUnit,
+      nameTextStyle: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontFamily: 'Arimo',
+        fontWeight: 400,
+        fontSize: pxToResponsive(16),
+        align: 'right',
+        padding: [0, pxToResponsive(12), pxToResponsive(8), 0],
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontFamily: 'Arimo',
+        fontWeight: 400,
+        fontSize: pxToResponsive(16),
+      },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          color: '#fff',
+          type: 'dashed',
+          opacity: 0.2,
+        },
+      },
+    }
+    : {
       type: 'value',
       name: yUnit,
       nameTextStyle: {
@@ -309,8 +374,8 @@ const initChart = () => {
         fontFamily: 'Arimo',
         fontWeight: 400,
         fontSize: pxToResponsive(12),
-        align: 'right', // 水平居中对齐
-        padding: [0, pxToResponsive(8), pxToResponsive(5), 0], // 上右下左的内边距，向下偏移5px
+        align: 'right',
+        padding: [0, pxToResponsive(8), pxToResponsive(5), 0],
       },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -324,20 +389,225 @@ const initChart = () => {
         show: true,
         lineStyle: {
           color: '#fff',
-          type: 'dashed', // y轴网格线设为虚线
+          type: 'dashed',
           opacity: 0.2,
           width: pxToResponsive(1),
         },
       },
+    }
+
+  // series
+  const seriesData = [
+    {
+      name: 'background',
+      type: 'bar',
+      barWidth: barWidth,
+      barGap: '-100%',
+      itemStyle: {
+        color: 'rgba(255,255,255,0)',
+      },
+      data: totalData,
+      showBackground: true,
+      backgroundStyle: {
+        color: 'rgba(252, 252, 253, 0.04)',
+      },
+      silent: true,
+      emphasis: { disabled: true },
+      tooltip: { show: false },
+      label: { show: false },
+      z: 0,
     },
+    ...props.series.map((s) => ({
+      name: s.name,
+      type: 'line',
+      data: s.data,
+      smooth: false,
+      symbol: 'circle',
+      symbolSize: isFullScreen ? pxToResponsive(8) : pxToResponsive(0),
+      areaStyle: {},
+      lineStyle: {
+        color: s.color,
+        width: isFullScreen ? pxToResponsive(6) : pxToResponsive(4),
+      },
+      itemStyle: {
+        color: s.color,
+        borderColor: s.color,
+        borderWidth: isFullScreen ? 3 : 2,
+      },
+      emphasis: {
+        focus: 'series',
+        scale: false,
+      },
+      z: 1,
+    })),
+  ]
+
+  // tooltip
+  const tooltip = isFullScreen
+    ? {
+      trigger: 'axis',
+      confine: true,
+      backgroundColor: '#3f4f75',
+      borderColor: 'rgba(255,255,255,0.12)',
+      borderWidth: pxToResponsive(2),
+      padding: [pxToResponsive(30), pxToResponsive(40), pxToResponsive(30), pxToResponsive(40)],
+      extraCssText: `
+          border-radius: ${pxToResponsive(24)}px;
+          box-shadow: 0 ${pxToResponsive(16)}px ${pxToResponsive(32)}px 0 rgba(0,0,0,0.15);
+          max-width: ${pxToResponsive(500)}px;
+          min-height: ${pxToResponsive(120)}px;
+        `,
+      textStyle: {
+        fontFamily: 'Arimo',
+        fontWeight: 400,
+        fontSize: pxToResponsive(24),
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: pxToResponsive(32),
+      },
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: {
+          color: 'rgba(79, 173, 247, 0.08)',
+        },
+        lineStyle: {
+          width: pxToResponsive(2),
+        },
+      },
+      formatter: (params: any) => customTooltipFormatter(params, tooltipSize),
+    }
+    : {
+      trigger: 'axis',
+      confine: true,
+      backgroundColor: '#3f4f75',
+      borderColor: 'rgba(255,255,255,0.12)',
+      borderWidth: pxToResponsive(1),
+      padding: [pxToResponsive(10), pxToResponsive(16), pxToResponsive(10), pxToResponsive(16)],
+      extraCssText: `
+          border-radius: ${pxToResponsive(8)}px;
+          box-shadow: 0 ${pxToResponsive(4)}px ${pxToResponsive(16)}px 0 rgba(0,0,0,0.12);
+          max-width: ${pxToResponsive(220)}px;
+          min-height: ${pxToResponsive(100)}px;
+        `,
+      textStyle: {
+        fontFamily: 'Arimo',
+        fontWeight: 400,
+        fontSize: pxToResponsive(12),
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: pxToResponsive(18),
+      },
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: {
+          color: 'rgba(79, 173, 247, 0.08)',
+        },
+        lineStyle: {
+          width: pxToResponsive(1),
+        },
+      },
+      formatter: (params: any) => customTooltipFormatter(params, tooltipSize),
+    }
+
+  return {
+    legend,
+    grid,
+    tooltip,
+    xAxis,
+    yAxis,
     series: seriesData,
+  }
+}
+
+// 初始化echarts
+const initChart = () => {
+  if (!chartRef.value) return
+  if (chartInstance) {
+    chartInstance.dispose()
+  }
+  const chartWidth = chartRef.value.clientWidth || 600
+  chartInstance = echarts.init(chartRef.value, {
+    renderer: 'canvas',
+    devicePixelRatio: window.devicePixelRatio,
+  })
+  chartInstance.setOption(getChartOption({ isFullScreen: false, chartWidth }))
+}
+
+// 初始化全屏图表
+const initFullScreenChart = () => {
+  if (!fullScreenChartRef.value) return
+  if (fullScreenChartInstance) {
+    fullScreenChartInstance.dispose()
+  }
+  const chartWidth = fullScreenChartRef.value.clientWidth || 1200
+  fullScreenChartInstance = echarts.init(fullScreenChartRef.value)
+  fullScreenChartInstance.setOption(getChartOption({ isFullScreen: true, chartWidth }))
+}
+
+const handleFullScreen = () => {
+  fullScreenDialogRef.value.dialogVisible = true
+  nextTick(() => {
+    setTimeout(() => {
+      initFullScreenChart()
+    }, 100)
   })
 }
 
-onMounted(() => {
-  initChart()
-  window.addEventListener('resize', resizeChart)
-})
+const handleExport = () => {
+  // 准备导出数据
+  const exportData: (string | number)[][] = []
+
+  // 添加表头
+  const headers: (string | number)[] = [
+    'time',
+    ...props.series.map(
+      (s) => `${s.name}${props.yAxiosOption.yUnit ? ' (' + props.yAxiosOption.yUnit + ')' : ''}`,
+    ),
+  ]
+  exportData.push(headers)
+
+  // 添加数据
+  props.xAxiosOption.xAxiosData.forEach((time, index) => {
+    const row: (string | number)[] = [time]
+    props.series.forEach((series) => {
+      row.push(series.data[index] || 0)
+    })
+    exportData.push(row)
+  })
+
+  // 创建工作簿
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.aoa_to_sheet(exportData)
+
+  // 添加工作表到工作簿
+  XLSX.utils.book_append_sheet(wb, ws, 'line_chart_data')
+
+  // 生成文件名
+  const fileName = `line_chart_data_${new Date().toISOString().slice(0, 10)}.xlsx`
+
+  // 导出文件
+  XLSX.writeFile(wb, fileName)
+}
+
+// 监听侧边栏折叠状态变化
+watch(
+  () => globalStore.isCollapse,
+  () => {
+    nextTick(() => {
+      setTimeout(() => {
+        chartInstance?.dispose()
+        initChart()
+      }, 300)
+    })
+  },
+)
+
+// 监听窗口大小变化，重新调整全屏图表
+const resizeFullScreenChart = () => {
+  if (fullScreenChartInstance && fullScreenDialogRef.value.dialogVisible) {
+    setTimeout(() => {
+      fullScreenChartInstance?.resize()
+    }, 300)
+  }
+}
 
 const resizeChart = () => {
   setTimeout(() => {
@@ -353,9 +623,17 @@ watch(
   { deep: true },
 )
 
+onMounted(() => {
+  initChart()
+  window.addEventListener('resize', resizeChart)
+  window.addEventListener('resize', resizeFullScreenChart)
+})
+
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeChart)
+  window.removeEventListener('resize', resizeFullScreenChart)
   chartInstance?.dispose()
+  fullScreenChartInstance?.dispose()
 })
 </script>
 
@@ -363,5 +641,42 @@ onBeforeUnmount(() => {
 .line-chart {
   width: 100%;
   height: 100%;
+  position: relative;
+
+  .line-chart-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  .line-chart-toolbox {
+    position: absolute;
+    top: -0.2rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+
+    .line-chart-toolbox-item {
+      width: 0.3rem;
+      height: 0.3rem;
+      cursor: pointer;
+    }
+  }
+}
+
+// 全屏图表样式
+.line-chart-full-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #212c49;
+
+  .line-chart-full-screen__container {
+    width: 100%;
+    height: calc(100vh - 1.1rem);
+    overflow: hidden;
+  }
 }
 </style>

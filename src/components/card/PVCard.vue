@@ -62,10 +62,10 @@ const iconUrl = computed(() => {
   width: 100%;
   height: 100%;
   background-color: rgba(84, 98, 140, 0.2);
-  padding: 20px;
+  padding: 0.2rem;
   display: flex;
   align-items: center;
-  border: 1px solid;
+  border: 0.01rem solid;
 
   border-image: linear-gradient(
       116.72deg,
@@ -75,17 +75,17 @@ const iconUrl = computed(() => {
       rgba(148, 166, 197, 0.3) 98.99%
     )
     1;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.1rem);
   .card__container {
     display: flex;
-    height: 58.56px;
+    height: 0.5856rem;
     .card__left {
       display: flex;
       align-items: center;
-      margin-right: 23px;
+      margin-right: 0.23rem;
 
       .card__left-icon {
-        width: 53.6px;
+        width: 0.536rem;
         height: 100%;
         display: flex;
         align-items: center;
@@ -112,23 +112,23 @@ const iconUrl = computed(() => {
       .card__right-top {
         .card__right-title {
           font-weight: 700;
-          font-size: 18px;
-          line-height: 18px;
-          margin-bottom: 10px;
+          font-size: 0.18rem;
+          line-height: 0.18rem;
+          margin-bottom: 0.1rem;
         }
       }
       .card__right-bottom {
-        margin-top: 2px;
+        margin-top: 0.02rem;
         display: flex;
         align-items: flex-end;
         .card__right-value {
           font-weight: 700;
-          font-size: 20px;
-          line-height: 16px;
+          font-size: 0.2rem;
+          line-height: 0.16rem;
           color: #ffffff;
           .card__right-unit {
-            font-size: 12px;
-            line-height: 16px;
+            font-size: 0.12rem;
+            line-height: 0.16rem;
             color: rgba(255, 255, 255, 0.6);
           }
         }

@@ -585,14 +585,14 @@ onBeforeUnmount(() => {
   }
   .stacked-bar-chart-toolbox {
     position: absolute;
-    top: -20px;
+    top: -0.2rem;
     right: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.1rem;
     .stacked-bar-chart-toolbox-item {
-      width: 30px;
-      height: 30px;
+      width: 0.3rem;
+      height: 0.3rem;
       cursor: pointer;
     }
   }
@@ -609,7 +609,7 @@ onBeforeUnmount(() => {
 
   .stacked-bar-chart-full-screen__container {
     width: 100%;
-    height: calc(100vh - 110px);
+    height: calc(100vh - 1.1rem);
     overflow: hidden;
   }
 }
