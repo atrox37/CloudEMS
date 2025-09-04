@@ -3,10 +3,12 @@ import en from 'element-plus/es/locale/lang/en'
 import wsManager from '@/utils/websocket'
 import { useRouter } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
 
 const locale = en
 const router = useRouter()
 const globalStore = useGlobalStore()
+const userStore = useUserStore()
 // 处理告警详情跳转
 const handleAlarmDetail = () => {
   ElMessage.closeAll()
@@ -14,8 +16,14 @@ const handleAlarmDetail = () => {
 }
 let idCount = 0
 const alarmMap = new Map()
-// 初始化WebSocket连接
+// 初始化WebSocket连接（只在用户登录后）
 const initWebSocket = async () => {
+  // 检查用户是否已登录
+  if (!userStore.isLoggedIn || !userStore.token) {
+    console.log('[main] 用户未登录，跳过WebSocket连接')
+    return
+  }
+
   try {
     await wsManager.connect()
     console.log('[main] WebSocket连接成功')
@@ -98,7 +106,23 @@ const initWebSocket = async () => {
     console.error('[main] WebSocket连接失败:', error)
   }
 }
-initWebSocket()
+
+// 监听用户登录状态变化
+watch(
+  () => userStore.isLoggedIn,
+  (isLoggedIn) => {
+    if (isLoggedIn) {
+      // 用户登录成功，连接WebSocket
+      console.log('[main] 用户登录成功，尝试连接WebSocket')
+      initWebSocket()
+    } else {
+      // 用户登出，断开WebSocket连接
+      console.log('[main] 用户登出，断开WebSocket连接')
+      wsManager.disconnect()
+    }
+  },
+  { immediate: true } // 立即执行一次
+)
 </script>
 
 <template>

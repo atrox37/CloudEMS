@@ -13,6 +13,7 @@
 
 import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 import type {
   ConnectionStatus,
   ClientMessage,
@@ -261,6 +262,14 @@ class WebSocketManager {
    */
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // 检查用户登录状态和token
+      const userStore = useUserStore()
+      if (!userStore.isLoggedIn || !userStore.token) {
+        console.log('[WebSocket] 用户未登录或token无效，跳过连接')
+        reject(new Error('User not logged in or token invalid'))
+        return
+      }
+
       // 已连接则直接resolve
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         resolve()
@@ -882,7 +891,11 @@ class WebSocketManager {
       this.ws.close(1000, '主动断开连接')
       this.ws = null
     }
-
+    // 清理所有订阅和监听器
+    this.globalListeners = {}
+    this.pageSubscriptions.clear()
+    this.pendingSubscriptionsMap.clear()
+    this.pendingUnsubscriptionsMap.clear()
     this.status.value = 'disconnected'
   }
 
@@ -897,17 +910,6 @@ class WebSocketManager {
       pageSubscriptions: this.pageSubscriptions.size,
       ...this.connectionStats,
     }
-  }
-
-  /**
-   * 清理所有资源，断开连接并移除所有监听器
-   */
-  public destroy(): void {
-    this.disconnect()
-    this.globalListeners = {}
-    this.pageSubscriptions.clear()
-    this.pendingSubscriptionsMap.clear()
-    this.pendingUnsubscriptionsMap.clear()
   }
 }
 console.log(import.meta.env.VITE_WS_URL, 'import.meta.env.VITE_WS_URL')

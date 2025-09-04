@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
 import { userApi } from '@/api/user'
-import { useGlobalStore } from '@/stores/global'
+import wsManager from '@/utils/websocket'
 import MD5 from 'crypto-js/md5'
 // 用户状态管理
 export const useUserStore = defineStore(
@@ -95,6 +95,9 @@ export const useUserStore = defineStore(
 
     // 清除用户数据（手动清除持久化数据）
     const clearUserData = () => {
+      // 断开WebSocket连接
+      wsManager.disconnect()
+      
       token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置

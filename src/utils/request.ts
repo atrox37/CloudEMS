@@ -6,6 +6,7 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import wsManager from '@/utils/websocket'
 
 // 存储所有pending的请求
 const pendingRequests = new Map()
@@ -169,30 +170,25 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           // 未授权，清除token并跳转到登录页
           const userStore = useUserStore()
+          // 断开WebSocket连接
+          wsManager.disconnect()
           userStore.clearUserData()
           errorMessage = 'Login expired, please log in again'
-          // ElMessage.error('Login expired, please log in again')
           // 跳转到登录页
           window.location.href = '/login'
           break
         case 403:
-          // ElMessage.error('No permission to access this resource')
           errorMessage = 'No permission to access this resource'
           break
         case 404:
-          // ElMessage.error('Requested resource not found')
           errorMessage = 'Requested resource not found'
           break
         case 500:
-          // ElMessage.error('Internal server error')
           errorMessage = 'Internal server error'
           break
         default:
-          if (customConfig.showErrorMessage !== false) {
-            ElMessage.error(errorMessage)
-          }
+          break
       }
-      console.log('errorMessage', response)
       ElMessage.error(response.data.message || errorMessage)
       return Promise.reject(new Error(errorMessage))
     }
@@ -267,6 +263,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       } catch (refreshError) {
         // 刷新token失败，清除用户数据并跳转到登录页
         const userStore = useUserStore()
+        // 断开WebSocket连接
+        wsManager.disconnect()
         userStore.clearUserData()
 
         // 处理队列中的请求
