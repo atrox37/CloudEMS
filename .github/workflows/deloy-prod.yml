@@ -119,13 +119,19 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update && sudo apt-get install -y jq
+          # 直接更新镜像URI，不进行复杂的清理操作
           jq --arg IMG "$IMAGE_URI" --arg NAME "$CONTAINER_NAME" '
             .containerDefinitions |=
             map(if .name == $NAME then .image = $IMG else . end)
           ' taskdef.json > taskdef.updated.json
-          jq 'del(..|nulls)' taskdef.updated.json > taskdef.clean.json
-          mv taskdef.clean.json taskdef.updated.json
           echo "Prepared taskdef.updated.json"
+          # 验证生成的JSON文件
+          if jq empty taskdef.updated.json 2>/dev/null; then
+            echo "✅ JSON validation passed"
+          else
+            echo "❌ JSON validation failed"
+            exit 1
+          fi
 
       - name: Register new task definition revision
         id: register
