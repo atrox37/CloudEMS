@@ -9,9 +9,9 @@
 </template>
 <script setup lang="ts">
 const prop = defineProps<{
-  title: String
-  value?: String | number
-  unit?: String
+  title: string
+  value?: string | number
+  unit?: string
 }>()
 
 const propNumber = computed(() => {

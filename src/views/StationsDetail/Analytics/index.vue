@@ -98,26 +98,6 @@ const handleExport = () => {
   console.log('handleExport')
 }
 
-// 功率趋势数据 - 用于折线图
-const powerTrendXAxis = {
-  xAxiosData: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
-  xUnit: '时间',
-}
-const powerTrendYAxis = {
-  yUnit: 'kW',
-}
-const powerTrendSeries = [
-  {
-    name: '总功率',
-    data: [120, 135, 140, 160, 180, 200, 210],
-    color: 'rgba(105, 203, 255, 1)',
-  },
-  {
-    name: '负载功率',
-    data: [100, 110, 115, 130, 150, 170, 180],
-    color: 'rgba(29, 134, 255, 1)',
-  },
-]
 
 const exampleDoughntSeries = [
   {

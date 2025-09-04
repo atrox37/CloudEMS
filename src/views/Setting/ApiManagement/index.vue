@@ -40,7 +40,7 @@
       <div class="api-management__pagination">
         <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
-          @size-change="handlePageChange" @current-change="handlePageChange" />
+          @size-change="handlePageSizeChange" @current-change="handlePageSizeChange" />
       </div>
       <!-- </LoadingBg> -->
     </div>
@@ -82,7 +82,7 @@ const pagination = ref({
   total: 0
 })
 
-const handlePageChange = (page: number, pageSize: number) => {
+const handlePageSizeChange = (page: number, pageSize: number) => {
   pagination.value.page = page
   pagination.value.pageSize = pageSize
 }

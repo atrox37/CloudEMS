@@ -1,13 +1,13 @@
 <template>
     <div class="stacked-bar-chart">
         <div class="stacked-bar-chart-container" ref="chartRef"></div>
-        <div class="stacked-bar-chart-toolbox">
-            <div class="stacked-bar-chart-toolbox-item" @click="handleFullScreen">
+        <div v-if="showToolbox" class="stacked-bar-chart-toolbox">
+            <div v-if="showFullScreen" class="stacked-bar-chart-toolbox-item" @click="handleFullScreen">
                 <el-icon>
                     <ZoomIn />
                 </el-icon>
             </div>
-            <div class="stacked-bar-chart-toolbox-item" @click="handleExport">
+            <div v-if="showDownload" class="stacked-bar-chart-toolbox-item" @click="handleExport">
                 <el-icon>
                     <Download />
                 </el-icon>
@@ -57,11 +57,44 @@ interface YAxisOption {
     yUnit?: string
 }
 
-const props = defineProps<{
+// Grid配置接口
+interface GridConfig {
+    left?: number
+    right?: number
+    top?: number
+    bottom?: number
+}
+
+const props = withDefaults(defineProps<{
     xAxiosOption: XAxisOption
     yAxiosOption: YAxisOption
     series: SeriesData[]
-}>()
+    // Grid配置参数
+    gridConfig?: GridConfig
+    // 全屏模式Grid配置参数
+    fullScreenGridConfig?: GridConfig
+    // 按钮显示控制
+    showToolbox?: boolean
+    showFullScreen?: boolean
+    showDownload?: boolean
+}>(), {
+    // 默认值
+    gridConfig: () => ({
+        left: 0,
+        right: 0,
+        top: 45,
+        bottom: 10
+    }),
+    fullScreenGridConfig: () => ({
+        left: 50,
+        right: 80,
+        top: 80,
+        bottom: 50
+    }),
+    showToolbox: true,
+    showFullScreen: true,
+    showDownload: true
+})
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
@@ -129,6 +162,24 @@ function customTooltipFormatter(
     html += '</div>'
     return html
 }
+
+// Grid配置转换函数
+function getGridConfig(isFullScreen: boolean) {
+    return isFullScreen ?
+        {
+            left: pxToResponsive(props.fullScreenGridConfig.left || 0),
+            right: pxToResponsive(props.fullScreenGridConfig.right || 0),
+            top: pxToResponsive(props.fullScreenGridConfig.top || 45),
+            bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 15),
+        } : {
+
+            left: pxToResponsive(props.gridConfig.left || 0),
+            right: pxToResponsive(props.gridConfig.right || 0),
+            top: pxToResponsive(props.gridConfig.top || 45),
+            bottom: pxToResponsive(props.gridConfig.bottom || 15),
+        }
+}
+
 
 // 统一生成option的方法
 function getChartOption({
@@ -220,21 +271,7 @@ function getChartOption({
             data: props.series.map((s) => s.name),
         }
 
-    const grid = isFullScreen
-        ? {
-            left: pxToResponsive(50),
-            right: pxToResponsive(50),
-            top: pxToResponsive(80),
-            bottom: pxToResponsive(50),
-            containLabel: true,
-        }
-        : {
-            left: 0,
-            right: 0,
-            top: pxToResponsive(45),
-            bottom: pxToResponsive(10),
-            containLabel: true,
-        }
+    const grid = getGridConfig(isFullScreen)
 
     const xAxis = isFullScreen
         ? {
@@ -587,6 +624,7 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     background: #212c49;
+    overflow: hidden;
 
     .stacked-bar-chart-full-screen__container {
         width: 100%;

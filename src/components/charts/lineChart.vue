@@ -1,13 +1,13 @@
 <template>
   <div class="line-chart">
     <div class="line-chart-container" ref="chartRef"></div>
-    <div class="line-chart-toolbox">
-      <div class="line-chart-toolbox-item" @click="handleFullScreen">
+    <div v-if="showToolbox" class="line-chart-toolbox">
+      <div v-if="showFullScreen" class="line-chart-toolbox-item" @click="handleFullScreen">
         <el-icon>
           <ZoomIn />
         </el-icon>
       </div>
-      <div class="line-chart-toolbox-item" @click="handleExport">
+      <div v-if="showDownload" class="line-chart-toolbox-item" @click="handleExport">
         <el-icon>
           <Download />
         </el-icon>
@@ -26,14 +26,14 @@
 
 <script setup lang="ts">
 import * as echarts from 'echarts/core'
-import { LineChart } from 'echarts/charts'
+import { LineChart, BarChart } from 'echarts/charts'
 import { TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
 import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
-import * as XLSX from 'xlsx'
 import { ZoomIn, Download } from '@element-plus/icons-vue'
+import * as XLSX from 'xlsx'
 
 const fullScreenDialogRef = ref()
 const fullScreenChartRef = ref<HTMLDivElement | null>(null)
@@ -54,7 +54,7 @@ watch(
   },
 )
 
-echarts.use([LineChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
+echarts.use([LineChart, BarChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
 
 // ================== 示例数据（可用数据，供参考，实际使用时请传递props） ==================
 // 下面是一些可用于该组件的示例数据，已注释，方便你参考和测试
@@ -106,11 +106,44 @@ interface YAxisOption {
   yUnit?: string
 }
 
-const props = defineProps<{
+// Grid配置接口
+interface GridConfig {
+  left?: number
+  right?: number
+  top?: number
+  bottom?: number
+}
+
+const props = withDefaults(defineProps<{
   xAxiosOption: XAxisOption
   yAxiosOption: YAxisOption
   series: SeriesData[]
-}>()
+  // Grid配置参数
+  gridConfig?: GridConfig
+  // 全屏模式Grid配置参数
+  fullScreenGridConfig?: GridConfig
+  // 按钮显示控制
+  showToolbox?: boolean
+  showFullScreen?: boolean
+  showDownload?: boolean
+}>(), {
+  // 默认值
+  gridConfig: () => ({
+    left: 0,
+    right: 0,
+    top: 45,
+    bottom: 10
+  }),
+  fullScreenGridConfig: () => ({
+    left: 50,
+    right: 50,
+    top: 80,
+    bottom: 50
+  }),
+  showToolbox: true,
+  showFullScreen: true,
+  showDownload: true
+})
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
@@ -179,6 +212,22 @@ function customTooltipFormatter(
   return html
 }
 
+// Grid配置转换函数
+function getGridConfig(isFullScreen: boolean) {
+  return isFullScreen ?
+    {
+      left: pxToResponsive(props.fullScreenGridConfig.left || 0),
+      right: pxToResponsive(props.fullScreenGridConfig.right || 0),
+      top: pxToResponsive(props.fullScreenGridConfig.top || 45),
+      bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 15),
+    } : {
+      left: pxToResponsive(props.gridConfig.left || 0),
+      right: pxToResponsive(props.gridConfig.right || 0),
+      top: pxToResponsive(props.gridConfig.top || 45),
+      bottom: pxToResponsive(props.gridConfig.bottom || 15),
+    }
+}
+
 // 统一生成option的方法
 function getChartOption({
   isFullScreen = false,
@@ -204,9 +253,11 @@ function getChartOption({
     )
     : Math.min(pxToResponsive(60), (chartWidth - margin - barSpacing * (dataCount - 1)) / dataCount)
 
-  // 背景数据
-  const totalData = props.xAxiosOption.xAxiosData.map((_, index) => {
-    return props.series.reduce((sum, s) => sum + (s.data[index] || 0), 0)
+  // 背景数据 - 取每个索引位置上的最大值
+  const totalData = props.xAxiosOption.xAxiosData.map((_, index: number) => {
+    // 获取所有系列在当前位置的值，取最大值
+    const valuesAtIndex = props.series.map(s => s.data[index] || 0)
+    return Math.max(...valuesAtIndex)
   })
 
   // Tooltip样式参数
@@ -248,7 +299,7 @@ function getChartOption({
         fontFamily: 'Arimo',
         fontWeight: 400,
       },
-      data: props.series.map((s) => s.name),
+      data: props.series.map((s: SeriesData) => s.name),
     }
     : {
       icon: 'circle',
@@ -266,24 +317,10 @@ function getChartOption({
         fontFamily: 'Arimo',
         fontWeight: 400,
       },
-      data: props.series.map((s) => s.name),
+      data: props.series.map((s: SeriesData) => s.name),
     }
 
-  const grid = isFullScreen
-    ? {
-      left: pxToResponsive(50),
-      right: pxToResponsive(50),
-      top: pxToResponsive(80),
-      bottom: pxToResponsive(50),
-      containLabel: true,
-    }
-    : {
-      left: 0,
-      right: 0,
-      top: pxToResponsive(45),
-      bottom: pxToResponsive(10),
-      containLabel: true,
-    }
+  const grid = getGridConfig(isFullScreen)
 
   const xAxis = isFullScreen
     ? {
@@ -417,7 +454,7 @@ function getChartOption({
       label: { show: false },
       z: 0,
     },
-    ...props.series.map((s) => ({
+    ...props.series.map((s: SeriesData) => ({
       name: s.name,
       type: 'line',
       data: s.data,
@@ -559,15 +596,15 @@ const handleExport = () => {
   const headers: (string | number)[] = [
     'time',
     ...props.series.map(
-      (s) => `${s.name}${props.yAxiosOption.yUnit ? ' (' + props.yAxiosOption.yUnit + ')' : ''}`,
+      (s: SeriesData) => `${s.name}${props.yAxiosOption.yUnit ? ' (' + props.yAxiosOption.yUnit + ')' : ''}`,
     ),
   ]
   exportData.push(headers)
 
   // 添加数据
-  props.xAxiosOption.xAxiosData.forEach((time, index) => {
+  props.xAxiosOption.xAxiosData.forEach((time: string, index: number) => {
     const row: (string | number)[] = [time]
-    props.series.forEach((series) => {
+    props.series.forEach((series: SeriesData) => {
       row.push(series.data[index] || 0)
     })
     exportData.push(row)
@@ -672,6 +709,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: #212c49;
+  overflow: hidden;
 
   .line-chart-full-screen__container {
     width: 100%;

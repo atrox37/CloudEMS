@@ -152,7 +152,7 @@ const series = ref([
 
   .performance-container__system {
     width: 100%;
-    height: 1.8rem;
+    // height: 1.8rem;
     margin-bottom: 0.2rem;
 
     .system-content {
@@ -166,7 +166,7 @@ const series = ref([
       .system-content__item {
 
         width: calc((100% - 0.4rem) / 3);
-        height: 100%;
+        height: 1rem;
       }
     }
   }

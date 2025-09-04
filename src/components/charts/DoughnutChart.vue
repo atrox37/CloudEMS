@@ -1,13 +1,13 @@
 <template>
   <div class="doughnut-chart">
     <div class="doughnut-chart-container" ref="chartRef"></div>
-    <div class="doughnut-chart-toolbox">
-      <div class="doughnut-chart-toolbox-item" @click="handleFullScreen">
+    <div v-if="showToolbox" class="doughnut-chart-toolbox">
+      <div v-if="showFullScreen" class="doughnut-chart-toolbox-item" @click="handleFullScreen">
         <el-icon>
           <ZoomIn />
         </el-icon>
       </div>
-      <div class="doughnut-chart-toolbox-item" @click="handleExport">
+      <div v-if="showDownload" class="doughnut-chart-toolbox-item" @click="handleExport">
         <el-icon>
           <Download />
         </el-icon>
@@ -32,8 +32,8 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
 import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
-import * as XLSX from 'xlsx'
 import { ZoomIn, Download } from '@element-plus/icons-vue'
+import * as XLSX from 'xlsx'
 
 const fullScreenDialogRef = ref()
 const fullScreenChartRef = ref<HTMLDivElement | null>(null)
@@ -56,33 +56,6 @@ watch(
 
 echarts.use([PieChart, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer])
 
-// ================== 示例数据（可用数据，供参考，实际使用时请传递props） ==================
-// 下面是一些可用于该组件的示例数据，已注释，方便你参考和测试
-/*
-  const exampleSeries = [
-    {
-      name: '光伏发电',
-      value: 45,
-      color: '#4FADF7'
-    },
-    {
-      name: '柴油发电',
-      value: 30,
-      color: '#F6C85F'
-    },
-    {
-      name: '储能放电',
-      value: 25,
-      color: '#6DD400'
-    }
-  ]
-  
-  // 传递给组件的props示例
-  const series = exampleSeries
-  const title = '能源分布'
-  const radius = ['40%', '70%'] // 内半径和外半径
-  */
-
 // 定义数据类型
 interface SeriesData {
   name: string
@@ -90,12 +63,45 @@ interface SeriesData {
   color: string
 }
 
-const props = defineProps<{
+// Grid配置接口
+interface GridConfig {
+  left?: number
+  right?: number
+  top?: number
+  bottom?: number
+}
+
+const props = withDefaults(defineProps<{
   series: SeriesData[]
   title?: string
   radius?: [string, string] // 内半径和外半径，如 ['40%', '70%']
   center?: [string, string] // 圆心位置，如 ['50%', '50%']
-}>()
+  // Grid配置参数
+  gridConfig?: GridConfig
+  // 全屏模式Grid配置参数
+  fullScreenGridConfig?: GridConfig
+  // 按钮显示控制
+  showToolbox?: boolean
+  showFullScreen?: boolean
+  showDownload?: boolean
+}>(), {
+  // 默认值
+  gridConfig: () => ({
+    left: 0,
+    right: 0,
+    top: 55,
+    bottom: 10
+  }),
+  fullScreenGridConfig: () => ({
+    left: 50,
+    right: 50,
+    top: 80,
+    bottom: 50
+  }),
+  showToolbox: true,
+  showFullScreen: true,
+  showDownload: true
+})
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
@@ -176,6 +182,21 @@ function customTooltipFormatter(
   return html
 }
 
+function getGridConfig(isFullScreen: boolean) {
+  return isFullScreen ? {
+    left: pxToResponsive(props.gridConfig.left || 0),
+    right: pxToResponsive(props.gridConfig.right || 0),
+    top: pxToResponsive(props.gridConfig.top || 45),
+    bottom: pxToResponsive(props.gridConfig.bottom || 15),
+  }
+    : {
+      left: pxToResponsive(props.fullScreenGridConfig.left || 0),
+      right: pxToResponsive(props.fullScreenGridConfig.right || 0),
+      top: pxToResponsive(props.fullScreenGridConfig.top || 45),
+      bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 15),
+    }
+}
+
 // 统一生成option的方法
 function getChartOption({
   isFullScreen = false,
@@ -227,7 +248,7 @@ function getChartOption({
         fontFamily: 'Arimo',
         fontWeight: 400,
       },
-      data: props.series.map((s) => s.name),
+      data: props.series.map((s: SeriesData) => s.name),
     }
     : {
       show: true,
@@ -244,24 +265,10 @@ function getChartOption({
         fontFamily: 'Arimo',
         fontWeight: 400,
       },
-      data: props.series.map((s) => s.name),
+      data: props.series.map((s: SeriesData) => s.name),
     }
 
-  const grid = isFullScreen
-    ? {
-      left: pxToResponsive(50),
-      right: pxToResponsive(50),
-      top: pxToResponsive(80),
-      bottom: pxToResponsive(50),
-      containLabel: true,
-    }
-    : {
-      left: 0,
-      right: 0,
-      top: pxToResponsive(45),
-      bottom: pxToResponsive(15),
-      containLabel: true,
-    }
+  const grid = getGridConfig(isFullScreen)
 
   // tooltip
   const tooltip = isFullScreen
@@ -340,7 +347,7 @@ function getChartOption({
       type: 'pie',
       radius: radius,
       center: center,
-      data: props.series.map((s) => ({
+      data: props.series.map((s: SeriesData) => ({
         name: s.name,
         value: s.value,
         itemStyle: {
@@ -426,10 +433,10 @@ const handleExport = () => {
   exportData.push(headers)
 
   // 计算总数用于计算百分比
-  const total = props.series.reduce((sum, item) => sum + item.value, 0)
+  const total = props.series.reduce((sum: number, item: SeriesData) => sum + item.value, 0)
 
   // 添加数据
-  props.series.forEach((item) => {
+  props.series.forEach((item: SeriesData) => {
     const percentage = total > 0 ? ((item.value / total) * 100).toFixed(2) : '0.00'
     exportData.push([item.name, item.value, `${percentage}%`])
   })
@@ -533,6 +540,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: #212c49;
+  overflow: hidden;
 
   .doughnut-chart-full-screen__container {
     width: 100%;

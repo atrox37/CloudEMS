@@ -68,7 +68,7 @@
       <div class="user-management__pagination">
         <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
-          @size-change="handlePageChange" @current-change="handlePageChange" />
+          @size-change="handlePageSizeChange" @current-change="handlePageChange" />
       </div>
       <!-- </LoadingBg> -->
     </div>
@@ -105,6 +105,7 @@ const {
   tableData,
   pagination: paginationData,
   handlePageChange,
+  handlePageSizeChange,
   fetchTableData,
   deleteRow,
 } = useTableData<UserManagementInfo>(tableConfig)

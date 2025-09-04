@@ -10,20 +10,28 @@ import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 import autoprefixer from 'autoprefixer'
 
-// import pxtorem from 'postcss-pxtorem'
+import pxtorem from 'postcss-pxtorem'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
+    vueDevTools(), // 注释掉这行可以禁用Vue DevTools
     AutoImport({
       imports: ['vue', 'vue-router', 'pinia'],
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+      ],
       dts: true,
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+      ],
       dts: true,
     }),
     // Gzip压缩插件（不压缩图片文件）
@@ -90,18 +98,18 @@ export default defineConfig({
           flexbox: 'no-2009',
         }),
         // // px 转 rem
-        // pxtorem({
-        //   rootValue: 100, // 根元素字体大小，与HTML中的设置保持一致
-        //   unitPrecision: 5, // 转换后的小数点位数
-        //   propList: ['*'], // 需要转换的属性，*表示所有属性
-        //   selectorBlackList: [
-        //     /^\.no-rem/, // 不转换的类名
-        //   ],
-        //   replace: true, // 是否替换原来的值
-        //   mediaQuery: false, // 是否转换媒体查询中的 px
-        //   minPixelValue: 1, // 小于这个值的 px 不转换
-        //   exclude: /node_modules|EnergyBg\.vue/i, // 排除 node_modules 文件夹和 EnergyBg.vue 文件
-        // }),
+        pxtorem({
+          rootValue: 100, // 根元素字体大小，与HTML中的设置保持一致
+          unitPrecision: 5, // 转换后的小数点位数
+          propList: ['*'], // 需要转换的属性，*表示所有属性
+          selectorBlackList: [
+            /^\.no-rem/, // 不转换的类名
+          ],
+          replace: true, // 是否替换原来的值
+          mediaQuery: false, // 是否转换媒体查询中的 px
+          minPixelValue: 1, // 小于这个值的 px 不转换
+          exclude: /node_modules|EnergyBg\.vue/i, // 排除 node_modules 文件夹和 EnergyBg.vue 文件
+        }),
       ],
     },
   },

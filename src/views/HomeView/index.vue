@@ -1,7 +1,7 @@
 <template>
   <div class="voltage-class home-view">
     <div class="home-view-map">
-      <USAMapChart />
+      <USAMapChart :powerStations="powerStations" />
     </div>
     <div class="home-view-dashboard">
       <div class="home-view-dashboard-item" v-for="item in dashboardData" :key="item.title">
@@ -12,11 +12,71 @@
 </template>
 
 <script setup lang="ts">
-import USAMapChart from '@/components/charts/USAMapChart.vue'
+import USAMapChart, { type PowerStation } from '@/components/charts/USAMapChart.vue'
 import energyToday from '@/assets/icons/energy-today.svg'
 import energyOnlineStations from '@/assets/icons/energy-onlineStation.svg'
 import energyAlarms from '@/assets/icons/energy-alarms.svg'
 import energySavingBilling from '@/assets/icons/energy-savingBilling.svg'
+
+// 发电站数据
+const powerStations = reactive<PowerStation[]>([
+  {
+    id: '1',
+    name: 'NORTON CREEK SOLAR ENERGY CENTER',
+    type: 'solar',
+    capacity: 550,
+    status: 'online',
+    coordinates: [-119.4179, 36.7783],
+    state: 'California',
+    powerValue: 120,
+    powerUnit: 'KWh',
+    sqcValue: 24,
+    sqcUnit: '%',
+    Alarm: 'NO',
+  },
+  {
+    id: '2',
+    name: 'NORTON CREEK SOLAR ENERGY CENTER',
+    type: 'solar',
+    capacity: 300,
+    status: 'online',
+    coordinates: [-99.9018, 31.9686],
+    state: 'Texas',
+    powerValue: 120,
+    powerUnit: 'KWh',
+    sqcValue: 24,
+    sqcUnit: '%',
+    Alarm: 'NO',
+  },
+  {
+    id: '5',
+    name: 'NORTON CREEK SOLAR ENERGY CENTER',
+    type: 'solar',
+    capacity: 800,
+    status: 'maintenance',
+    coordinates: [-81.6869, 27.6648],
+    state: 'Florida',
+    powerValue: 120,
+    powerUnit: 'KWh',
+    sqcValue: 24,
+    sqcUnit: '%',
+    Alarm: 'NO',
+  },
+  {
+    id: '7',
+    name: 'NORTON CREEK SOLAR ENERGY CENTER',
+    type: 'solar',
+    capacity: 400,
+    status: 'online',
+    coordinates: [-111.0937, 34.0489],
+    state: 'Arizona',
+    powerValue: 120,
+    powerUnit: 'KWh',
+    sqcValue: 24,
+    sqcUnit: '%',
+    Alarm: 'NO',
+  },
+])
 
 const dashboardData = reactive([
   {
@@ -25,7 +85,6 @@ const dashboardData = reactive([
     unit: 'kWh',
     iconUrl: energyToday,
   },
-
   {
     title: 'Online Stations',
     value: '8/13',

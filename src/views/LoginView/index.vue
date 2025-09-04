@@ -5,6 +5,7 @@
         <div class="loginPage__head-text">Log in page</div>
       </div>
     </header>
+
     <div ref="loginFormContainer" class="loginPage__form">
       <ModuleCard title="Monarch">
         <div class="loginPage__form-content">
@@ -116,7 +117,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         background-repeat: no-repeat;
       }
       .loginPage__head-text {
-        margin-left: 0.2rem;
         font-family: 'Montserrat', sans-serif;
         font-weight: 600;
         font-size: 0.3rem;

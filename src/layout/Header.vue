@@ -40,7 +40,7 @@
       </div>
       <div class="header__right-notice">
         <el-button link class="header__right-noticeBtn" @click="toggleNotifications">
-          <el-badge :value="notificationCount" :hidden="notificationCount === 0">
+          <el-badge :value="globalStore.alarmNum" :hidden="globalStore.alarmNum === 0">
             <img :src="noticeIcon" class="header__right-noticeIcon" />
           </el-badge>
         </el-button>
@@ -52,19 +52,19 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-
+import { useGlobalStore } from '@/stores/global'
 // 正确引入头像图片，确保路径无误，推荐用import方式
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import noticeIcon from '@/assets/icons/notice.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
 const router = useRouter()
 const userStore = useUserStore()
+const globalStore = useGlobalStore()
 
-const notificationCount = ref()
 
 // // 切换通知
 const toggleNotifications = () => {
-  // router.push({ name: 'alarmCurrentRecords' })
+  router.push({ name: 'Alerts' })
 }
 
 // 用户操作

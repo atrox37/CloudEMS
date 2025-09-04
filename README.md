@@ -1,189 +1,259 @@
 # CloudEMS - 云端能源管理系统
 
-## 项目简介
+## 项目概述
 
-CloudEMS是一个基于Vue 3的现代化云端能源管理系统，提供实时监控、数据分析和可视化展示功能。
+CloudEMS是一个基于Vue 3的现代化云端能源管理系统，提供实时数据监控、告警管理、设备控制等功能。
 
-## 主要功能
+## 技术栈
 
-### 美国地图下钻功能
+- **前端框架**: Vue 3 + TypeScript
+- **构建工具**: Vite
+- **UI组件库**: Element Plus
+- **状态管理**: Pinia
+- **路由管理**: Vue Router
+- **样式预处理**: Sass
+- **图表库**: ECharts
+- **网络请求**: Axios
+- **国际化**: Vue I18n
+- **实时通信**: WebSocket
 
-#### 功能描述
-- **美国轮廓地图展示**：显示美国各州边界和轮廓
-- **发电站标记**：在地图上标记各个发电站位置，包含发光效果
-- **地图下钻**：点击任意州可以下钻到该州的详细地图
-- **返回功能**：通过"返回美国地图"按钮可以返回到美国轮廓地图
+## 项目结构
 
-#### 发电站信息
-每个发电站包含以下信息：
-- **名称**：发电站的具体名称
-- **类型**：太阳能、风力、核能、水力、火力等
-- **容量**：以MW为单位的发电容量
-- **状态**：在线、离线、维护中等状态
-- **位置**：精确的地理坐标
-
-#### 发电站类型及颜色
-- 🟡 **太阳能**：黄色标记
-- 🟢 **风力**：绿色标记
-- 🔴 **核能**：红色标记
-- 🔵 **水力**：蓝色标记
-- 🟣 **火力**：紫色标记
-
-#### 使用方法
-1. **查看美国地图**：页面加载时显示美国轮廓地图和所有发电站
-2. **查看发电站详情**：鼠标悬停在发电站标记上可查看详细信息
-3. **下钻到州地图**：点击任意州区域可查看该州的详细地图和发电站
-4. **返回美国地图**：在州地图页面点击"返回美国地图"按钮
-
-#### 技术特性
-- **响应式设计**：支持不同屏幕尺寸和分辨率
-- **交互式地图**：支持缩放、拖拽等操作
-- **实时数据**：发电站状态实时更新
-- **高性能渲染**：基于ECharts的高性能地图渲染
-
-## 技术架构
-
-### 前端技术栈
-- **Vue 3**：使用Composition API和setup语法糖
-- **TypeScript**：提供类型安全和开发体验
-- **ECharts**：专业的数据可视化图表库
-- **Element Plus**：现代化的Vue 3 UI组件库
-- **SCSS**：使用BEM规范的样式管理，支持响应式设计
-- **Vite**：快速的构建工具
-
-### 响应式设计
-- **rem单位系统**：以1rem=100px为标准，实现响应式布局
-- **响应式工具函数**：提供pxToResponsive和pxToRem等转换函数
-- **自适应布局**：支持不同屏幕尺寸和分辨率
-
-### 项目结构
 ```
-src/
-├── components/
-│   └── charts/
-│       └── USAMapChart.vue    # 美国地图组件
-├── views/
-│   └── HomeView/
-│       └── index.vue          # 主页面
-├── assets/
-│   ├── jsons/
-│   │   ├── USAOutlineMap.json # 美国轮廓地图数据
-│   │   └── USAStatesMap.json  # 美国各州地图数据
-│   └── styles/
-│       └── element/           # Element Plus组件样式
-├── utils/
-│   ├── responsive.ts          # 响应式工具函数
-│   └── pxToRemConverter.ts    # px到rem转换工具
-└── ...
+CloudEMS/
+├── src/
+│   ├── api/                 # API接口定义
+│   ├── assets/             # 静态资源
+│   ├── components/         # 公共组件
+│   ├── composables/        # 组合式函数
+│   ├── layout/             # 布局组件
+│   ├── router/             # 路由配置
+│   ├── stores/             # 状态管理
+│   ├── types/              # 类型定义
+│   ├── utils/              # 工具函数
+│   └── views/              # 页面组件
+├── public/                 # 公共资源
+├── package.json            # 依赖配置
+└── README.md               # 项目说明
 ```
 
-## 安装和运行
+## 核心功能
+
+### 1. 实时数据监控
+- 多频道数据订阅
+- 实时数据更新
+- 批量数据处理
+- 数据可视化图表
+
+### 2. 告警管理
+- 实时告警推送
+- 告警级别分类
+- 告警状态管理
+- 告警数量统计
+
+### 3. 设备控制
+- 远程设备控制
+- 控制命令确认
+- 操作日志记录
+- 权限验证
+
+### 4. 用户管理
+- 用户认证授权
+- 角色权限管理
+- 操作审计日志
+- 安全策略配置
+
+## WebSocket策略调整
+
+### 概述
+本次更新对WebSocket通信策略进行了重大调整，实现了智能的订阅队列管理，避免重复订阅和取消订阅冲突。
+
+### 主要改进
+
+#### 1. 基础报文结构优化
+- **新增唯一标识字段**: 所有WebSocket消息现在都包含唯一的`id`字段
+- **消息追踪**: 支持消息的完整生命周期追踪
+- **请求响应关联**: 通过ID字段关联请求和响应消息
+
+#### 2. 新增服务端报文类型
+- **unsubscribe_ack**: 取消订阅确认消息
+  ```json
+  {
+    "type": "unsubscribe_ack",
+    "id": "unsub_001_ack",
+    "timestamp": "2025-09-03T14:48:07.974090",
+    "data": {
+      "request_id": "unsub_001",
+      "unsubscribed": [],
+      "failed": [],
+      "total": 0
+    }
+  }
+  ```
+
+#### 3. 智能订阅队列管理
+
+##### 待取消订阅信息Map
+- 管理等待取消订阅的请求
+- 支持页面级别的取消订阅操作
+- 自动去重和冲突检测
+
+##### 待订阅信息Map
+- 管理等待订阅的请求
+- 支持页面级别的订阅配置
+- 智能延迟处理机制
+
+#### 4. 核心策略逻辑
+
+##### 取消订阅优先级
+- 当有待取消订阅请求时，优先处理取消订阅操作
+- 取消订阅完成后，自动处理待订阅队列
+
+##### 智能冲突检测
+- 检测待订阅和待取消订阅的冲突
+- 自动跳过不必要的取消订阅操作
+- 优化网络请求效率
+
+##### 重连后队列处理
+- 连接恢复后自动处理所有待处理的操作
+- 确保操作顺序的正确性
+- 支持断线重连的完整恢复
+
+### 技术实现
+
+#### 数据结构
+```typescript
+// 待订阅信息结构
+interface PendingSubscription {
+  id: string
+  pageId: string
+  config: SubscriptionConfig
+  listeners: any
+  timestamp: number
+}
+
+// 待取消订阅信息结构
+interface PendingUnsubscription {
+  id: string
+  pageId: string
+  channels: number[]
+  timestamp: number
+}
+```
+
+#### 核心方法
+- `processPendingUnsubscriptions()`: 处理待取消订阅队列
+- `processPendingSubscriptions()`: 处理待订阅队列
+- `isSameSubscription()`: 订阅配置冲突检测
+- `generateMessageId()`: 生成唯一消息ID
+
+#### 消息流程
+1. **订阅请求**: 检查待取消订阅队列 → 添加到待订阅队列或直接发送
+2. **取消订阅请求**: 添加到待取消订阅队列 → 立即处理或等待连接
+3. **连接恢复**: 自动处理所有待处理的操作队列
+4. **确认处理**: 收到确认消息后自动处理下一个队列
+
+### 使用示例
+
+#### 基本订阅
+```typescript
+// 页面订阅
+const { subscribePage } = useWebSocket('home', config, listeners)
+subscribePage('home', {
+  channels: [1, 2, 3],
+  dataTypes: ['T', 'S'],
+  interval: 1000
+}, listeners)
+```
+
+#### 取消订阅
+```typescript
+// 取消页面订阅
+const { unsubscribePage } = useWebSocket('home', config, listeners)
+unsubscribePage('home', [1, 2]) // 取消指定频道
+unsubscribePage('home') // 取消所有频道
+```
+
+### 优势特性
+
+1. **避免冲突**: 智能检测和处理订阅冲突
+2. **队列管理**: 有序处理所有订阅和取消订阅请求
+3. **断线恢复**: 支持完整的断线重连恢复
+4. **性能优化**: 减少不必要的网络请求
+5. **状态一致性**: 确保订阅状态的一致性
+
+## 开发指南
 
 ### 环境要求
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Node.js >= 16.0.0
+- npm >= 8.0.0 或 pnpm >= 7.0.0
 
 ### 安装依赖
 ```bash
 npm install
+# 或
+pnpm install
 ```
 
 ### 开发模式
 ```bash
 npm run dev
+# 或
+pnpm dev
 ```
 
 ### 构建生产版本
 ```bash
 npm run build
+# 或
+pnpm build
 ```
 
-### 类型检查
+### 代码检查
 ```bash
-npm run type-check
+npm run lint
+# 或
+pnpm lint
 ```
 
-## 地图数据说明
+## 部署说明
 
-### USAOutlineMap.json
-- 包含美国各州的轮廓边界数据
-- 使用GeoJSON格式
-- 每个州包含id、name、geometry等属性
+### Docker部署
+```bash
+# 构建镜像
+docker build -t cloudems .
 
-### USAStatesMap.json
-- 包含美国各州的详细地图数据
-- 使用GeoJSON格式
-- 每个州包含GEO_ID、STATE、NAME、CENSUSAREA等属性
-
-## 自定义配置
-
-### 添加新的发电站
-在`USAMapChart.vue`组件中的`powerStations`数组中添加新的发电站数据：
-
-```typescript
-{
-  id: 'unique-id',
-  name: '发电站名称',
-  type: 'solar', // solar, wind, nuclear, hydro, thermal
-  capacity: 500, // 容量(MW)
-  status: 'online', // online, offline, maintenance
-  coordinates: [-120.0, 40.0], // [经度, 纬度]
-  state: 'California' // 所属州名
-}
+# 运行容器
+docker run -d -p 80:80 cloudems
 ```
 
-### 修改地图样式
-在`USAMapChart.vue`组件的样式中修改地图颜色和布局：
+### 环境变量配置
+```bash
+# WebSocket服务地址
+VITE_WS_URL=ws://your-websocket-server.com/ws
 
-```scss
-.usamap-chart {
-  &__map {
-    background: #your-color;
-  }
-}
+# API服务地址
+VITE_API_BASE_URL=https://your-api-server.com/api
 ```
-
-### 响应式单位转换
-项目使用rem单位系统，以1rem=100px为标准：
-
-```typescript
-// 使用响应式工具函数
-import { pxToResponsive, pxToRem } from '@/utils/responsive'
-
-// 转换px到响应式px
-const responsiveValue = pxToResponsive(100) // 根据屏幕宽度自动缩放
-
-// 转换px到rem
-const remValue = pxToRem(100) // 返回 "1rem"
-```
-
-### 样式开发规范
-- 所有尺寸单位使用rem（1rem = 100px）
-- 使用BEM命名规范
-- 组件样式以`.voltage-class`为根选择器
-- 支持响应式设计，适配不同屏幕尺寸
-
-## 浏览器兼容性
-
-- Chrome >= 88
-- Firefox >= 85
-- Safari >= 14
-- Edge >= 88
-
-## 许可证
-
-本项目采用MIT许可证。
 
 ## 贡献指南
 
-欢迎提交Issue和Pull Request来改进这个项目。
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
 ## 联系方式
 
-如有问题或建议，请通过以下方式联系：
-- 提交GitHub Issue
-- 发送邮件至项目维护者
+- 项目维护者: AI进化论-花生
+- 邮箱: [your-email@example.com]
+- 项目地址: [https://github.com/your-username/CloudEMS]
 
 ---
 
-**注意**：本项目仅供学习和研究使用，请勿用于商业用途。
+**注意**: 本规则由 AI进化论-花生 创建，版权所有，引用请注明出处。

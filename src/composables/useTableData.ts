@@ -101,7 +101,6 @@ export function useTableData<T = any>(config: TableConfig) {
   const fetchTableData = async (resetPage = false) => {
     try {
       loading.value = true
-
       if (resetPage) {
         pagination.page = 1
       }
@@ -113,7 +112,7 @@ export function useTableData<T = any>(config: TableConfig) {
         ...queryParams,
         ...filters,
       }
-
+      console.log('fetchTableData', resetPage, pagination)
       // 过滤空值参数
       const filteredParams: Record<string, any> = {}
       for (const key in params) {
@@ -208,13 +207,16 @@ export function useTableData<T = any>(config: TableConfig) {
    * @param page 页码
    * @param pageSize 每页大小
    */
-  const handlePageChange = (pageSize: number) => {
+  const handlePageSizeChange = (pageSize: number) => {
     pagination.pageSize = pageSize
     pagination.page = 1 // 改变每页大小时重置到第一页
 
     fetchTableData()
   }
-
+  const handlePageChange = (page: number) => {
+    pagination.page = page
+    fetchTableData()
+  }
   /**
    * 删除单条记录
    * @param id 记录ID
@@ -386,7 +388,7 @@ export function useTableData<T = any>(config: TableConfig) {
     // 响应式数据
     loading: readonly(loading),
     tableData, // 不使用readonly，保持数组的可变性
-    pagination: readonly(pagination),
+    pagination: pagination,
     queryParams: readonly(queryParams),
     filters,
     nowFilters,
@@ -407,8 +409,8 @@ export function useTableData<T = any>(config: TableConfig) {
 
     // el-table 集成方法
     handleSortChange,
+    handlePageSizeChange,
     handlePageChange,
-
     // 删除方法
     deleteRow,
     batchDeleteRows,

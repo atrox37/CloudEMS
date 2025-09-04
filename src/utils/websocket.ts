@@ -8,6 +8,7 @@
  *  - 支持批量数据、告警、控制命令等多种消息类型
  *  - 提供全局和局部监听器机制
  *  - 连接状态、统计信息响应式
+ *  - 智能订阅队列管理，避免重复订阅和取消订阅冲突
  */
 
 import { ref, reactive, computed } from 'vue'
@@ -22,6 +23,8 @@ import type {
   UnsubscribeMessage,
   ControlMessage,
   PingMessage,
+  CommandType,
+  UnsubscribeAckMessage,
 } from '@/types/websocket'
 
 // WebSocket连接配置
@@ -31,6 +34,23 @@ interface WebSocketConfig {
   maxReconnectAttempts?: number // 最大重连次数
   heartbeatInterval?: number // 心跳间隔(ms)
   heartbeatTimeout?: number // 心跳超时时间(ms)
+}
+
+// 待订阅信息结构
+interface PendingSubscription {
+  id: string
+  pageId: string
+  config: SubscriptionConfig
+  listeners: any
+  timestamp: number
+}
+
+// 待取消订阅信息结构
+interface PendingUnsubscription {
+  id: string
+  pageId: string
+  channels: number[]
+  timestamp: number
 }
 
 class WebSocketManager {
@@ -73,6 +93,12 @@ class WebSocketManager {
     }
   >()
 
+  // 新增：待订阅信息Map - 管理等待订阅的请求
+  private pendingSubscriptionsMap = new Map<string, PendingSubscription>()
+
+  // 新增：待取消订阅信息Map - 管理等待取消订阅的请求
+  private pendingUnsubscriptionsMap = new Map<string, PendingUnsubscription>()
+
   // 连接统计信息（响应式）
   public readonly connectionStats = reactive({
     connectTime: 0, // 上次连接时间戳
@@ -90,10 +116,142 @@ class WebSocketManager {
     // 合并默认配置和传入配置
     this.config = {
       reconnectInterval: 5000, // 默认重连间隔5秒
-      maxReconnectAttempts: 10, // 默认最大重连10次
-      heartbeatInterval: 30000, // 默认心跳间隔30秒
-      heartbeatTimeout: 10000, // 默认心跳超时10秒
+      maxReconnectAttempts: Infinity, // 默认最大重连10次
+      heartbeatInterval: 5000, // 默认心跳间隔30秒
+      heartbeatTimeout: 3000, // 默认心跳超时10秒
       ...config,
+    }
+  }
+
+  /**
+   * 发送订阅消息
+   * @param config 订阅配置
+   * @param messageId 消息ID
+   */
+  private sendSubscribeMessage(config: SubscriptionConfig, messageId: string): void {
+    const subscribeMessage: SubscribeMessage = {
+      id: messageId,
+      type: 'subscribe',
+      timestamp: '',
+      data: {
+        channels: config.channels,
+        data_types: config.dataTypes,
+        interval: config.interval,
+      },
+    }
+
+    this.sendMessage(subscribeMessage)
+    console.log('[WebSocket] 发送订阅消息:', messageId, config)
+  }
+
+  /**
+   * 发送取消订阅消息
+   * @param channels 频道列表
+   * @param messageId 消息ID
+   */
+  private sendUnsubscribeMessage(channels: number[], messageId: string): void {
+    const unsubscribeMessage: UnsubscribeMessage = {
+      id: messageId,
+      type: 'unsubscribe',
+      timestamp: '',
+      data: {
+        channels: channels,
+      },
+    }
+
+    this.sendMessage(unsubscribeMessage)
+    console.log('[WebSocket] 发送取消订阅消息:', messageId, channels)
+  }
+
+  /**
+   * 生成唯一消息ID
+   * @returns 唯一ID字符串
+   */
+  private generateMessageId(): string {
+    return `msg_${Date.now()}_${++this.messageIdCounter}`
+  }
+
+  /**
+   * 检查两个订阅配置是否相同
+   * @param config1 订阅配置1
+   * @param config2 订阅配置2
+   * @returns 是否相同
+   */
+  private isSameSubscription(config1: SubscriptionConfig, config2: SubscriptionConfig): boolean {
+    return (
+      JSON.stringify(config1.channels.sort()) === JSON.stringify(config2.channels.sort()) &&
+      JSON.stringify(config1.dataTypes.sort()) === JSON.stringify(config2.dataTypes.sort()) &&
+      config1.interval === config2.interval
+    )
+  }
+
+  /**
+   * 处理待取消订阅队列
+   * 当待取消订阅Map中有数据时，优先处理取消订阅
+   */
+  private processPendingUnsubscriptions(): void {
+    if (this.pendingUnsubscriptionsMap.size === 0) {
+      return
+    }
+
+    console.log('[WebSocket] 处理待取消订阅队列，数量:', this.pendingUnsubscriptionsMap.size)
+
+    // 遍历所有待取消订阅的请求
+    for (const [id, unsubInfo] of this.pendingUnsubscriptionsMap) {
+      // 检查是否有相同的待订阅信息
+      let hasMatchingSubscription = false
+
+      for (const [subId, subInfo] of this.pendingSubscriptionsMap) {
+        if (subInfo.pageId === unsubInfo.pageId) {
+          console.log('[WebSocket] 发现匹配的待订阅信息，跳过取消订阅:', subId)
+          // 清除待订阅信息
+          this.pendingSubscriptionsMap.delete(subId)
+          hasMatchingSubscription = true
+          break
+        }
+      }
+
+      if (!hasMatchingSubscription) {
+        // 发送取消订阅请求，但不立即清除Map
+        this.sendUnsubscribeMessage(unsubInfo.channels, id)
+        console.log('[WebSocket] 发送取消订阅请求，等待确认:', id)
+      } else {
+        // 如果有匹配的订阅信息，直接清除取消订阅请求
+        this.pendingUnsubscriptionsMap.delete(id)
+      }
+    }
+  }
+
+  /**
+   * 处理待订阅队列
+   * 只有当待取消订阅Map为空时才处理订阅
+   */
+  private processPendingSubscriptions(): void {
+    if (this.pendingUnsubscriptionsMap.size > 0) {
+      console.log('[WebSocket] 有待取消订阅请求，延迟处理订阅')
+      return
+    }
+
+    if (this.pendingSubscriptionsMap.size === 0) {
+      return
+    }
+
+    console.log('[WebSocket] 处理待订阅队列，数量:', this.pendingSubscriptionsMap.size)
+
+    // 遍历所有待订阅的请求
+    for (const [id, subInfo] of this.pendingSubscriptionsMap) {
+      // 发送订阅消息，但不立即清除Map
+      this.sendSubscribeMessage(subInfo.config, id)
+
+      // 记录页面订阅
+      this.pageSubscriptions.set(subInfo.pageId, {
+        id: subInfo.id,
+        config: subInfo.config,
+        listeners: subInfo.listeners,
+      })
+
+      console.log('[WebSocket] 发送订阅请求，等待确认:', id)
+      // 不从待订阅Map中移除，等待确认消息
     }
   }
 
@@ -142,6 +300,11 @@ class WebSocketManager {
       this.connectionStats.connectTime = Date.now()
       this.startHeartbeat() // 启动心跳
       this.globalListeners.onConnect?.() // 全局连接回调
+
+      //连接成功后处理队列
+      this.processPendingUnsubscriptions()
+      this.processPendingSubscriptions()
+
       onConnect()
     }
 
@@ -213,6 +376,10 @@ class WebSocketManager {
         // 订阅确认
         this.handleSubscribeAck((message as any).data)
         break
+      case 'unsubscribe_ack':
+        // 取消订阅确认
+        this.handleUnsubscribeAck((message as any).data)
+        break
       case 'control_ack':
         // 控制命令确认
         this.handleControlAck((message as any).data)
@@ -224,6 +391,10 @@ class WebSocketManager {
       case 'pong':
         // 心跳响应
         this.handlePong((message as any).data)
+        break
+      case 'alarm_num':
+        // 告警数量更新
+        this.handleAlarmNum((message as any).data)
         break
       default:
         // 未知类型
@@ -286,9 +457,65 @@ class WebSocketManager {
    */
   private handleSubscribeAck(data: any): void {
     console.log('[WebSocket] 订阅确认:', data)
+
+    // 通过request_id查找对应的待订阅信息并清理
+    const requestId = data.request_id
+    if (requestId) {
+      // 查找并清理待订阅Map中对应的信息
+      for (const [id, subInfo] of this.pendingSubscriptionsMap) {
+        if (id === requestId) {
+          console.log('[WebSocket] 清理已确认的订阅请求:', id)
+          this.pendingSubscriptionsMap.delete(id)
+          break
+        }
+      }
+    }
+
     // 如果有订阅失败的频道，弹出警告
     if (data.failed.length > 0) {
       ElMessage.warning(`部分频道订阅失败: ${data.failed.join(', ')}`)
+    }
+
+    // 订阅确认后，检查是否可以处理待订阅队列
+    if (this.pendingSubscriptionsMap.size > 0) {
+      console.log('[WebSocket] 订阅确认后，继续处理待订阅队列')
+      this.processPendingSubscriptions()
+    }
+  }
+
+  /**
+   * 处理取消订阅确认消息
+   * @param data 取消订阅确认内容
+   */
+  private handleUnsubscribeAck(data: any): void {
+    console.log('[WebSocket] 取消订阅确认:', data)
+
+    // 通过request_id查找对应的待取消订阅信息并清理
+    const requestId = data.request_id
+    if (requestId) {
+      // 查找并清理待取消订阅Map中对应的信息
+      for (const [id, unsubInfo] of this.pendingUnsubscriptionsMap) {
+        if (id === requestId) {
+          console.log('[WebSocket] 清理已确认的取消订阅请求:', id)
+          this.pendingUnsubscriptionsMap.delete(id)
+          break
+        }
+      }
+    }
+
+    // 处理取消订阅确认后的逻辑
+    if (data.unsubscribed.length > 0) {
+      console.log('[WebSocket] 成功取消订阅的频道:', data.unsubscribed)
+    }
+
+    if (data.failed.length > 0) {
+      ElMessage.warning(`部分频道取消订阅失败: ${data.failed.join(', ')}`)
+    }
+
+    // 处理完取消订阅确认后，检查是否可以处理待订阅队列
+    if (this.pendingUnsubscriptionsMap.size === 0 && this.pendingSubscriptionsMap.size > 0) {
+      console.log('[WebSocket] 取消订阅确认后，开始处理待订阅队列')
+      this.processPendingSubscriptions()
     }
   }
 
@@ -302,6 +529,17 @@ class WebSocketManager {
     if (!data.result.success) {
       ElMessage.error(`控制命令执行失败: ${data.result.error_message}`)
     }
+  }
+
+  /**
+   * 处理告警数量更新消息
+  /**
+   * 处理告警数量更新消息
+   * @param data 告警数量更新内容
+   */
+  private handleAlarmNum(data: any): void {
+    console.log('[WebSocket] 告警数量更新:', data)
+    this.globalListeners.onAlarmNum?.(data)
   }
 
   /**
@@ -350,19 +588,32 @@ class WebSocketManager {
    * @param config 订阅配置
    */
   public subscribe(config: SubscriptionConfig): void {
-    // 构造订阅消息
-    const subscribeMessage: SubscribeMessage = {
-      type: 'subscribe',
-      timestamp: '',
-      data: {
-        channels: config.channels,
-        data_types: config.dataTypes,
-        interval: config.interval,
-      },
+    // 检查是否有待取消订阅的请求
+    if (this.pendingUnsubscriptionsMap.size > 0) {
+      console.log('[WebSocket] 有待取消订阅请求，将订阅请求添加到队列')
+      // 添加到待订阅队列
+      const messageId = this.generateMessageId()
+      this.pendingSubscriptionsMap.set(messageId, {
+        id: messageId,
+        pageId: 'global',
+        config,
+        listeners: {},
+        timestamp: Date.now(),
+      })
+      return
     }
 
-    // 发送订阅消息
-    this.sendMessage(subscribeMessage)
+    // 直接发送订阅消息，并添加到待订阅队列等待确认
+    const messageId = this.generateMessageId()
+    this.pendingSubscriptionsMap.set(messageId, {
+      id: messageId,
+      pageId: 'global',
+      config,
+      listeners: {},
+      timestamp: Date.now(),
+    })
+    this.sendSubscribeMessage(config, messageId)
+    console.log('[WebSocket] 发送全局订阅请求，等待确认:', messageId)
   }
 
   /**
@@ -383,6 +634,21 @@ class WebSocketManager {
   ): string {
     const subscriptionId = `page_${pageId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+    // 检查是否有待取消订阅的请求
+    if (this.pendingUnsubscriptionsMap.size > 0) {
+      console.log('[WebSocket] 有待取消订阅请求，将页面订阅请求添加到队列:', pageId)
+      // 添加到待订阅队列
+      const messageId = this.generateMessageId()
+      this.pendingSubscriptionsMap.set(messageId, {
+        id: messageId,
+        pageId,
+        config,
+        listeners,
+        timestamp: Date.now(),
+      })
+      return subscriptionId
+    }
+
     // 记录页面订阅
     this.pageSubscriptions.set(pageId, {
       id: subscriptionId,
@@ -390,19 +656,17 @@ class WebSocketManager {
       listeners,
     })
 
-    // 发送订阅消息
-    const subscribeMessage: SubscribeMessage = {
-      type: 'subscribe',
-      timestamp: '',
-      data: {
-        channels: config.channels,
-        data_types: config.dataTypes,
-        interval: config.interval,
-      },
-    }
-
-    this.sendMessage(subscribeMessage)
-    console.log(`[WebSocket] 页面订阅成功: ${pageId}`, config)
+    // 直接发送订阅消息，并添加到待订阅队列等待确认
+    const messageId = this.generateMessageId()
+    this.pendingSubscriptionsMap.set(messageId, {
+      id: messageId,
+      pageId,
+      config,
+      listeners,
+      timestamp: Date.now(),
+    })
+    this.sendSubscribeMessage(config, messageId)
+    console.log(`[WebSocket] 页面订阅成功: ${pageId}，等待确认:`, messageId)
     return subscriptionId
   }
 
@@ -411,17 +675,22 @@ class WebSocketManager {
    * @param channels 可选，指定要取消的频道
    */
   public unsubscribe(channels?: number[]): void {
-    // 构造取消订阅消息
-    const unsubscribeMessage: UnsubscribeMessage = {
-      type: 'unsubscribe',
-      timestamp: '',
-      data: {
-        channels: channels || [],
-      },
-    }
+    const messageId = this.generateMessageId()
 
-    // 发送取消订阅消息
-    this.sendMessage(unsubscribeMessage)
+    // 添加到待取消订阅队列
+    this.pendingUnsubscriptionsMap.set(messageId, {
+      id: messageId,
+      pageId: 'global',
+      channels: channels || [],
+      timestamp: Date.now(),
+    })
+
+    console.log('[WebSocket] 取消订阅请求已添加到队列:', messageId, channels)
+
+    // 如果连接已建立，立即处理队列
+    if (this.isConnected.value) {
+      this.processPendingUnsubscriptions()
+    }
   }
 
   /**
@@ -433,17 +702,18 @@ class WebSocketManager {
     const record = this.pageSubscriptions.get(pageId)
     if (!record) return
 
-    // 构造取消订阅消息
-    const unsubscribeMessage: UnsubscribeMessage = {
-      type: 'unsubscribe',
-      timestamp: '',
-      data: {
-        channels: channels || record.config.channels,
-      },
-    }
+    const messageId = this.generateMessageId()
+    const channelsToUnsubscribe = channels || record.config.channels
 
-    // 发送取消订阅消息
-    this.sendMessage(unsubscribeMessage)
+    // 添加到待取消订阅队列
+    this.pendingUnsubscriptionsMap.set(messageId, {
+      id: messageId,
+      pageId,
+      channels: channelsToUnsubscribe,
+      timestamp: Date.now(),
+    })
+
+    console.log(`[WebSocket] 页面取消订阅请求已添加到队列: ${pageId}`, channelsToUnsubscribe)
 
     // 如果指定了部分频道，只移除这些频道
     if (channels) {
@@ -455,7 +725,10 @@ class WebSocketManager {
       this.pageSubscriptions.delete(pageId)
     }
 
-    console.log(`[WebSocket] 页面取消订阅: ${pageId}`)
+    // 如果连接已建立，立即处理队列
+    if (this.isConnected.value) {
+      this.processPendingUnsubscriptions()
+    }
   }
 
   /**
@@ -477,6 +750,7 @@ class WebSocketManager {
   ): void {
     // 构造控制命令消息
     const controlMessage: ControlMessage = {
+      id: this.generateMessageId(),
       type: 'control',
       timestamp: '',
       data: {
@@ -497,6 +771,7 @@ class WebSocketManager {
    */
   public sendPing(): void {
     const pingMessage: PingMessage = {
+      id: this.generateMessageId(),
       type: 'ping',
       timestamp: '',
     }
@@ -631,6 +906,8 @@ class WebSocketManager {
     this.disconnect()
     this.globalListeners = {}
     this.pageSubscriptions.clear()
+    this.pendingSubscriptionsMap.clear()
+    this.pendingUnsubscriptionsMap.clear()
   }
 }
 console.log(import.meta.env.VITE_WS_URL, 'import.meta.env.VITE_WS_URL')

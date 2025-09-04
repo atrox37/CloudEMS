@@ -96,12 +96,13 @@
   // 时间选择器
   .el-time-panel {
     // 时间选择器头部
+    border-radius: 0;
     border: 0.01rem solid rgba(128, 128, 128, 0.5);
     background-color: rgba(30, 47, 80, 0.1) !important;
 
-    margin: 0.05rem 0;
+    margin: 0;
     width: 1.8rem;
-    height: 2.4rem;
+    // height: 2.4rem;
     .el-time-panel__header {
       padding: 0.16rem 0.2rem;
       color: #fff;
@@ -117,10 +118,11 @@
 
     // 时间选择器内容
     .el-time-panel__content {
-      // padding: 16px 20px;
-      height: 2.04rem;
-      height: 2;
+      max-height: 1.92rem;
       &::before {
+        height: 0.32rem;
+        padding-top: 0.06rem;
+        margin-top: -0.16rem;
         border-bottom: 0.01rem solid rgb(128, 128, 128);
         border-top: 0.01rem solid rgb(128, 128, 128);
       }
@@ -129,8 +131,15 @@
         margin-top: -0.16rem;
         padding-top: 0.06rem;
       }
+      .el-time-spinner__wrapper{
+        max-height: 1.92rem;
+      }
       // 时间列表
       .el-time-spinner__list {
+        &::before {
+          height: 0.8rem;
+        }
+
         .el-time-spinner__item {
           height: 0.36rem;
           line-height: 0.36rem;
@@ -157,6 +166,19 @@
           }
         }
       }
+      .el-scrollbar {
+        .el-scrollbar__bar {
+          border-radius: 0.04rem;
+          right: 0.02rem;
+          &.is-vertical {
+            top: 0.02rem;
+            width: 0.06rem;
+            .el-scrollbar__thumb {
+              height: 0.2rem !important;
+            }
+          }
+        }
+      }
     }
 
     // 时间选择器底部
@@ -166,7 +188,7 @@
       line-height: 0.25rem;
       padding: 0.04rem;
       border-top: 0.01rem solid rgb(128, 128, 128);
-      background-color: rgba(30, 47, 80, 0.1)  !important;
+      background-color: rgba(30, 47, 80, 0.1) !important;
       .el-time-panel__btn {
         font-size: 0.14rem;
         color: #fff;
@@ -202,7 +224,6 @@
 .el-date-table td.today .el-date-table-cell__text {
   color: rgba(255, 105, 0, 1) !important;
 }
-.el-popper.el-picker__popper{
-  left:0;
-  bottom:0.44rem;
+.el-popper.el-picker__popper {
+  bottom: 0.44rem !important;
 }

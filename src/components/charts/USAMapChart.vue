@@ -16,12 +16,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { pxToResponsive } from '@/utils/responsive'
 
+const mapPointImage = new URL('@/assets/icons/map-point.svg', import.meta.url).href
+
 // 定义发电站数据接口
-interface PowerStation {
+export interface PowerStation {
   id: string
   name: string
   type: 'solar' | 'wind' | 'nuclear' | 'hydro' | 'thermal'
@@ -36,78 +37,42 @@ interface PowerStation {
   Alarm: string | number
 }
 
+// 定义ECharts点击事件参数类型
+interface EChartsClickParams {
+  componentType: string
+  name: string
+  [key: string]: any
+}
+
+// 定义州地图数据类型
+interface StateMapData {
+  [key: string]: any
+}
+
+// 定义组件Props
+interface Props {
+  powerStations: PowerStation[]
+}
+
+// 接收父组件传递的props
+const props = withDefaults(defineProps<Props>(), {
+  powerStations: () => []
+})
+
 // 组件状态
-const chartRef = ref<HTMLElement>()
-const chart = ref<echarts.ECharts>()
+const chartRef = ref<HTMLElement | null>(null)
+const chart = ref<echarts.ECharts | null>(null)
 const currentView = ref<'usa' | 'state'>('usa')
 const currentState = ref<string>('')
 const isTransitioning = ref<boolean>(false)
 // 导入生成的州地图数据
-const statesData = ref(null)
+const statesData = ref<StateMapData | null>(null)
 
-// 模拟发电站数据
-const powerStations: PowerStation[] = [
-  {
-    id: '1',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    type: 'solar',
-    capacity: 550,
-    status: 'online',
-    coordinates: [-119.4179, 36.7783],
-    state: 'California',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    sqcValue: 24,
-    sqcUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '2',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    type: 'solar',
-    capacity: 300,
-    status: 'online',
-    coordinates: [-99.9018, 31.9686],
-    state: 'Texas',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    sqcValue: 24,
-    sqcUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '5',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    type: 'solar',
-    capacity: 800,
-    status: 'maintenance',
-    coordinates: [-81.6869, 27.6648],
-    state: 'Florida',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    sqcValue: 24,
-    sqcUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '7',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    type: 'solar',
-    capacity: 400,
-    status: 'online',
-    coordinates: [-111.0937, 34.0489],
-    state: 'Arizona',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    sqcValue: 24,
-    sqcUnit: '%',
-    Alarm: 'NO',
-  },
-]
+// 使用父组件传递的发电站数据
 
 // 获取指定州的发电站
 const getStateStations = (stateName: string): PowerStation[] => {
-  return powerStations.filter((station) => station.state === stateName)
+  return props.powerStations.filter((station) => station.state === stateName)
 }
 
 // 返回美国地图
@@ -167,10 +132,10 @@ const initUSAMap = async () => {
 
     const option = {
       backgroundColor: 'transparent',
-      animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
-      animationDelay: 0,
+      // animation: true,
+      // animationDuration: 800,
+      // animationEasing: 'cubicOut',
+      // animationDelay: 0,
       // 全局tooltip配置
       tooltip: {
         trigger: 'item',
@@ -192,7 +157,7 @@ const initUSAMap = async () => {
           center: [-97.6, 35 + 0.3],
           itemStyle: {
             areaColor: '#152e5a',
-            borderColor: 'rgba(124, 163, 232, 1)',
+            borderColor: '#223e71',
             borderWidth: pxToResponsive(1.2),
           },
           emphasis: { disabled: true },
@@ -204,8 +169,8 @@ const initUSAMap = async () => {
           zoom: 1.2,
           center: [-98, 35],
           itemStyle: {
-            areaColor: '#3a5e9b',
-            borderColor: 'rgba(107, 141, 226, 1)',
+            areaColor: '#5984CF',
+            borderColor: '#70B3FF',
             borderWidth: pxToResponsive(1.2),
           },
           emphasis: {
@@ -230,24 +195,20 @@ const initUSAMap = async () => {
           type: 'scatter',
           coordinateSystem: 'geo',
           geoIndex: 1,
-          data: powerStations.map((station) => ({
+          data: props.powerStations.map((station) => ({
             name: station.name,
             value: [...station.coordinates, station.capacity],
             station: station,
-            itemStyle: {
-              color: getStationTypeColor(station.type),
-              shadowBlur: pxToResponsive(10),
-              shadowColor: getStationTypeColor(station.type),
-            },
           })),
-          symbolSize: (val: any) => pxToResponsive(Math.min(val[2] / 20, 20)),
+          symbol: `image://${mapPointImage}`,
+          symbolSize: pxToResponsive(14),
           label: { show: false },
           // 关键：为点位单独配置tooltip
           tooltip: {
             show: true,
             trigger: 'item',
-            backgroundColor: 'rgba(84, 98, 140, 0.5)',
-            borderColor: 'rgba(84, 98, 140, 0.8)',
+            backgroundColor: 'transparent',
+            borderColor: 'transparent',
             padding: 0,
             borderWidth: 0,
             textStyle: {
@@ -257,11 +218,11 @@ const initUSAMap = async () => {
             formatter: (params: any) => {
               const station = params.data.station
               return `
-                <div style="width:2.67rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.5);border: 0.01rem solid;border-image: linear-gradient(118.48deg, #94A6C5 3.05%, rgba(148, 166, 197, 0) 35.39%, rgba(148, 166, 197, 0.344221) 79.87%, #94A6C5 108.93%) 1;backdrop-filter: blur(0.1rem);">
-                  <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px;">${station.name}</div>
-                  <p style="margin: ${pxToResponsive(22)}px 0;font-weight:700; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;${station.powerValue}&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
-                  <p style="margin: ${pxToResponsive(22)}px 0;font-weight:700; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;${station.sqcValue}&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
-                  <p style="margin: ${pxToResponsive(22)}px 0 0 0; font-weight:700;line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;${station.Alarm}</p>
+                <div style="width:2.48rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.2);border: 0.01rem solid #7a8db2;backdrop-filter: blur(0.1rem);border-radius: ${pxToResponsive(10)}px;">
+                  <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px ">${station.name}</div>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.powerValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.sqcValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0 0 0; line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.Alarm}</span></p>
                 </div>
               `
             },
@@ -273,7 +234,7 @@ const initUSAMap = async () => {
     chart.value?.setOption(option as any)
 
     chart.value?.off('click')
-    chart.value?.on('click', (params) => {
+    chart.value?.on('click', (params: EChartsClickParams) => {
       if (params.componentType === 'geo' && params.name) {
         drillDownToState(params.name)
       }
@@ -282,6 +243,7 @@ const initUSAMap = async () => {
     console.error('load USA map data failed:', error)
   }
 }
+
 let isDrilling = false
 
 const drillDownToState = async (stateName: string) => {
@@ -339,8 +301,8 @@ const drillDownToState = async (stateName: string) => {
             zoom: zoom,
             center: [center[0] + 0.4, center[1] - 0.05],
             itemStyle: {
-              areaColor: 'rgba(0, 0, 0, 0.15)',
-              borderColor: 'rgba(34, 62, 113, 1)',
+              areaColor: '#152e5a',
+              borderColor: '#223E71',
               borderWidth: pxToResponsive(1.2),
             },
             emphasis: { disabled: true },
@@ -352,21 +314,13 @@ const drillDownToState = async (stateName: string) => {
             zoom: zoom,
             center: center,
             itemStyle: {
-              areaColor: '#3a5e9b',
-              borderColor: 'rgba(107, 141, 226, 1)',
+              areaColor: '#5984CF',
+              borderColor: '#70B3FF',
               borderWidth: pxToResponsive(1.2),
             },
             emphasis: {
               disabled: true,
-              // label: {
-              //   color: '#fff',
-              //   fontSize: pxToResponsive(30),
-              // },
-              // itemStyle: {
-              //   areaColor: 'rgba(255, 105, 0, 0.8)',
-              //   borderColor: '#ff6900',
-              //   borderWidth: pxToResponsive(3),
-              // },
+
             },
             tooltip: {
               show: false, // 关键：地图区域不显示tooltip，避免覆盖点位
@@ -383,35 +337,38 @@ const drillDownToState = async (stateName: string) => {
               name: station.name,
               value: [...station.coordinates, station.capacity],
               station: station,
-              itemStyle: {
-                color: getStationTypeColor(station.type),
-                shadowBlur: pxToResponsive(10),
-                shadowColor: getStationTypeColor(station.type),
-              },
             })),
-            symbolSize: (val: any) => pxToResponsive(Math.min(val[2] / 20, 20)),
             label: { show: false },
+            // emphasis: {
+            //   symbolSize: pxToResponsive(100),
+            // },
             tooltip: {
-              show: true,
-              trigger: 'item',
-              backgroundColor: 'rgba(84, 98, 140, 0.5)',
-              borderColor: 'rgba(84, 98, 140, 0.8)',
-              padding: 0,
-              borderWidth: 0,
-              textStyle: {
-                color: '#fff',
-                fontSize: pxToResponsive(12),
-              },
-              formatter: (params: any) => {
-                const station = params.data.station
-                return `
-                  <div style="width:2.67rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.5);border: 0.01rem solid;border-image: linear-gradient(118.48deg, #94A6C5 3.05%, rgba(148, 166, 197, 0) 35.39%, rgba(148, 166, 197, 0.344221) 79.87%, #94A6C5 108.93%) 1;backdrop-filter: blur(0.1rem);">
-                    <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px;">${station.name}</div>
-                    <p style="margin: ${pxToResponsive(22)}px 0;font-weight:700; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;${station.powerValue}&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
-                    <p style="margin: ${pxToResponsive(22)}px 0;font-weight:700; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;${station.sqcValue}&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
-                    <p style="margin: ${pxToResponsive(22)}px 0 0 0; font-weight:700;line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;${station.Alarm}</p>
-                  </div>
-                `
+              symbol: `image://${mapPointImage}`,
+              symbolSize: pxToResponsive(14),
+              label: { show: false },
+              // 关键：为点位单独配置tooltip
+              tooltip: {
+                show: true,
+                trigger: 'item',
+                backgroundColor: 'transparent',
+                borderColor: 'transparent',
+                padding: 0,
+                borderWidth: 0,
+                textStyle: {
+                  color: '#fff',
+                  fontSize: pxToResponsive(12),
+                },
+                formatter: (params: any) => {
+                  const station = params.data.station
+                  return `
+                <div style="width:2.48rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.2);border: 0.01rem solid #7a8db2;backdrop-filter: blur(0.1rem);border-radius: ${pxToResponsive(10)}px;">
+                  <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px ">${station.name}</div>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.powerValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.sqcValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0 0 0; line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.Alarm}</span></p>
+                </div>
+              `
+                },
               },
             },
           },
@@ -512,17 +469,6 @@ const calculateOptimalZoom = (bounds: {
   return 1.2
 }
 
-// 获取发电站类型颜色
-const getStationTypeColor = (type: string): string => {
-  const typeColors: Record<string, string> = {
-    solar: 'rgba(106, 193, 97, 1)',
-    wind: 'rgba(218, 45, 44, 1)',
-    nuclear: '#f87171',
-    hydro: '#60a5fa',
-    thermal: '#a78bfa',
-  }
-  return typeColors[type] || '#94a3b8'
-}
 
 // 初始化图表
 const initChart = () => {
@@ -632,6 +578,7 @@ onUnmounted(() => {
       0% {
         transform: rotate(0deg);
       }
+
       100% {
         transform: rotate(360deg);
       }
