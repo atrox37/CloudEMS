@@ -113,7 +113,7 @@ const initUSAMap = async () => {
   if (!chartRef.value) return
 
   try {
-    const usaOutlineData = await import('@/assets/jsons/UsaOutlineMap.json')
+    const usaOutlineData = await import('@/assets/jsons/USAOutlineMap.json')
     const usaShadowData = await import('@/assets/jsons/USAOutlineMapShadow.json')
 
     if (!statesData.value) {
