@@ -119,23 +119,13 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update && sudo apt-get install -y jq
-          # 转换Windows换行符为Unix换行符
-          sed -i 's/\r$//' taskdef.json
-          # 直接更新镜像URI，不进行复杂的清理操作
           jq --arg IMG "$IMAGE_URI" --arg NAME "$CONTAINER_NAME" '
             .containerDefinitions |=
             map(if .name == $NAME then .image = $IMG else . end)
           ' taskdef.json > taskdef.updated.json
+          jq 'del(..|nulls)' taskdef.updated.json > taskdef.clean.json
+          mv taskdef.clean.json taskdef.updated.json
           echo "Prepared taskdef.updated.json"
-          # 验证生成的JSON文件
-          if jq empty taskdef.updated.json 2>/dev/null; then
-            echo "✅ JSON validation passed"
-          else
-            echo "❌ JSON validation failed"
-            echo "Debug: First few lines of taskdef.updated.json:"
-            head -5 taskdef.updated.json
-            exit 1
-          fi
 
       - name: Register new task definition revision
         id: register
@@ -167,7 +157,7 @@ jobs:
             --cluster "${ECS_CLUSTER}" \
             --service "${ECS_SERVICE}" \
             --task-definition "${NEW_TD}" \
-            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=100,deploymentCircuitBreaker={enable=true,rollback=true}" \
+            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=200,deploymentCircuitBreaker={enable=true,rollback=true}" \
             --force-new-deployment
 
       - name: Wait for service stability
