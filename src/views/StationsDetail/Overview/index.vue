@@ -1,86 +1,87 @@
 <template>
   <div class="overview-container">
-    <div class="overview-container__dashborad">
+    <!-- <div class="overview-container__dashborad">
       <div class="dashboard-title">Analytics Dashboard</div>
       <div class="dashboard-content">
         <div v-for="item in dashboardList" :key="item.id" class="dashboard-content-item">
           <DashboardCard :dashboardData="item.data" :iconBgColor="item.iconBgColor" />
         </div>
       </div>
-    </div>
-    <div class="overview-container__main">
-          <ModuleCard title="24-Hour Energy Sources">
-            <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
-          </ModuleCard>
-        </div>
+    </div> -->
+    <!-- <div class="overview-container__main"> -->
+    <div class="overview-container__tuopu"></div>
+    <ModuleCard title="24-Hour Energy Sources">
+      <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
+    </ModuleCard>
   </div>
+  <!-- </div> -->
 
 </template>
 
 <script setup lang="ts">
-import DashboardCard from '../../../components/card/DashboardCard.vue'
+// import DashboardCard from '../../../components/card/DashboardCard.vue'
 
-import totalOutputIcon from '@/assets/icons/station-dashboard-output.svg'
-import batteryLevelIcon from '@/assets/icons/station-dashboard-battery.svg'
-import dieselPowerIcon from '@/assets/icons/station-dashboard-diesel.svg'
-import efficiencyIcon from '@/assets/icons/station-dashboard-efficiency.svg'
-import temperatureIcon from '@/assets/icons/station-dashboard-temperature.svg'
+// import totalOutputIcon from '@/assets/icons/station-dashboard-output.svg'
+// import batteryLevelIcon from '@/assets/icons/station-dashboard-battery.svg'
+// import dieselPowerIcon from '@/assets/icons/station-dashboard-diesel.svg'
+// import efficiencyIcon from '@/assets/icons/station-dashboard-efficiency.svg'
+// import temperatureIcon from '@/assets/icons/station-dashboard-temperature.svg'
 import LineChart from '@/components/charts/lineChart.vue'
 
 
-const dashboardList = ref([
-  {
-    id: 1,
-    data:{
-      title: 'Total Output',
-    value: '176',
-    unit: 'kWh',
-    icon: totalOutputIcon,
-    },
-    iconBgColor: 'rgba(3, 93, 239, 0.1)'
+// const dashboardList = ref([
+//   {
+//     id: 1,
+//     data: {
+//       title: 'Total Output',
+//       value: '176',
+//       unit: 'kWh',
+//       icon: totalOutputIcon,
+//     },
+//     iconBgColor: 'rgba(3, 93, 239, 0.1)'
 
-  },
-  {
-    id: 2,
-    data:{
-      title: 'Battery Level',
-      value: '23',
-      unit: '%',
-      icon: batteryLevelIcon,
-    },
-    iconBgColor: 'rgba(106, 193, 97, 0.1)'
-  },
-  {
-    id: 3,
-    data:{
-      title: 'Diesel Power',
-    value: 23,
-    unit: 'kW',
-    icon: dieselPowerIcon,
-    },
-    iconBgColor: 'rgba(255, 59, 59, 0.14)'
-  },
-  {
-    id: 4,
-    data:{
-      title: 'Efficiency',
-      value: 23,
-      unit: '%',
-      icon: efficiencyIcon,
-    },
-    iconBgColor: 'rgba(255, 105, 0, 0.1)'
-  },
-  {
-    id: 5,
-    data:{
-      title: 'Temperature',
-      value: 23,
-      unit: '℉',
-      icon: temperatureIcon,
-    },
-    iconBgColor: 'rgba(211, 52, 255, 0.1)'
-  }
-])
+//   },
+//   {
+//     id: 2,
+//     data: {
+//       title: 'Battery Level',
+//       value: '23',
+//       unit: '%',
+//       icon: batteryLevelIcon,
+//     },
+//     iconBgColor: 'rgba(106, 193, 97, 0.1)'
+//   },
+//   {
+//     id: 3,
+//     data: {
+//       title: 'Diesel Power',
+//       value: 23,
+//       unit: 'kW',
+//       icon: dieselPowerIcon,
+//     },
+//     iconBgColor: 'rgba(255, 59, 59, 0.14)'
+//   },
+//   {
+//     id: 4,
+//     data: {
+//       title: 'Efficiency',
+//       value: 23,
+//       unit: '%',
+//       icon: efficiencyIcon,
+//     },
+//     iconBgColor: 'rgba(255, 105, 0, 0.1)'
+//   },
+//   {
+//     id: 5,
+//     data: {
+//       title: 'Temperature',
+//       value: 23,
+//       unit: '℉',
+//       icon: temperatureIcon,
+//     },
+//     iconBgColor: 'rgba(211, 52, 255, 0.1)'
+//   }
+// ])
 
 const exampleXAxisData = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
@@ -117,6 +118,7 @@ const series = exampleSeries
 .overview-container {
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 
   .overview-container__dashborad {
     width: 100%;
@@ -143,9 +145,21 @@ const series = exampleSeries
       }
     }
   }
-  .overview-container__main{
+  .overview-container__tuopu {
+      width: 100%;
+      height: 8.17rem;
+      background-image: url('@/assets/images/tuopu-bg.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-bottom: 0.2rem;
+    }
+  .overview-container__main {
     height: calc(100% - 1.82rem);
     width: 100%;
+    overflow-y: auto;
+
+
   }
 }
 </style>

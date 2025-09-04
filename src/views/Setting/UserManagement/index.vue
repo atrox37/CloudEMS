@@ -165,25 +165,12 @@ const handleDelete = async (row: UserManagementInfo) => {
  * @param name 用户名字符串
  * @returns string 头像缩写
  */
-const getAvatarName = (name: string): string => {
-  if (!name) return ''
-  // 英文名处理
-  if (/^[a-zA-Z\s]+$/.test(name)) {
-    const parts = name.trim().split(/\s+/)
-    if (parts.length === 1) {
-      return parts[0][0].toUpperCase()
-    } else {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    }
-  }
-  // 中文名处理
-  // 假设中文名一般为2-3字，姓在前
-  if (name.length === 2) {
-    return name
-  } else if (name.length >= 3) {
-    return name[0] + name[1]
+ const getAvatarName = (name: string): string => {
+  const nameStr = name.split(' ')
+  if (nameStr.length === 1) {
+    return name.charAt(0).toUpperCase()
   } else {
-    return name[0]
+    return nameStr[0].charAt(0).toUpperCase() + nameStr[1].charAt(0).toUpperCase()
   }
 }
 </script>
