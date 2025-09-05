@@ -174,7 +174,9 @@ const exampleSeries = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
 
+    margin-bottom: 0.2rem;
     .analytics__toolbar-left {
       display: flex;
       align-items: center;
@@ -222,7 +224,7 @@ const exampleSeries = [
   }
 
   .analytics__charts {
-    height: calc(100% - 0.52rem);
+    height: calc(100% - 0.72rem);
     display: flex;
     flex-wrap: wrap;
     gap: 0.2rem;

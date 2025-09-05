@@ -9,7 +9,9 @@
       </div>
     </div> -->
     <!-- <div class="overview-container__main"> -->
-    <div class="overview-container__tuopu"></div>
+    <div class="overview-container__tuopu">
+      <Tuopu />
+    </div>
     <ModuleCard title="24-Hour Energy Sources">
       <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
     </ModuleCard>
@@ -27,7 +29,7 @@
 // import efficiencyIcon from '@/assets/icons/station-dashboard-efficiency.svg'
 // import temperatureIcon from '@/assets/icons/station-dashboard-temperature.svg'
 import LineChart from '@/components/charts/lineChart.vue'
-
+import Tuopu from './tuopu.vue'
 
 // const dashboardList = ref([
 //   {
@@ -145,15 +147,23 @@ const series = exampleSeries
       }
     }
   }
+
   .overview-container__tuopu {
-      width: 100%;
-      height: 8.17rem;
-      background-image: url('@/assets/images/tuopu-bg.png');
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      background-position: center;
-      margin-bottom: 0.2rem;
-    }
+    width: 100%;
+    height: 7.5rem;
+    background-color: rgba(84, 98, 140, 0.2);
+    border: 1px solid;
+
+    border-image: linear-gradient(117.64deg, rgba(148, 166, 197, 0.3) 2.73%, rgba(148, 166, 197, 0) 31.73%, rgba(148, 166, 197, 0.103266) 71.62%, rgba(148, 166, 197, 0.3) 97.67%) 1;
+
+
+    // background-image: url('@/assets/images/tuopu-bg.png');
+    // background-size: 100% 100%;
+    // background-repeat: no-repeat;
+    // background-position: center;
+    margin-bottom: 0.2rem;
+  }
+
   .overview-container__main {
     height: calc(100% - 1.82rem);
     width: 100%;
