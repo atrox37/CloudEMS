@@ -64,7 +64,7 @@ const globalStore = useGlobalStore()
 
 // // 切换通知
 const toggleNotifications = () => {
-  router.push({ name: 'Alerts' })
+  router.push({ name: 'Alarm' })
 }
 
 // 用户操作

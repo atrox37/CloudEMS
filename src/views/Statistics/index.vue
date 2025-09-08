@@ -103,7 +103,7 @@
               {{ scope.row.efficiency }}%
             </template>
           </el-table-column>
-          <el-table-column prop="alerts" label="Alerts">
+          <el-table-column prop="Alarm" label="Alarm">
           </el-table-column>
           <el-table-column prop="lastUpdate" label="Last Update" />
         </el-table>
@@ -347,7 +347,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 88,
-    alerts: 2,
+    Alarm: 2,
     lastUpdate: '2024-01-15 14:30:25'
   },
   {
@@ -358,7 +358,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 85,
-    alerts: 0,
+    Alarm: 0,
     lastUpdate: '2024-01-15 14:28:10'
   },
   {
@@ -369,7 +369,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 0,
-    alerts: 5,
+    Alarm: 5,
     lastUpdate: '2024-01-15 14:25:45'
   },
   {
@@ -380,7 +380,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 91,
-    alerts: 1,
+    Alarm: 1,
     lastUpdate: '2024-01-15 14:32:15'
   },
   {
@@ -391,7 +391,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 82,
-    alerts: 3,
+    Alarm: 3,
     lastUpdate: '2024-01-15 14:29:30'
   },
   {
@@ -402,7 +402,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 87,
-    alerts: 0,
+    Alarm: 0,
     lastUpdate: '2024-01-15 14:31:20'
   },
   {
@@ -413,7 +413,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 0,
-    alerts: 8,
+    Alarm: 8,
     lastUpdate: '2024-01-15 14:24:55'
   },
   {
@@ -424,7 +424,7 @@ const tableData = ref([
     powerOutput: '120 / 150 kW 80.0% capacity',
     batteryStatus: '85% Charging',
     efficiency: 84,
-    alerts: 1,
+    Alarm: 1,
     lastUpdate: '2024-01-15 14:30:40'
   }
 ])

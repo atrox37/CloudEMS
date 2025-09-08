@@ -1,6 +1,6 @@
 <template>
   <div class="voltage-class notification">
-    <HeaderCard title="Notification" desc="Configure system alerts and notifications" />
+    <HeaderCard title="Notification" desc="Configure system Alarm and notifications" />
     <div class="notification__body">
       <SettingCard title="Email Notifications" :icon="mailIcon">
         <template #control>
@@ -102,9 +102,9 @@ const {
 // 邮件通知
 const emailAll = ref(true)
 const emailForm = ref({
-  systemAlerts: true,
+  systemAlarm: true,
   stationStatusChanges: true,
-  batteryAlerts: true,
+  batteryAlarm: true,
   maintenanceReminders: true,
   dailyReports: true,
   weeklyReports: true,
@@ -112,9 +112,9 @@ const emailForm = ref({
 const emailList = ref([
   {
     id: 1,
-    title: 'System Alerts',
+    title: 'System Alarm',
     desc: 'critical system Tailures and errors',
-    value: 'systemAlerts',
+    value: 'systemAlarm',
   },
   {
     id: 2,
@@ -124,9 +124,9 @@ const emailList = ref([
   },
   {
     id: 3,
-    title: 'battery Alerts',
+    title: 'battery Alarm',
     desc: 'Low battery and charging issues',
-    value: 'batteryAlerts',
+    value: 'batteryAlarm',
   },
   {
     id: 4,
@@ -151,17 +151,17 @@ const emailList = ref([
 // 短信通知
 const smsAll = ref(true)
 const smsForm = ref({
-  systemAlerts: true,
+  systemAlarm: true,
   stationOffline: true,
-  fireOrSafetyAlerts: true,
+  fireOrSafetyAlarm: true,
   batteryCriticalLow: true,
 })
 const smsList = ref([
   {
     id: 1,
-    title: 'Critical System Alerts',
+    title: 'Critical System Alarm',
     desc: 'Emergency system failures only',
-    value: 'systemAlerts',
+    value: 'systemAlarm',
   },
   {
     id: 2,
@@ -171,9 +171,9 @@ const smsList = ref([
   },
   {
     id: 3,
-    title: 'Fire or Safety Alerts',
+    title: 'Fire or Safety Alarm',
     desc: 'Emergency safety notifications',
-    value: 'fireOrSafetyAlerts',
+    value: 'fireOrSafetyAlarm',
   },
   {
     id: 4,
@@ -186,16 +186,16 @@ const smsList = ref([
 // 推送通知
 const pushAll = ref(true)
 const pushForm = ref({
-  realTimeAlerts: true,
+  realTimeAlarm: true,
   performanceUpdates: true,
   taskReminders: true,
 })
 const pushList = ref([
   {
     id: 1,
-    title: 'Real-time Alerts',
-    desc: 'Instant notifications for all alerts',
-    value: 'realTimeAlerts',
+    title: 'Real-time Alarm',
+    desc: 'Instant notifications for all Alarm',
+    value: 'realTimeAlarm',
   },
   {
     id: 2,

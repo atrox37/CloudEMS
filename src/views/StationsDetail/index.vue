@@ -73,8 +73,8 @@
                     text="Performance" @click="handleTabClick('Performance')" />
                 <IconButton :type="activeTab === 'Analytics' ? 'primary' : 'warning'" :icon="analyticsIcon"
                     text="Analytics" @click="handleTabClick('Analytics')" />
-                <IconButton :type="activeTab === 'Alerts' ? 'primary' : 'warning'" :icon="alertsIcon" text="Alerts"
-                    @click="handleTabClick('Alerts')" />
+                <IconButton :type="activeTab === 'Alarm' ? 'primary' : 'warning'" :icon="AlarmIcon" text="Alarm"
+                    @click="handleTabClick('Alarm')" />
                 <IconButton :type="activeTab === 'Maintenance' ? 'primary' : 'warning'" :icon="maintenanceIcon"
                     text="Maintenance" @click="handleTabClick('Maintenance')" />
                 <!-- <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Overview' }"
@@ -83,8 +83,8 @@
                     @click="handleTabClick('Performance')"><img :src="performanceIcon" /><span>Performance</span></div>
                 <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Analytics' }"
                     @click="handleTabClick('Analytics')"><img :src="analyticsIcon" /><span>Analytics</span></div>
-                <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Alerts' }"
-                    @click="handleTabClick('Alerts')"><img :src="alertsIcon" /><span>Alerts</span></div>
+                <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Alarm' }"
+                    @click="handleTabClick('Alarm')"><img :src="AlarmIcon" /><span>Alarm</span></div>
                 <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Maintenance' }"
                     @click="handleTabClick('Maintenance')"><img :src="maintenanceIcon" /><span>Maintenance</span></div> -->
             </div>
@@ -106,7 +106,7 @@ import overviewIcon from '@/assets/icons/button-overview.svg'
 import performanceIcon from '@/assets/icons/button-performance.svg'
 import analyticsIcon from '@/assets/icons/button-analytics.svg'
 import maintenanceIcon from '@/assets/icons/button-maintenance.svg'
-import alertsIcon from '@/assets/icons/button-alerts.svg'
+import AlarmIcon from '@/assets/icons/button-Alarm.svg'
 import sunIcon from '@/assets/icons/sunny.svg'
 import timeIcon from '@/assets/icons/time.svg'
 import addressIcon from '@/assets/icons/address.svg'

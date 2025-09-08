@@ -12,7 +12,7 @@ const userStore = useUserStore()
 // 处理告警详情跳转
 const handleAlarmDetail = () => {
   ElMessage.closeAll()
-  router.push({ name: 'Alerts' })
+  router.push({ name: 'Alarm' })
 }
 let idCount = 0
 const alarmMap = new Map()

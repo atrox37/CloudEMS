@@ -1,42 +1,42 @@
 <template>
-    <div class="alert-card" :class="`${levelList[alertData.level]}`">
-        <div class="alert-card__header">
-            <div class="header-icon" :class="`${levelList[alertData.level]}`"></div>
-            <div class="header-level" :class="`${levelList[alertData.level]}`">{{ levelList[alertData.level] }}</div>
-            <div class="header-title">{{ alertData.title }}</div>
+    <div class="Alarm-card" :class="`${levelList[AlarmData.level]}`">
+        <div class="Alarm-card__header">
+            <div class="header-icon" :class="`${levelList[AlarmData.level]}`"></div>
+            <div class="header-level" :class="`${levelList[AlarmData.level]}`">{{ levelList[AlarmData.level] }}</div>
+            <div class="header-title">{{ AlarmData.title }}</div>
         </div>
-        <div class="alert-card__content">
+        <div class="Alarm-card__content">
             <div class="card-left">
-                <div class="alert-detail">{{ alertData.detail }}</div>
+                <div class="Alarm-detail">{{ AlarmData.detail }}</div>
 
-                <div class="alert-time">{{ alertData.time }}</div>
+                <div class="Alarm-time">{{ AlarmData.time }}</div>
 
             </div>
-            <!-- <div v-if="alertData.level !== 2" class="card-right">
-                <el-button v-if="alertData.level === 0" type="primary">Urgent Action</el-button>
-                <el-button v-else-if="alertData.level === 1" type="primary">Investigate</el-button>
+            <!-- <div v-if="AlarmData.level !== 2" class="card-right">
+                <el-button v-if="AlarmData.level === 0" type="primary">Urgent Action</el-button>
+                <el-button v-else-if="AlarmData.level === 1" type="primary">Investigate</el-button>
             </div> -->
         </div>
     </div>
 </template>
 <script setup lang="ts">
 
-interface AlertData {
+interface AlarmData {
     title: string,
     level: number,
     detail: string,
     requirement: string,
     time: string,
 }
-interface AlertProps {
-    alertData: AlertData,
+interface AlarmProps {
+    AlarmData: AlarmData,
 }
-const props = defineProps<AlertProps>()
+const props = defineProps<AlarmProps>()
 
 const levelList = ['Critical', 'Warning', 'Info']
 </script>
 <style scoped lang="scss">
-.alert-card {
+.Alarm-card {
     height: 100%;
     width: 100%;
     padding: 0.2rem;
@@ -53,7 +53,7 @@ const levelList = ['Critical', 'Warning', 'Info']
         background-color: rgba(29, 134, 255, 0.1);
     }
 
-    .alert-card__header {
+    .Alarm-card__header {
         width: 100%;
         margin-bottom: 0.2rem;
         display: flex;
@@ -68,15 +68,15 @@ const levelList = ['Critical', 'Warning', 'Info']
             margin-right: 0.1rem;
 
             &.Critical {
-                background-image: url('@/assets/icons/critical-alert.svg');
+                background-image: url('@/assets/icons/critical-Alarm.svg');
             }
 
             &.Warning {
-                background-image: url('@/assets/icons/warning-alert.svg');
+                background-image: url('@/assets/icons/warning-Alarm.svg');
             }
 
             &.Info {
-                background-image: url('@/assets/icons/info-alert.svg');
+                background-image: url('@/assets/icons/info-Alarm.svg');
             }
         }
 
@@ -108,7 +108,7 @@ const levelList = ['Critical', 'Warning', 'Info']
         }
     }
 
-    .alert-card__content {
+    .Alarm-card__content {
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -117,7 +117,7 @@ const levelList = ['Critical', 'Warning', 'Info']
             display: flex;
             flex-direction: column;
 
-            .alert-detail {
+            .Alarm-detail {
                 font-weight: 700;
                 font-size: 0.22rem;
                 line-height: 100%;
@@ -126,7 +126,7 @@ const levelList = ['Critical', 'Warning', 'Info']
                 margin-bottom: 0.1rem;
             }
 
-            .alert-requirement {
+            .Alarm-requirement {
                 font-size: 0.18rem;
                 line-height: 0.2133rem;
                 letter-spacing: 0%;
@@ -134,7 +134,7 @@ const levelList = ['Critical', 'Warning', 'Info']
                 margin-bottom: 0.04rem;
             }
 
-            .alert-time {
+            .Alarm-time {
                 font-size: 0.16rem;
                 line-height: 0.2133rem;
                 letter-spacing: 0%;

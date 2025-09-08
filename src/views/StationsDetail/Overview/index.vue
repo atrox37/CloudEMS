@@ -150,7 +150,7 @@ const series = exampleSeries
 
   .overview-container__tuopu {
     width: 100%;
-    height: 7.5rem;
+    height: 6rem;
     background-color: rgba(84, 98, 140, 0.2);
     border: 1px solid;
 

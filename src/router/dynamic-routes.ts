@@ -83,11 +83,11 @@ export const dynamicRoutes: RouteItem[] = [
         },
       },
       {
-        path:'alerts',
-        name:'Alerts',
-        component:()=>import('@/views/StationsDetail/Alerts/index.vue'),
+        path:'Alarm',
+        name:'Alarm',
+        component:()=>import('@/views/StationsDetail/Alarm/index.vue'),
         meta:{
-          title:'Alerts',
+          title:'Alarm',
           activeNav:'/stations',
           roles: ['Admin', 'operator', 'Engineer'],
         },
