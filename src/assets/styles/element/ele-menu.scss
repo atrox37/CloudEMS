@@ -143,6 +143,10 @@
       height: 0.36rem;
       line-height: 0.36rem;
       padding-left: 0.3rem;
+      &.is-active {
+        background: rgba(255, 105, 0, 0.2);
+        color: rgba(255, 105, 0, 1);
+      }
       &:hover {
         background: rgba(255, 255, 255, 0.1);
         color: #fff;
@@ -151,8 +155,8 @@
   }
   &::after {
     content: '';
-    width: 0.01rem;
-    height: 0.01rem;
+    width: 0.1rem;
+    height: 0.1rem;
     position: absolute;
     top: 0.1rem;
     left: -0.055rem;

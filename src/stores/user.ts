@@ -97,7 +97,6 @@ export const useUserStore = defineStore(
     const clearUserData = () => {
       // 断开WebSocket连接
       wsManager.disconnect()
-      
       token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置

@@ -3,7 +3,11 @@
     // background-color: rgba(84, 98, 140, 0.2);
     .el-message-box {
       padding: 0.12rem;
-      background-color: rgba(84, 98, 140, 0.2);
+      background-color: #1f2e4a;
+      max-width: 4.5rem;
+      border-radius: 0.04rem;
+      font-size: 0.16rem;
+      box-shadow: none;
       .el-message-box__header {
         font-size: 0.16rem;
         font-weight: 700;
@@ -17,7 +21,7 @@
           color: #fff;
         }
         .el-message-box__headerbtn {
-          width: 0.40rem;
+          width: 0.4rem;
           height: 0.4rem;
           .el-icon.el-message-box__close {
             color: #fff;
@@ -51,10 +55,6 @@
   padding: 0.11rem 0.15rem !important;
   border-width: 0.01rem !important;
   border-radius: 0.04rem !important;
-  // 调整第一条消息距离顶部的高度
-  &:first-child {
-    top: 1rem !important; // 可以根据需要调整这个值，比如 0.3rem、0.5rem 等
-  }
   &.el-message--error {
     .el-message__content {
       color: #f56c6c !important;
@@ -69,5 +69,9 @@
   }
   .el-icon.el-message__closeBtn {
     font-size: 0.16rem !important;
+  }
+  // 调整第一条消息距离顶部的高度
+  &:first-child {
+    top: 1rem !important; // 可以根据需要调整这个值，比如 0.3rem�?0rem �?  }
   }
 }

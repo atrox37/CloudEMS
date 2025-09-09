@@ -6,7 +6,6 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import wsManager from '@/utils/websocket'
 
 // 存储所有pending的请求
 const pendingRequests = new Map()
@@ -170,8 +169,6 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           // 未授权，清除token并跳转到登录页
           const userStore = useUserStore()
-          // 断开WebSocket连接
-          wsManager.disconnect()
           userStore.clearUserData()
           errorMessage = 'Login expired, please log in again'
           // 跳转到登录页
@@ -263,8 +260,6 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       } catch (refreshError) {
         // 刷新token失败，清除用户数据并跳转到登录页
         const userStore = useUserStore()
-        // 断开WebSocket连接
-        wsManager.disconnect()
         userStore.clearUserData()
 
         // 处理队列中的请求

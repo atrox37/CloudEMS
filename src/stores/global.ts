@@ -8,4 +8,10 @@ export const useGlobalStore = defineStore('global', () => {
     isCollapse,
     alarmNum,
   }
+},{
+  persist: {
+    key: 'global',
+    storage: localStorage,
+    pick: ['isCollapse', 'alarmNum'],
+  },
 })
