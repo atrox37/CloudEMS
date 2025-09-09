@@ -11,11 +11,11 @@ router.beforeEach(async (to, from, next) => {
 
   const user = useUserStore()
 
-  // 未登录：只允许进入白名单
-  if (!user.token && !user.userInfo) {
-    if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
-    return next({ path: '/login', query: { redirect: to.path } })
-  }
+  // // 未登录：只允许进入白名单
+  // if (!user.token && !user.userInfo) {
+  //   if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
+  //   return next({ path: '/login', query: { redirect: to.path } })
+  // }
 
   // 已登录：确保已注入动态路由
   try {
