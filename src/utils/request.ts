@@ -6,39 +6,31 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { useGlobalStore } from '@/stores/global'
 
 // 存储所有pending的请求
-const pendingRequests = new Map()
+const pendingRequests = reactive(new Map())
 
+watch(pendingRequests, () => {
+  const globalStore = useGlobalStore()
+  globalStore.loading = pendingRequests.size > 0
+})
 // 定义响应数据的通用接口
 export interface ApiResponse<T = any> {
   code: number // 响应状态码
-  message: string // 响应消息
+  msg: string // 响应消息
   data: T // 响应数据
-  success: boolean // 请求是否成功
 }
-
-// 定义请求配置的扩展接口
-export interface RequestConfig extends AxiosRequestConfig {
-  showErrorMessage?: boolean // 是否显示错误消息，默认true
-  showSuccessMessage?: boolean // 是否显示成功消息，默认false
-  loading?: boolean // 是否显示loading，默认false
-}
-
 /**
  * 创建axios实例
  * 设置基础配置项
  */
 const service = axios.create({
-  // API的base_url，可以通过环境变量配置
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/${import.meta.env.VITE_API_DEFAULT_VERSION}`,
-  // 请求超时时间 (毫秒)
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/user-app'}`,
   timeout: 15000,
-  // 默认请求头
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
   },
-  // 跨域请求时是否需要使用凭证
   withCredentials: false,
 })
 
@@ -78,9 +70,13 @@ const requestInterceptor = (config: any) => {
   const userStore = useUserStore()
   const token = userStore.token
   if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`
+    // config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `${token}`
   }
 
+  if (config.url?.includes('/login')) {
+    config.headers['LOGINTYPE'] = 'PASS'
+  }
   // 如果是POST/PUT/PATCH请求且没有设置Content-Type，设置为json
   if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
     if (!config.headers['Content-Type']) {
@@ -151,19 +147,15 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 
     // 检查业务状态码
     // 如果返回的是blob类型，直接认为请求成功，否则判断业务code或success
-    if (
-      response.request?.responseType === 'blob' ||
-      (data && (data.code === 200 || data.success))
-    ) {
+    if (response.request?.responseType === 'blob' || (data && data.code === 200)) {
       // 请求成功
-      if (customConfig.showSuccessMessage && data.message) {
-        ElMessage.success(data.message)
+      if (customConfig.showSuccessMessage && data.msg) {
+        ElMessage.success(data.msg)
       }
       return response
     } else {
       // 业务逻辑错误
-      let errorMessage = data.message || 'Request failed'
-
+      let errorMessage = data.msg || 'Request failed'
       // 根据不同的业务状态码进行处理
       switch (data.code) {
         case 401:
@@ -171,6 +163,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           const userStore = useUserStore()
           userStore.clearUserData()
           errorMessage = 'Login expired, please log in again'
+          ElMessage.error(errorMessage)
           // 跳转到登录页
           window.location.href = '/login'
           break
@@ -186,7 +179,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         default:
           break
       }
-      ElMessage.error(response.data.message || errorMessage)
+      ElMessage.error(response.data.msg || errorMessage)
       return Promise.reject(new Error(errorMessage))
     }
   }
@@ -210,68 +203,66 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
     const originalRequest = error.config
 
     // 处理401错误 - 自动刷新token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // 如果正在刷新token，将请求加入队列
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`
-            return serviceInstance(originalRequest)
-          })
-          .catch((err) => {
-            return Promise.reject(err)
-          })
-      }
+    // if (error.response?.status === 401 && !originalRequest._retry) {
+    //   if (isRefreshing) {
+    //     // 如果正在刷新token，将请求加入队列
+    //     return new Promise((resolve, reject) => {
+    //       failedQueue.push({ resolve, reject })
+    //     })
+    //       .then((token) => {
+    //         originalRequest.headers['Authorization'] = `Bearer ${token}`
+    //         return serviceInstance(originalRequest)
+    //       })
+    //       .catch((err) => {
+    //         return Promise.reject(err)
+    //       })
+    //   }
 
-      originalRequest._retry = true
-      isRefreshing = true
-      try {
-        const userStore = useUserStore()
-        const refreshToken = userStore.refreshToken
+    //   originalRequest._retry = true
+    //   isRefreshing = true
+    //   try {
+    //     const userStore = useUserStore()
+    //     const refreshToken = userStore.refreshToken
 
-        if (!refreshToken) {
-          throw new Error('No refresh token available')
-        }
+    //     if (!refreshToken) {
+    //       throw new Error('No refresh token available')
+    //     }
 
-        // 调用刷新token的API
-        const response = await service.post('auth/refresh', {
-          refresh_token: refreshToken,
-        })
-        console.log('response', response)
+    //     // 调用刷新token的API
+    //     const response = await service.post('auth/refresh', {
+    //       refresh_token: refreshToken,
+    //     })
+    //     // 注意：刷新token接口也可能返回401或失败
+    //     if (response.data && response.data.success) {
+    //       // 更新store中的token
+    //       userStore.token = response.data.data.access_token
+    //       userStore.refreshToken = response.data.data.refresh_token
 
-        if (response.data.success) {
-          // 更新store中的token
-          userStore.token = response.data.data.access_token
-          userStore.refreshToken = response.data.data.refresh_token
+    //       // 更新当前请求的Authorization头
+    //       originalRequest.headers['Authorization'] = `Bearer ${response.data.data.access_token}`
 
-          // 更新当前请求的Authorization头
-          originalRequest.headers['Authorization'] = `Bearer ${response.data.data.access_token}`
+    //       // 处理队列中的请求
+    //       processQueue(null, response.data.data.access_token)
 
-          // 处理队列中的请求
-          processQueue(null, response.data.data.access_token)
+    //       // 重试原请求
+    //       return serviceInstance(originalRequest)
+    //     } else {
+    //       // 刷新token接口返回失败
+    //       throw new Error(response.data?.msg || 'Token refresh failed')
+    //     }
+    //   } catch (refreshError: any) {
+    //     // 清除用户数据并跳转到登录页
+    //     const userStore = useUserStore()
+    //     userStore.clearUserData()
 
-          // 重试原请求
-          return serviceInstance(originalRequest)
-        } else {
-          throw new Error('Token refresh failed')
-        }
-      } catch (refreshError) {
-        // 刷新token失败，清除用户数据并跳转到登录页
-        const userStore = useUserStore()
-        userStore.clearUserData()
-
-        // 处理队列中的请求
-        processQueue(refreshError, null)
-
-        ElMessage.error('Login expired, please log in again')
-        window.location.href = '/login'
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
-      }
-    }
+    //     // 处理队列中的请求
+    //     processQueue(refreshError, null)
+    //     window.location.href = '/login'
+    //     return Promise.reject(refreshError)
+    //   } finally {
+    //     isRefreshing = false
+    //   }
+    // }
 
     // 处理其他错误
     let errorMessage = 'Network request failed'
@@ -283,6 +274,13 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       switch (status) {
         case 400:
           errorMessage = 'Bad request'
+          break
+        case 401:
+          errorMessage = 'Login expired, please log in again'
+          const userStore = useUserStore()
+          userStore.clearUserData()
+          ElMessage.error(errorMessage)
+          window.location.href = '/login'
           break
         case 403:
           errorMessage = 'Access denied'
@@ -319,7 +317,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       // 请求配置出错
       errorMessage = error.message || 'Request configuration error'
     }
-    ElMessage.error(error.response?.data?.message || errorMessage)
+    ElMessage.error(error.response?.data?.msg || errorMessage)
     return Promise.reject(error)
   }
 
@@ -346,7 +344,7 @@ class Request {
    * @param params 请求参数
    * @param config 请求配置
    */
-  async get<T = any>(url: string, params?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
+  async get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.get(url, { params, ...config })
     return response.data
   }
@@ -357,7 +355,7 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
+  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.post(url, data, config)
     return response.data
   }
@@ -368,7 +366,7 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
+  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.put(url, data, config)
     return response.data
   }
@@ -378,7 +376,7 @@ class Request {
    * @param url 请求地址
    * @param config 请求配置
    */
-  async delete<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.delete(url, config)
     return response.data
   }
@@ -389,7 +387,7 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async patch<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
+  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.patch(url, data, config)
     return response.data
   }
@@ -405,7 +403,7 @@ class Request {
     url: string,
     file: File,
     data?: any,
-    config?: RequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     const formData = new FormData()
     formData.append('file', file)
@@ -443,7 +441,6 @@ class Request {
       const blob = new Blob([response.data])
       const downloadUrl = window.URL.createObjectURL(blob)
       console.log('downloadUrl', downloadUrl)
-      debugger
       // 创建下载链接
       const link = document.createElement('a')
       link.href = downloadUrl

@@ -22,28 +22,18 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps({
-  title: {
-    type: String,
-    required: true,
-  },
-  value: {
-    type: String,
-    required: true,
-  },
-  unit: {
-    type: String,
-    default: '',
-  },
-  iconUrl: {
-    type: String,
-    required: true,
-  },
-  bgColor: {
-    type: String,
-    default: '',
-  },
+const props = withDefaults(defineProps<{
+  title: string
+  value: string | number
+  unit?: string
+  iconUrl: string
+  bgColor?: string
+}>(), {
+  title: '',
+  value: '',
+  iconUrl: '',
 })
+
 </script>
 
 <style lang="scss" scoped>

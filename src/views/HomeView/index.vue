@@ -1,5 +1,6 @@
 <template>
   <div class="voltage-class home-view">
+    <LoadingBg :loading="globalStore.loading">
     <div class="home-view-map">
       <USAMapChart :powerStations="powerStations" />
     </div>
@@ -8,6 +9,7 @@
         <EnergyCard :title="item.title" :value="item.value" :unit="item.unit" :iconUrl="item.iconUrl" bgColor="rgba(84, 98, 140, 0.2)" />
       </div>
     </div>
+    </LoadingBg>
   </div>
 </template>
 
@@ -17,7 +19,10 @@ import energyToday from '@/assets/icons/energy-today.svg'
 import energyOnlineStations from '@/assets/icons/energy-onlineStation.svg'
 import energyAlarms from '@/assets/icons/energy-alarms.svg'
 import energySavingBilling from '@/assets/icons/energy-savingBilling.svg'
-
+import LoadingBg from '@/components/common/LoadingBg.vue'
+import {getHomeTotalData} from '@/api/home'
+import { useGlobalStore } from '@/stores/global'
+const globalStore = useGlobalStore()
 // 发电站数据
 const powerStations = reactive<PowerStation[]>([
   {
@@ -81,26 +86,36 @@ const powerStations = reactive<PowerStation[]>([
 const dashboardData = reactive([
   {
     title: 'Energy Today',
-    value: '3600',
+    value: 0,
     unit: 'kWh',
     iconUrl: energyToday,
   },
   {
     title: 'Online Stations',
-    value: '8/13',
+    value: 0,
     iconUrl: energyOnlineStations,
   },
   {
     title: 'Alarms',
-    value: '12',
+    value: 0,
     iconUrl: energyAlarms,
   },
   {
     title: 'Saving Billing',
-    value:'$ 560',
+    value: 0,
     iconUrl: energySavingBilling,
   }
 ])
+
+onMounted(async () => {
+  const res = await getHomeTotalData()
+  if (res.code === 200) {
+    dashboardData[0].value = res.data.todayEnergy
+    dashboardData[1].value = res.data.stationOnline
+    dashboardData[2].value = res.data.stationAlarmSum
+    dashboardData[3].value = res.data.todayPrice
+  }
+})
 </script>
 
 <style scoped lang="scss">

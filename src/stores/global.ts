@@ -4,9 +4,11 @@ import { defineStore } from 'pinia'
 export const useGlobalStore = defineStore('global', () => {
   const isCollapse = ref(false)
   const alarmNum = ref(0)
+  const loading = ref(false)
   return {
     isCollapse,
     alarmNum,
+    loading,
   }
 },{
   persist: {

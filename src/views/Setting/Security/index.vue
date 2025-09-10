@@ -8,26 +8,39 @@
     </div>
     <div class="security__body">
       <SettingCard title="Password Policy">
+        <template #control>
+          <el-button type="primary">submit</el-button>
+        </template>
         <SettingItem title="Minimum password length">
           <el-input v-model="passwordForm.minLength" placeholder="Enter password" />
         </SettingItem>
         <SettingItem title="Require uppercase letters">
-          <el-switch v-model="passwordForm.requireUppercase" style="margin-right:2.04rem"/>
+          <el-switch v-model="passwordForm.requireUppercase" style="margin-right:2.04rem" />
         </SettingItem>
         <SettingItem title="Require lowercase letters">
-          <el-switch v-model="passwordForm.requireLowercase" style="margin-right:2.04rem"/>
+          <el-switch v-model="passwordForm.requireLowercase" style="margin-right:2.04rem" />
         </SettingItem>
         <SettingItem title="Password expiration (days)">
           <el-input v-model="passwordForm.expiration" placeholder="Enter password" />
         </SettingItem>
+        <!-- <div class="security__submit-btn">
+          <el-button type="primary">submit</el-button>
+        </div> -->
+
       </SettingCard>
       <SettingCard title="Two-Factor Authentication">
+        <template #control>
+          <el-button type="primary">submit</el-button>
+        </template>
         <SettingItem title="Require 2FA for all users">
-          <el-switch v-model="twoFactorForm.require2FA" style="margin-right:2.04rem"/>
+          <el-switch v-model="twoFactorForm.require2FA" style="margin-right:2.04rem" />
         </SettingItem>
         <SettingItem title="Require 2FA for admin users">
-          <el-switch v-model="twoFactorForm.require2FAAdmin" style="margin-right:2.04rem"/>
+          <el-switch v-model="twoFactorForm.require2FAAdmin" style="margin-right:2.04rem" />
         </SettingItem>
+        <!-- <div class="security__submit-btn">
+          <el-button type="primary">submit</el-button>
+        </div> -->
       </SettingCard>
     </div>
 
@@ -110,12 +123,22 @@ const twoFactorForm = ref({
     width: 100%;
     height: calc(100% - 1.22rem);
     overflow-y: auto;
-    &>div{
+
+    &>div {
       margin-bottom: 0.2rem;
-      &:last-child{
+
+      &:last-child {
         margin-bottom: 0;
       }
     }
+  }
+
+  .security__submit-btn {
+    margin-top: 0.2rem;
+    padding-right: 0.2rem;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
   }
 
 

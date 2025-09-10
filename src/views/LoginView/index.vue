@@ -42,11 +42,11 @@ const formRules = reactive<FormRules<LoginParams>>({
   username: [{ required: true, message: 'Please enter your username', trigger: 'blur' }],
   password: [
     { required: true, message: 'Please enter your password', trigger: 'blur' },
-    {
-      pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/,
-      message: 'Password must be 6-12 characters and include both letters and numbers',
-      trigger: 'blur',
-    },
+    // {
+    //   pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/,
+    //   message: 'Password must be 6-12 characters and include both letters and numbers',
+    //   trigger: 'blur',
+    // },
   ],
 })
 const userStore = useUserStore()
@@ -57,20 +57,28 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     if (valid) {
       const res = await userStore.login(form)
       if (res.success) {
-        const userInfo = await userStore.getUserInfo()
-        if (userInfo.success) {
-          await wsManager.disconnect()
+        // const userInfo = await userStore.getUserInfo()
+        wsManager.connect()
+        
           const redirect = router.currentRoute.value.query.redirect as string
           if (redirect) {
             router.push({ path: redirect })
           } else {
             router.push({ path: '/' })
           }
-        } else {
-          ElMessage.error(userInfo.message)
-        }
+        // if (userInfo.success) {
+        //   await wsManager.connect()
+        //   const redirect = router.currentRoute.value.query.redirect as string
+        //   if (redirect) {
+        //     router.push({ path: redirect })
+        //   } else {
+        //     router.push({ path: '/' })
+        //   }
+        // } else {
+        //   // ElMessage.error(userInfo.message)
+        // }
       } else {
-        ElMessage.error(res.message)
+        // ElMessage.error(res.message)
       }
       // 这里可以添加登录请求逻辑
     } else {

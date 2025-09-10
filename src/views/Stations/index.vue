@@ -10,20 +10,22 @@
 
 <script setup lang="ts">
 import StationCard from './components/StationCard.vue'
-interface Station {
-  id: string
-  name: string
-  status: string
-  currentPower: number
-  totalCapacity: number
-  powerPercentage: number
-  batteryLevel: number
-  efficiency: number
-  todayEnergy: number
-  temperature: number
-  lastUpdate: string
-}
-const stations = ref<Station[]>([
+import { getStations } from '@/api/station'
+import type { Stations } from '@/types/Stations'
+// interface Station {
+//   id: string
+//   name: string
+//   status: string
+//   currentPower: number
+//   totalCapacity: number
+//   powerPercentage: number
+//   batteryLevel: number
+//   efficiency: number
+//   todayEnergy: number
+//   temperature: number
+//   lastUpdate: string
+// }
+const stations = ref([
   {
     id: '1',
     name: 'North Valley Solar',

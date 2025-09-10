@@ -31,7 +31,7 @@
           <img :src="shareIcon" style="margin-right: 2.04rem" />
         </SettingItem>
       </SettingCard>
-      <SettingCard title="Video Tutorials" :icon="videoIcon">
+      <!-- <SettingCard title="Video Tutorials" :icon="videoIcon">
         <div class="video-list">
           <VideoCard
             v-for="item in videoList"
@@ -42,7 +42,7 @@
             style="width: calc(50% - 0.1rem)"
           />
         </div>
-      </SettingCard>
+      </SettingCard> -->
       <SettingCard title="Frequently Asked Questions" :icon="questionIcon">
         <el-collapse v-model="activeNames" @change="handleChange">
           <SettingItem custom v-for="item in questionList" :key="item.id">
@@ -64,7 +64,7 @@
             :icon="item.icon"
             :title="item.title"
             :desc="item.desc"
-            style="width: calc((100% - 0.4rem) / 3); height: 2.25rem"
+            style="width: calc(50% - 0.1rem); height: 2.25rem"
           />
         </div>
       </SettingCard>
@@ -159,7 +159,7 @@ const helpList = ref([
   {
     icon: mailIcon,
     title: 'Email Support',
-    desc: 'support@energyplatform.com',
+    desc: 'support@voltageenergy.com',
   },
   {
     icon: phoneIcon,
@@ -167,11 +167,11 @@ const helpList = ref([
     desc: '+1 （555） 123-4567',
   },
 
-  {
-    icon: chatIcon,
-    title: 'Chat Support',
-    desc: 'Available 247',
-  },
+  // {
+  //   icon: chatIcon,
+  //   title: 'Chat Support',
+  //   desc: 'Available 247',
+  // },
 ])
 const videoList = ref([
   {

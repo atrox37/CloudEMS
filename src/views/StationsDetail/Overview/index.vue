@@ -85,22 +85,22 @@ import Tuopu from './tuopu.vue'
 //   }
 // ])
 
-const exampleXAxisData = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const exampleXAxisData = ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
 
 const exampleSeries = [
   {
-    name: '光伏发电',
-    data: [120, 132, 101, 134, 90, 230, 210],
+    name: 'pv',
+    data: [120, 132, 101, 134, 90, 230, 210, 190, 170, 160, 150, 140],
     color: '#4FADF7'
   },
   {
-    name: '柴油发电',
-    data: [220, 182, 191, 234, 290, 330, 310],
+    name: 'diesel generator',
+    data: [220, 182, 191, 234, 290, 330, 310, 290, 270, 250, 230, 210],
     color: '#F6C85F'
   },
   {
-    name: '储能放电',
-    data: [150, 232, 201, 154, 190, 330, 410],
+    name: 'ess',
+    data: [150, 232, 201, 154, 190, 330, 410, 390, 370, 350, 330, 310],
     color: '#6DD400'
   }
 ]
@@ -108,7 +108,7 @@ const exampleSeries = [
 // 传递给组件的props示例
 const xAxiosOption = {
   xAxiosData: exampleXAxisData,
-  xUnit: '天'
+  xUnit: 'h'
 }
 const yAxiosOption = {
   yUnit: 'kWh'

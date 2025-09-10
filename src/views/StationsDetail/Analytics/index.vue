@@ -135,17 +135,17 @@ const handleExport = () => {
 
 const exampleDoughntSeries = [
   {
-    name: '光伏发电',
+    name: 'pv',
     value: 45,
     color: '#4FADF7',
   },
   {
-    name: '柴油发电',
+    name: 'diesel generator',
     value: 30,
     color: '#F6C85F',
   },
   {
-    name: '储能放电',
+    name: 'ess',
     value: 25,
     color: '#6DD400',
   },

@@ -41,13 +41,13 @@
         width: 0.16rem;
         height: 0.16rem;
         background-color: transparent;
-        border: 0.01rem solid $border-color-base;
-        border-radius: $border-radius-small;
+        border: 0.01rem solid #fff;
+        border-radius: 0.02rem;
         transition: all $transition-base;
         box-sizing: border-box;
 
         &:hover {
-          border-color: $primary-color;
+          border-color: #ff6900;
         }
 
         // 勾选图标
@@ -89,7 +89,7 @@
           background-color: $primary-color;
           border-color: $primary-color;
 
-          &::after {
+          &::before {
             content: '';
             position: absolute;
             top: 50%;
@@ -290,63 +290,63 @@
     }
   }
 
-  // 不同尺寸
-  .el-checkbox--large {
-    .el-checkbox__input {
-      .el-checkbox__inner {
-        width: 0.18rem;
-        height: 0.18rem;
+  // // 不同尺寸
+  // .el-checkbox--large {
+  //   .el-checkbox__input {
+  //     .el-checkbox__inner {
+  //       width: 0.18rem;
+  //       height: 0.18rem;
 
-        &::after {
-          top: 0.02rem;
-          left: 0.06rem;
-          width: 0.05rem;
-          height: 0.09rem;
-        }
-      }
-    }
+  //       &::after {
+  //         top: 0.02rem;
+  //         left: 0.06rem;
+  //         width: 0.05rem;
+  //         height: 0.09rem;
+  //       }
+  //     }
+  //   }
 
-    .el-checkbox__label {
-      font-size: $font-size-large;
-      padding-left: $spacing-md;
-    }
-  }
+  //   .el-checkbox__label {
+  //     font-size: $font-size-large;
+  //     padding-left: $spacing-md;
+  //   }
+  // }
 
-  .el-checkbox--small {
-    .el-checkbox__input {
-      .el-checkbox__inner {
-        width: 0.14rem;
-        height: 0.14rem;
+  // .el-checkbox--small {
+  //   .el-checkbox__input {
+  //     .el-checkbox__inner {
+  //       width: 0.14rem;
+  //       height: 0.14rem;
 
-        &::after {
-          top: 0.01rem;
-          left: 0.04rem;
-          width: 0.03rem;
-          height: 0.06rem;
-        }
-      }
-    }
+  //       &::after {
+  //         top: 0.01rem;
+  //         left: 0.04rem;
+  //         width: 0.03rem;
+  //         height: 0.06rem;
+  //       }
+  //     }
+  //   }
 
-    .el-checkbox__label {
-      font-size: $font-size-small;
-      padding-left: 0.06rem;
-    }
-  }
+  //   .el-checkbox__label {
+  //     font-size: $font-size-small;
+  //     padding-left: 0.06rem;
+  //   }
+  // }
 
-  // 按钮尺寸
-  .el-checkbox-button--large {
-    .el-checkbox-button__inner {
-      padding: $button-padding-large;
-      font-size: $button-font-size-large;
-      border-radius: $border-radius-small;
-    }
-  }
+  // // 按钮尺寸
+  // .el-checkbox-button--large {
+  //   .el-checkbox-button__inner {
+  //     padding: $button-padding-large;
+  //     font-size: $button-font-size-large;
+  //     border-radius: $border-radius-small;
+  //   }
+  // }
 
-  .el-checkbox-button--small {
-    .el-checkbox-button__inner {
-      padding: $button-padding-small;
-      font-size: $button-font-size-small;
-      border-radius: $border-radius-small;
-    }
-  }
+  // .el-checkbox-button--small {
+  //   .el-checkbox-button__inner {
+  //     padding: $button-padding-small;
+  //     font-size: $button-font-size-small;
+  //     border-radius: $border-radius-small;
+  //   }
+  // }
 }

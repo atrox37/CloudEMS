@@ -7,7 +7,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     component: () => import('../views/LoginView/index.vue'),
     meta: {
       activeNav: '/login',
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
   },
   {
@@ -17,7 +17,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     children: [],
     meta: {
       activeNav: '/home',
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
   },
 ]

@@ -17,7 +17,7 @@ export const dynamicRoutes: RouteItem[] = [
       activeNav: '/home',
       icon: homeIcon,
       title: 'Home',
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
   },
   {
@@ -29,7 +29,7 @@ export const dynamicRoutes: RouteItem[] = [
       activeNav: '/stations',
       icon: stationsIcon,
       title: 'Stations',
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
   },
   {
@@ -39,7 +39,7 @@ export const dynamicRoutes: RouteItem[] = [
     redirect: '/stationsDetail/overview',
     meta: {
       activeNav: '/stationsDetail',
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
     children: [
       {
@@ -49,7 +49,7 @@ export const dynamicRoutes: RouteItem[] = [
         meta: {
           title: 'Overview',
           activeNav: '/stations',
-          roles: ['Admin', 'operator', 'Engineer'],
+          roles: ['Admin', 'Viewer', 'Engineer'],
         },
       },
       {
@@ -59,7 +59,7 @@ export const dynamicRoutes: RouteItem[] = [
         meta:{
           title:'Performance',
           activeNav:'/stations',
-          roles: ['Admin', 'operator', 'Engineer'],
+          roles: ['Admin', 'Viewer', 'Engineer'],
         },
       },
       {
@@ -69,7 +69,7 @@ export const dynamicRoutes: RouteItem[] = [
         meta:{
           title:'Analytics',
           activeNav:'/stations',
-          roles: ['Admin', 'operator', 'Engineer'],
+          roles: ['Admin', 'Viewer', 'Engineer'],
         }
       },
       {
@@ -79,7 +79,7 @@ export const dynamicRoutes: RouteItem[] = [
         meta:{
           title:'Maintenance',
           activeNav:'/stations',
-          roles: ['Admin', 'operator', 'Engineer'],
+          roles: ['Admin', 'Viewer', 'Engineer'],
         },
       },
       {
@@ -89,7 +89,7 @@ export const dynamicRoutes: RouteItem[] = [
         meta:{
           title:'Alarm',
           activeNav:'/stations',
-          roles: ['Admin', 'operator', 'Engineer'],
+          roles: ['Admin', 'Viewer', 'Engineer'],
         },
       },
     ],
@@ -103,7 +103,7 @@ export const dynamicRoutes: RouteItem[] = [
       activeNav: '/statistics',
       icon: statisticsIcon,
       title: 'Statistics', 
-      roles: ['Admin', 'operator', 'Engineer'],
+      roles: ['Admin', 'Viewer', 'Engineer'],
     },
   },
   {

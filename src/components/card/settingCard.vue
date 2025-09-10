@@ -63,7 +63,7 @@ const props = defineProps({
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 2.04rem;
+            // margin-right: 2.04rem;
 
         }
     }

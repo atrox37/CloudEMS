@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
-import { userApi } from '@/api/user'
+// import { userApi } from '@/api/user'
 import type { UserFormModel, DialogExpose } from '@/types/userManagement'
 
 const formRef = ref<FormInstance>()
@@ -139,13 +139,13 @@ async function open(userId: number, openMode: 'create' | 'edit' = 'create') {
   form.value = getDefaultForm()
   if (userId) {
     roleId.value = userId
-    const user = await userApi.getUserDetail(userId)
+    // const user = await userApi.getUserDetail(userId)
 
-    if (user.success) {
-      form.value.username = user.data.username
-      form.value.role_id = user.data.role.id
-      form.value.is_active = user.data.is_active
-    }
+    // if (user.success) {
+    //   form.value.username = user.data.username
+    //   form.value.role_id = user.data.role.id
+    //   form.value.is_active = user.data.is_active
+    // }
   }
   nextTick(() => {
     setTimeout(() => {
@@ -173,26 +173,26 @@ async function onSubmit() {
   formRef.value?.validate(async (valid) => {
     if (!valid) return
     if (mode.value === 'create') {
-      const res = await userApi.addUser({
-        username: form.value.username,
-        password: form.value.password,
-        role_id: form.value.role_id,
-      })
-      if (res.success) {
-        ElMessage.success('User added successfully')
-        emit('submit', form.value)
-      }
+      // const res = await userApi.addUser({
+      //   username: form.value.username,
+      //   password: form.value.password,
+      //   role_id: form.value.role_id,
+      // })
+      // if (res.success) {
+      //   ElMessage.success('User added successfully')
+      //   emit('submit', form.value)
+      // }
       close()
     } else if (mode.value === 'edit') {
-      const res = await userApi.updateUser(roleId.value, {
-        role_id: form.value.role_id,
-        is_active: form.value.is_active,
-      })
-      if (res.success) {
-        ElMessage.success('User updated successfully')
-        emit('submit', form.value)
-        close()
-      }
+      // const res = await userApi.updateUser(roleId.value, {
+      //   role_id: form.value.role_id,
+      //   is_active: form.value.is_active,
+      // })
+      // if (res.success) {
+      //   ElMessage.success('User updated successfully')
+      //   emit('submit', form.value)
+      //   close()
+      // }
     }
   })
 }

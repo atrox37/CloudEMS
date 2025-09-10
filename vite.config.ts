@@ -60,13 +60,8 @@ export default defineConfig({
     port: 5173, // 指定端口号
     open: true, // 自动打开浏览器
     proxy: {
-      '/api': {
-        target: 'http://192.168.30.62:6005',
-        changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-      '/alarmApi': {
-        target: 'http://192.168.30.62:6002',
+      '/user-app': {
+        target: 'http://192.168.40.114:9000',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },

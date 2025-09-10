@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
-import { userApi } from '@/api/user'
+import { userLogin, userLogout, userGetUserInfo } from '@/api/user'
 import wsManager from '@/utils/websocket'
 import MD5 from 'crypto-js/md5'
 // 用户状态管理
@@ -9,7 +9,7 @@ export const useUserStore = defineStore(
   () => {
     // 状态
     const token = ref<string>('')
-    const refreshToken = ref<string>('')
+    // const refreshToken = ref<string>('')
     const userInfo = ref<UserInfo | null>(null)
     // routesInjected 不参与持久化，仅用于本地内存
     const routesInjected = ref<boolean>(false) // 是否已注入动态路由
@@ -19,7 +19,7 @@ export const useUserStore = defineStore(
     const displayName = computed(() => userInfo.value?.username || '')
 
     const roles = computed(() =>
-      userInfo.value?.role.name_en ? [userInfo.value.role.name_en] : ['Admin'],
+      ['Admin'],
     )
 
     // 用户登录
@@ -28,22 +28,23 @@ export const useUserStore = defineStore(
         // 对密码进行MD5加密
         const encryptedParams = {
           ...params,
-          password: MD5(params.password).toString(),
+          // password: MD5(params.password).toString(),
+          
         }
 
-        const response = await userApi.login(encryptedParams)
+        const response = await userLogin(encryptedParams)
 
-        if (response.success) {
+        if (response.code === 200) {
           // 更新状态（会自动持久化）
-          token.value = response.data.access_token
-          refreshToken.value = response.data.refresh_token
-          ElMessage.success(response.message || 'Login successful')
-          return { success: true, message: response.message || 'Login successful' }
+          token.value = response.data
+          // refreshToken.value = ''
+          ElMessage.success(response.msg || 'Login successful')
+          return { success: true, message: response.msg || 'Login successful' }
         } else {
-          return { success: false, message: response.message || 'Login failed' }
+          return { success: false, message: response.msg || 'Login failed' }
         }
       } catch (error: any) {
-        return { success: false, message: error.message || 'Login failed' }
+        return { success: false, message: error.msg || 'Login failed' }
       }
     }
 
@@ -52,12 +53,12 @@ export const useUserStore = defineStore(
       try {
         // 调用登出API
         if (token.value) {
-          const res = await userApi.logout(refreshToken.value)
-          if (res.success) {
+          const res = await userLogout()
+            if (res.code === 200) {
             ElMessage.success('Logout successful')
             clearUserData()
           } else {
-            ElMessage.error(res.message || 'Logout failed')
+            ElMessage.error(res.msg || 'Logout failed')
           }
         }
       } catch (error) {
@@ -68,17 +69,17 @@ export const useUserStore = defineStore(
     // 获取用户信息
     const getUserInfo = async () => {
       try {
-        const response = await userApi.getUserInfo()
+        const response = await userGetUserInfo()
 
-        if (response.success) {
+        if (response.code === 200) {
           userInfo.value = response.data
 
-          return { success: true, message: response.message || 'Get user info successful' }
+          return { success: true, message: response.msg || 'Get user info successful' }
         } else {
-          return { success: false, message: response.message || 'Get user info failed' }
+          return { success: false, message: response.msg || 'Get user info failed' }
         }
       } catch (error: any) {
-        return { success: false, message: error.message || 'Get user info failed' }
+        return { success: false, message: error.msg || 'Get user info failed' }
       }
     }
 
@@ -86,10 +87,18 @@ export const useUserStore = defineStore(
     const refreshUserToken = async () => {
       try {
         // 这里应该调用刷新Token的API
-        // 暂时返回成功，实际项目中需要实现真实的刷新逻辑
-        return { success: true, message: 'Token refreshed successfully' }
+        // const response = await userRefreshToken(refreshToken.value)
+        // if (response.code === 200) {
+        //   token.value = response.data
+        //   refreshToken.value = response.data.refresh_token
+        //   return { success: true, message: 'Token refreshed successfully' }
+        // } else {
+        //   return { success: false, message: response.msg || 'Token refresh failed' }
+        // }
+        // // 暂时返回成功，实际项目中需要实现真实的刷新逻辑
+        // return { success: true, message: 'Token refreshed successfully' }
       } catch (error: any) {
-        return { success: false, message: error.message || 'Token refresh failed' }
+        return { success: false, message: error.msg || 'Token refresh failed' }
       }
     }
 
@@ -100,13 +109,12 @@ export const useUserStore = defineStore(
       token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置
-      refreshToken.value = ''
+      // refreshToken.value = ''
     }
 
     return {
       // 状态
       token,
-      refreshToken,
       userInfo,
       routesInjected,
 
@@ -128,7 +136,7 @@ export const useUserStore = defineStore(
     persist: {
       key: 'user',
       storage: localStorage,
-      pick: ['token', 'refreshToken', 'userInfo'],
+      pick: ['token', 'userInfo'],
     },
   },
 )
