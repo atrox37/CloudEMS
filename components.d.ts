@@ -47,6 +47,8 @@ declare module 'vue' {
     LineChart: typeof import('./src/components/charts/lineChart.vue')['default']
     LoadingBg: typeof import('./src/components/common/LoadingBg.vue')['default']
     ModuleCard: typeof import('./src/components/card/ModuleCard.vue')['default']
+    NegativeLineChart: typeof import('./src/components/charts/NegativeLineChart.vue')['default']
+    NegativeLineChartExample: typeof import('./src/components/charts/NegativeLineChartExample.vue')['default']
     PVCard: typeof import('./src/components/card/PVCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
