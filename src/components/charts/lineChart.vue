@@ -56,40 +56,6 @@ watch(
 
 echarts.use([LineChart, BarChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
 
-// ================== 示例数据（可用数据，供参考，实际使用时请传递props） ==================
-// 下面是一些可用于该组件的示例数据，已注释，方便你参考和测试
-/*
-  const exampleXAxisData = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-
-  const exampleSeries = [
-    {
-      name: '光伏发电',
-      data: [120, 132, 101, 134, 90, 230, 210],
-      color: '#4FADF7'
-    },
-    {
-      name: '柴油发电',
-      data: [220, 182, 191, 234, 290, 330, 310],
-      color: '#F6C85F'
-    },
-    {
-      name: '储能放电',
-      data: [150, 232, 201, 154, 190, 330, 410],
-      color: '#6DD400'
-    }
-  ]
-
-  // 传递给组件的props示例
-  const xAxiosOption = {
-    xAxiosData: exampleXAxisData,
-    xUnit: '天'
-  }
-  const yAxiosOption = {
-    yUnit: 'kWh'
-  }
-  const series = exampleSeries
-  */
-
 // 定义数据类型
 interface SeriesData {
   name: string
@@ -384,7 +350,7 @@ function getChartOption({
         fontWeight: 400,
         fontSize: pxToResponsive(16),
         align: 'right',
-        padding: [0, pxToResponsive(12), pxToResponsive(8), 0],
+        padding: [0, pxToResponsive(12), 0, 0],
       },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -412,7 +378,7 @@ function getChartOption({
         fontWeight: 400,
         fontSize: pxToResponsive(12),
         align: 'right',
-        padding: [0, pxToResponsive(8), pxToResponsive(5), 0],
+        padding: [0, pxToResponsive(8), 0, 0],
       },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -458,7 +424,7 @@ function getChartOption({
       name: s.name,
       type: 'line',
       data: s.data,
-      smooth: false,
+      smooth: true,
       symbol: 'circle',
       symbolSize: isFullScreen ? pxToResponsive(8) : pxToResponsive(0),
       areaStyle: {},

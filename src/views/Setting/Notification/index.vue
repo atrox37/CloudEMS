@@ -8,8 +8,8 @@
             <el-checkbox v-model="mailChecked" :indeterminate="isMailIndeterminate"
               @change="onMailCheckedChange">mail</el-checkbox>
             <el-checkbox v-model="smsChecked" :indeterminate="isSmsIndeterminate"
-              @change="onSmsCheckedChange" style="margin-right: 1.31rem;">sms</el-checkbox>
-            <el-button type="primary">submit</el-button>
+              @change="onSmsCheckedChange" style="margin-right: 2.04rem;">sms</el-checkbox>
+            <!-- <el-button type="primary">submit</el-button> -->
           </div>
         </template>
         <SettingItem v-for="item in emailList" :key="item.id" :title="item.title" :desc="item.desc">
@@ -18,9 +18,9 @@
 
         </SettingItem>
       </SettingCard>
-      <!-- <div class="notification__submit-btn">
+      <div class="notification__submit-btn">
         <el-button type="primary">Submit</el-button>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>

@@ -63,6 +63,60 @@ CloudEMS/
 - 操作审计日志
 - 安全策略配置
 
+### 5. 时间工具系统
+- 基于美国当地时间的智能时间计算
+- 支持多个美国时区（东部、中部、山地、太平洋等）
+- 自动处理夏令时调整
+- 提供多种时间范围计算功能
+
+#### 时间工具功能详情
+
+##### 基础时间计算
+- **最近6小时**: 精确到小时的时间范围计算
+- **最近24小时**: 完整一天的时间范围计算  
+- **最近一周**: 按日期计算的一周时间范围
+- **最近一个月**: 按日期计算的一个月时间范围
+
+##### 时区支持
+- **智能时区检测**: 自动检测系统时区，无需手动设置
+- **美国时区优先**: 如果系统是美国时区，直接使用；否则根据UTC偏移量智能推断
+- **多时区支持**: 支持美国所有主要时区（东部、中部、山地、太平洋、阿拉斯加、夏威夷）
+- **夏令时处理**: 自动处理夏令时切换，无需手动调整
+- **时区信息查询**: 提供详细的时区检测和偏移量信息
+
+##### 时间格式化
+- 多种时间格式输出
+- ISO标准时间格式
+- 相对时间描述（如：2小时前）
+- 自定义格式支持
+
+##### 使用示例
+```typescript
+import { TimeUtils } from '@/utils/time'
+
+// 自动检测时区，无需手动设置
+const now = TimeUtils.now() // 自动使用系统检测的时区
+
+// 获取系统时区信息
+const systemInfo = TimeUtils.getSystemTimezoneInfo()
+console.log('检测到的时区:', systemInfo.detected)
+console.log('是否为美国时区:', systemInfo.isUSATimezone)
+
+// 获取当前使用的时区
+const currentTimezone = TimeUtils.getCurrentTimezone()
+console.log('当前时区:', TimeUtils.getTimezoneDisplayName(currentTimezone))
+
+// 时间范围计算（自动使用时区）
+const last6Hours = TimeUtils.getLast6Hours()
+const lastWeek = TimeUtils.getLastWeek()
+
+// 手动指定时区（可选）
+const pacificTime = TimeUtils.now('America/Los_Angeles')
+
+// 检查是否为自动检测的时区
+const isAutoDetected = TimeUtils.isAutoDetectedTimezone()
+```
+
 ## WebSocket策略调整
 
 ### 概述

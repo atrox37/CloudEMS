@@ -3,9 +3,9 @@
     <HeaderCard title="System & General Settings" desc="Configure system-wide settings and general preferences" />
     <div class="system-and-general__body">
       <SettingCard title="Company Information">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <el-form :model="companyInfoForm" label-width="1rem" label-position="top" inline class="company-info-form">
           <el-form-item label="Company Name" style="margin-right: 1.08rem;">
             <el-input v-model="companyInfoForm.companyName" placeholder="Enter Company Name" style="width: 7.52rem !important;"/>
@@ -38,14 +38,14 @@
             </div>
           </el-form-item>
         </el-form>
-        <!-- <div class="company-info-form__submit-btn">
+        <div class="company-info-form__submit-btn">
           <el-button type="primary">submit</el-button>
-        </div> -->
+        </div>
       </SettingCard>
       <SettingCard title="Display Preferences">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <SettingItem title="Dark mode">
           <el-switch v-model="displayPreferencesForm.darkMode" style="margin-right: 2.04rem;"/>
         </SettingItem>
@@ -55,39 +55,41 @@
         <SettingItem title="Auto-refresh dashboard (minutes)">
           <el-switch v-model="displayPreferencesForm.autoRefresh" style="margin-right: 2.0rem;"/>
         </SettingItem>
-        <!-- <div class="display-preferences-form__submit-btn">
+        <div class="display-preferences-form__submit-btn">
           <el-button type="primary">submit</el-button>
-        </div> -->
+        </div>
       </SettingCard>
       <SettingCard title="Data Retention">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <SettingItem title="Historical data retention (months)">
           <el-input v-model="dataRetentionForm.historicalDataRetention" placeholder="Enter Historical Data Retention" />
         </SettingItem>
         <SettingItem title="Log retention (days)">
           <el-input v-model="dataRetentionForm.logRetention" placeholder="Enter Log Retention" />
         </SettingItem>
-        <!-- <div class="data-retention-form__submit-btn">
+        <div class="data-retention-form__submit-btn">
           <el-button type="primary">submit</el-button>
-        </div> -->
+        </div>
       </SettingCard>
       <SettingCard title="Backup & Recovery">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <SettingItem title="Automatic daily backups">
           <el-switch v-model="backupAndRecoveryForm.automaticDailyBackups" style="margin-right: 2.0rem;"/>
         </SettingItem>
         <SettingItem title="Backup retention (days)">
           <el-input v-model="backupAndRecoveryForm.backupRetention" placeholder="Enter Backup Retention" />
         </SettingItem>
-        <!-- <div class="backup-and-recovery-form__submit-btn">
+        <div class="backup-and-recovery-form__submit-btn">
           <el-button type="primary">submit</el-button>
-        </div> -->
+        </div>
       </SettingCard>
-      <IconButton :icon="downloadIcon" text="Download System Backup" />
+      <div class="system-and-general__download-btn">
+        <IconButton :icon="downloadIcon" text="Download System Backup" />
+      </div>
     </div>
   </div>
 </template>
@@ -148,12 +150,17 @@ const backupAndRecoveryForm = ref({
     .company-info-form__submit-btn,
     .display-preferences-form__submit-btn,
     .data-retention-form__submit-btn,
-    .backup-and-recovery-form__submit-btn {
+    .backup-and-recovery-form__submit-btn,
+    .system-and-general__download-btn {
       width: 100%;
       display: flex;
       justify-content: flex-end;
       margin-top: 0.2rem;
       padding-right: 0.2rem;
+    }
+    .system-and-general__download-btn{
+      border-top: 0.01rem solid rgba(255, 255, 255, 0.4);
+      padding-top: 0.2rem;
     }
   }
 

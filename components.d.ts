@@ -44,6 +44,8 @@ declare module 'vue' {
     GlobalLoading: typeof import('./src/components/common/GlobalLoading.vue')['default']
     HeaderCard: typeof import('./src/components/card/headerCard.vue')['default']
     IconButton: typeof import('./src/components/common/IconButton.vue')['default']
+    LineAndBarChart: typeof import('./src/components/charts/LineAndBarChart.vue')['default']
+    LineAndBarChartExample: typeof import('./src/components/charts/LineAndBarChart-example.vue')['default']
     LineChart: typeof import('./src/components/charts/lineChart.vue')['default']
     LoadingBg: typeof import('./src/components/common/LoadingBg.vue')['default']
     ModuleCard: typeof import('./src/components/card/ModuleCard.vue')['default']

@@ -35,27 +35,28 @@
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Power Monitoring">
-            <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="exampleSeries" />
+            <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="poweryAxiosOption" :series="powerSeries" />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Energy Storage Operation Status">
-            <DoughnutChart :series="exampleDoughntSeries" />
+            <LineAndBarChart :xAxiosOption="xAxiosOption" :yAxiosOption="EssyAxiosOption"
+              :lineSeries="EssSeries.lineSeries" :barSeries="EssSeries.barSeries" />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Electricity Generation Statistics">
-            <StackedBarChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="exampleSeries" />
+            <SimpleBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="generateyAxiosOption" :series="generateSeries" />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Energy Supply And Demand Balance">
-            <SimpleBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="exampleSeries" />
+            <SimpleBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="energyyAxiosOption" :series="energySeries" />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Economic Benefit Analysis">
-            <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="exampleSeries" />
+            <SimpleBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="economicyAxiosOption" :series="economicSeries" />
           </ModuleCard>
         </div>
       </div>
@@ -64,11 +65,10 @@
 </template>
 
 <script setup lang="ts">
-import SimpleBarChar from '@/components/charts/SimpleBarChar.vue'
 import PVEnergy from '@/assets/icons/PVEnergy.svg'
 import ESS from '@/assets/icons/ESSEnergy.svg'
 import DG from '@/assets/icons/DGEnergy.svg'
-
+import { getTimeRangeArray } from '@/utils/time'
 const toolbarRightRef = ref<HTMLElement | null>(null)
 const selectedFilter = ref('all')
 
@@ -79,26 +79,6 @@ const timeBtnList = [
   { label: '1 Week', value: '1w' },
   { label: '1 Month', value: '1m' },
 ]
-const stationInfoList = reactive([
-  {
-    title: 'PV',
-    icon: PVEnergy,
-    value: '150',
-    unit: 'kWh',
-  },
-  {
-    title: 'ESS',
-    icon: ESS,
-    value: '150',
-    unit: 'kWh',
-  },
-  {
-    title: 'DG',
-    icon: DG,
-    value: '145',
-    unit: 'kWh', // 修正单位大小写
-  },
-])
 // 当前选中的时间按钮
 const selectedTimeBtn = ref('6h')
 
@@ -116,63 +96,119 @@ const handleTimeBtnClick = (event: MouseEvent) => {
 const handleFilterChange = () => {
   console.log('handleFilterChange')
 }
-const handleExport = () => {
-  console.log('handleExport')
-}
-
-
-const exampleDoughntSeries = [
-  {
-    name: 'pv',
-    value: 45,
-    color: '#4FADF7',
-  },
-  {
-    name: 'diesel generator',
-    value: 30,
-    color: '#F6C85F',
-  },
-  {
-    name: 'ess',
-    value: 25,
-    color: '#6DD400',
-  },
-]
-const exampleXAxisData = [
-  '0:00',
-  '2:00',
-  '4:00',
-  '6:00',
-  '8:00',
-  '10:00',
-  '12:00',
-  '14:00',
-  '16:00',
-  '18:00',
-  '20:00',
-  '22:00',
-]
 const xAxiosOption = {
-  xAxiosData: exampleXAxisData,
+  xAxiosData: getTimeRangeArray('6hours'),
 }
-const yAxiosOption = {
-  yUnit: 'kWh',
-}
-const exampleSeries = [
+const powerSeries = [
+
   {
-    name: 'Diesel',
-    data: [120, 135, 140, 160, 180, 200, 210, 190, 170, 160, 150, 140],
+    name: 'DG',
+    data: [220, 182, 191, 234, 290, 330, 250],
     color: 'rgb(3, 93, 239)',
   },
   {
     name: 'ESS',
-    data: [80, 90, 100, 110, 120, 130, 140, 135, 130, 125, 120, 115],
+    data: [150, 232, 201, 154, 190, 330, 250],
     color: 'rgb(29, 134, 255)',
   },
   {
     name: 'PV',
-    data: [0, 10, 30, 60, 100, 130, 150, 140, 120, 80, 30, 5],
+    data: [120, 132, 101, 134, 90, 230, 150],
     color: 'rgb(105, 203, 255)',
+  },
+]
+
+const poweryAxiosOption = {
+  yUnit: 'kW',
+}
+
+const EssSeries = {
+  barSeries: [
+    {
+      name: 'recharge',
+      data: [150, 232, 201, 154, 190, 330, 250],
+
+      color: 'rgb(29, 134, 255)',
+    },
+    {
+      name: 'discharge',
+      data: [-120, -132, -101, -134, -90, -230, -150],
+      color: 'rgb(105, 203, 255)',
+    }
+  ],
+  lineSeries: [
+    {
+      name: 'SOC',
+      data: [50, 70, 60, 75, 80, 90, 85],
+      color: 'rgb(3, 93, 239)',
+    }
+  ]
+}
+const EssyAxiosOption = {
+  yUnit: ['kw', '%'],
+}
+
+
+const generateSeries = [
+  {
+    name: 'PV',
+    data: [120, 132, 101, 134, 90, 230, 150],
+    color: 'rgb(105, 203, 255)',
+  },
+  {
+    name: 'DG',
+    data: [80, 90, 100, 110, 120, 130, 150],
+    color: 'rgb(29, 134, 255)',
+  },
+]
+const generateyAxiosOption = {
+  yUnit: 'kWh',
+}
+
+
+const energySeries = [
+  {
+    name: 'total generation',
+
+    data: [80, 90, 100, 110, 120, 130, 150],
+    color: 'rgb(29, 134, 255)',
+  },
+  {
+    name: 'load demand',
+    data: [120, 132, 101, 134, 90, 230, 150],
+    color: '#ff4e3a',
+  },
+]
+const energyyAxiosOption = {
+  yUnit: 'kWh',
+}
+
+
+const economicSeries = [
+  {
+    name: 'total revenue',
+    data: [120, 132, 101, 134, 90, 230, 150],
+    color: 'rgb(29, 134, 255)',
+  },
+]
+const economicyAxiosOption = {
+  yUnit: '$',
+}
+const exampleDoughntSeries = [
+  {
+    name: 'PV',
+    value: 45,
+    color: 'rgb(105, 203, 255)',
+  },
+  {
+    name: 'DG',
+    value: 30,
+    color: 'rgb(3, 93, 239)',
+  },
+  {
+    name: 'ESS',
+    value: 25,
+    color: 'rgb(29, 134, 255)',
   },
 ]
 </script>
