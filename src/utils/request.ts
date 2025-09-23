@@ -11,6 +11,15 @@ import { useGlobalStore } from '@/stores/global'
 // 存储所有pending的请求
 const pendingRequests = reactive(new Map())
 
+// 延迟获取router实例，避免在模块顶层使用useRouter
+let routerInstance: any = null
+const getRouter = () => {
+  if (!routerInstance) {
+    routerInstance = useRouter()
+  }
+  return routerInstance
+}
+
 watch(pendingRequests, () => {
   const globalStore = useGlobalStore()
   globalStore.loading = pendingRequests.size > 0
@@ -52,7 +61,9 @@ const alarmService = axios.create({
  */
 const requestInterceptor = (config: any) => {
   // 生成请求的唯一标识
-  const requestKey = `${config.method}-${config.url}`
+  const params = { ...(config.params || {}) }
+  const requestKey = `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
+  console.log(requestKey, 'requestKey1')
 
   // 如果存在相同的pending请求，取消它
   if (pendingRequests.has(requestKey)) {
@@ -105,26 +116,26 @@ const requestErrorInterceptor = (error: any) => {
 service.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 alarmService.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 
-// 用于防止重复刷新token的标志
-let isRefreshing = false
-// 存储等待token刷新的请求队列
-let failedQueue: Array<{
-  resolve: (value: any) => void
-  reject: (error: any) => void
-}> = []
+// // 用于防止重复刷新token的标志
+// let isRefreshing = false
+// // 存储等待token刷新的请求队列
+// let failedQueue: Array<{
+//   resolve: (value: any) => void
+//   reject: (error: any) => void
+// }> = []
 
-// 处理队列中的请求
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error)
-    } else {
-      resolve(token)
-    }
-  })
+// // 处理队列中的请求
+// const processQueue = (error: any, token: string | null = null) => {
+//   failedQueue.forEach(({ resolve, reject }) => {
+//     if (error) {
+//       reject(error)
+//     } else {
+//       resolve(token)
+//     }
+//   })
 
-  failedQueue = []
-}
+//   failedQueue = []
+// }
 
 /**
  * 响应拦截器工厂函数
@@ -134,8 +145,16 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
   // 响应成功时的处理
   const responseSuccessHandler = (response: any) => {
     // 请求完成后，从pendingRequests中移除
-    const requestKey = `${response.config.method}-${response.config.url}`
+    console.log(response, 'response1')
+
+    const params = { ...(response.config?.params || {}) }
+    if ('_t' in params) {
+      delete params._t
+    }
+    const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(params)}-${response.config?.data}`
+    // console.log(response.config?.data,requestKey,requestKey==='post-sys-app/sys_user/_page-{}-{"current":1,"size":20,"terms":[{"column":"t.state","value":1}]}', 'requestKey2')
     pendingRequests.delete(requestKey)
+    console.log(pendingRequests, 'pendingRequests')
 
     console.log(
       `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
@@ -147,7 +166,11 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 
     // 检查业务状态码
     // 如果返回的是blob类型，直接认为请求成功，否则判断业务code或success
-    if (response.request?.responseType === 'blob' || (data && data.code === 200)) {
+    if (
+      response.request?.responseType === 'blob' ||
+      (data && data.code === 200) ||
+      response.status === 200
+    ) {
       // 请求成功
       if (customConfig.showSuccessMessage && data.msg) {
         ElMessage.success(data.msg)
@@ -165,7 +188,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           errorMessage = 'Login expired, please log in again'
           ElMessage.error(errorMessage)
           // 跳转到登录页
-          window.location.href = '/login'
+          const router = getRouter()
+          router.push({ path: '/login', query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query } })
+          // window.location.href = '/login'
           break
         case 403:
           errorMessage = 'No permission to access this resource'
@@ -186,6 +211,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 
   // 响应失败时的处理
   const responseErrorHandler = async (error: any) => {
+    console.log(error, 'error1')
+
     // 如果是取消请求的错误，不显示错误信息
     if (axios.isCancel(error)) {
       console.log(`${logPrefix}[请求已取消] ${error.message}`)
@@ -193,14 +220,20 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
     }
 
     // 请求完成后，从pendingRequests中移除
-    const requestKey = `${error.config?.method}-${error.config?.url}`
+    // 生成requestKey时，去除params中的_t参数
+    const params = { ...(error.config?.params || {}) }
+    if ('_t' in params) {
+      delete params._t
+    }
+    const requestKey = `${error.config?.method}-${error.config?.url}-${JSON.stringify(params)}-${JSON.stringify(error.config?.data)}`
+    console.log(requestKey, 'requestKey3')
     if (requestKey) {
       pendingRequests.delete(requestKey)
     }
 
     console.error(`${logPrefix}[响应错误]`, error)
 
-    const originalRequest = error.config
+    // const originalRequest = error.config
 
     // 处理401错误 - 自动刷新token
     // if (error.response?.status === 401 && !originalRequest._retry) {
@@ -280,7 +313,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           const userStore = useUserStore()
           userStore.clearUserData()
           ElMessage.error(errorMessage)
-          window.location.href = '/login'
+          const router = getRouter()
+          router.push({ path: '/login', query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query } })
           break
         case 403:
           errorMessage = 'Access denied'
@@ -344,7 +378,11 @@ class Request {
    * @param params 请求参数
    * @param config 请求配置
    */
-  async get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async get<T = any>(
+    url: string,
+    params?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.get(url, { params, ...config })
     return response.data
   }
@@ -355,7 +393,11 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.post(url, data, config)
     return response.data
   }
@@ -366,7 +408,11 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.put(url, data, config)
     return response.data
   }
@@ -387,7 +433,11 @@ class Request {
    * @param data 请求数据
    * @param config 请求配置
    */
-  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.patch(url, data, config)
     return response.data
   }
@@ -424,6 +474,15 @@ class Request {
     return response.data
   }
 
+  /*
+   * 接受图片地址
+   * @param url 图片地址
+   * @param params 请求参数
+   */
+  async getUrl<T = any>(url: string, params?: any): Promise<Blob> {
+    const response = await this.axiosInstance.get(url, { params, responseType: 'blob' })
+    return response.data
+  }
   /**
    * 下载文件
    * @param url 下载地址

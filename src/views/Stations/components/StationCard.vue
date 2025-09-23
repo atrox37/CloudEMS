@@ -3,16 +3,16 @@
         <!-- Header Section -->
         <div class="station-card__header">
             <div class="station-card__title-section">
-                <h2 class="station-card__title">{{ station.name }}</h2>
+                <h2 class="station-card__title">{{ station.stationName }}</h2>
                 <div class="station-card__status">
-                    <img class="station-card__status-dot" :src="station.status === 'Online' ? onlineIcon : offlineIcon"
+                    <img class="station-card__status-dot" :src="station.stationStatus === 'online' ? onlineIcon : offlineIcon"
                         alt="status-dot" />
-                    <span class="station-card__status-text">{{ station.status }}</span>
+                    <span class="station-card__status-text">{{ station.stationStatus }}</span>
                 </div>
             </div>
             <div class="station-card__power-display">
-                <div class="station-card__current-power">{{ station.currentPower }} <span>kWh</span></div>
-                <div class="station-card__total-capacity">/{{ station.totalCapacity }}kWh</div>
+                <div class="station-card__current-power">{{ station.power }} <span>kWh</span></div>
+                <div class="station-card__total-capacity">/150kWh</div>
             </div>
         </div>
 
@@ -20,9 +20,9 @@
         <div class="station-card__power-section">
             <div class="station-card__power-label">Power Output</div>
             <div class="station-card__power-bar">
-                <div class="station-card__power-bar-fill" :style="{ width: `${station.powerPercentage}%` }"></div>
+                <div class="station-card__power-bar-fill" :style="{ width: `80%`, background: station.stationStatus === 'online' ? 'rgba(106, 193, 97, 1)' : 'rgba(148, 166, 197, 1)' }"></div>
             </div>
-            <div class="station-card__power-percentage">{{ station.powerPercentage }}%</div>
+            <div class="station-card__power-percentage">80%</div>
         </div>
 
         <!-- Metric Cards Grid -->
@@ -37,7 +37,7 @@
         <div class="station-card__footer">
             <div class="footer-left">
                 <IconButton type="primary" :icon="buttonSyncIcon" text="Data Synced" @click="handleSync" />
-                <div class="station-card__last-update">Last Update: {{ station.lastUpdate }}</div>
+                <div class="station-card__last-update">Last Update: {{ station.time }}</div>
 
             </div>
             <div class="footer-right">
@@ -47,7 +47,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts">    
 import onlineIcon from '@/assets/icons/station-status__online.svg'
 import offlineIcon from '@/assets/icons/station-status__offline.svg'
 import batteryIcon from '@/assets/icons/station-battery.svg'
@@ -58,23 +58,24 @@ import buttonSyncIcon from '@/assets/icons/button-synced.svg'
 import detailIcon from '@/assets/icons/button-detail.svg'
 import ValueCard from './ValueCard.vue'
 
+import type { Stations } from '@/types/Stations'
 
-interface Station {
-    id: string
-    name: string
-    status: string
-    currentPower: number
-    totalCapacity: number
-    powerPercentage: number
-    batteryLevel: number
-    efficiency: number
-    todayEnergy: number
-    temperature: number
-    lastUpdate: string
-}
+// interface Station {
+//     id: string
+//     name: string
+//     status: string
+//     currentPower: number
+//     totalCapacity: number
+//     powerPercentage: number
+//     batteryLevel: number
+//     efficiency: number
+//     todayEnergy: number
+//     temperature: number
+//     lastUpdate: string
+// }
 
 interface Props {
-    station: Station
+    station: Stations
 }
 
 const props = defineProps<Props>()
@@ -86,7 +87,7 @@ const cardData = computed(() => {
             CardValue: {
 
                 title: 'Battery Level',
-                value: props.station.batteryLevel,
+                value: props.station.battery,
                 unit: '%',
 
             },
@@ -112,8 +113,8 @@ const cardData = computed(() => {
             CardValue: {
 
                 title: 'Today\'s Energy',
-                value: props.station.todayEnergy,
-                unit: 'KWh',
+                value: props.station.energy,
+                unit: 'KWh',    
 
             },
             bgColor: 'rgba(211, 52, 255, 0.1)',
@@ -141,7 +142,7 @@ const handleSync = () => {
 }
 
 const handleDetail = () => {
-    router.push({ name: 'stationsDetail' })
+    router.push({ name: 'stationsDetail', query: { stationId: props.station.stationId } })
 }
 </script>
 
@@ -258,7 +259,7 @@ const handleDetail = () => {
 
             .station-card__power-bar-fill {
                 height: 100%;
-                background: rgba(106, 193, 97, 1);
+                // background: rgba(106, 193, 97, 1);
                 transition: width 0.3s ease;
             }
         }

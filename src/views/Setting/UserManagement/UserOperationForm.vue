@@ -1,103 +1,112 @@
 <template>
   <FormDialog width="9.24rem" ref="dialogRef" :title="dialogTitle">
     <template #dialog-body>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="1.24rem"
-        class="user-form"
-        label-position="right"
-        inline
-      >
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="1.24rem" class="user-form" label-position="right"
+        inline>
         <el-form-item label="username" prop="username">
-          <el-input
-            v-model="form.username"
-            placeholder="Enter username"
-            :disabled="mode === 'edit'"
-          />
+          <el-input v-model="form.username" placeholder="Enter username" :disabled="mode === 'edit'" />
+        </el-form-item>
+        <el-form-item label="Email" prop="email">
+          <el-input v-model="form.email" placeholder="Enter email" :disabled="mode === 'edit'" />
         </el-form-item>
 
-        <el-form-item label="Role" prop="role_id">
+        <el-form-item label="Role" prop="roleId">
           <div class="role-group" ref="roleGroupRef">
-            <el-select v-model="form.role_id" placeholder="Select role" :append-to="roleGroupRef">
-              <el-option
-                v-for="item in roleOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
+            <el-select v-model="form.roleId" placeholder="Select role" :append-to="roleGroupRef">
+              <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </div>
         </el-form-item>
 
         <!-- Status 独占一行，去除 inline 并设置宽度100% -->
-        <el-form-item
-          v-if="mode === 'edit'"
-          label="Status"
-          prop="is_active"
-          class="user-form__status-row"
-        >
-          <el-switch v-model="form.is_active" />
+        <el-form-item v-if="mode === 'edit'" label="status" prop="state" class="user-form__status-row">
+          <el-switch v-model="form.state" :active-value="1" :inactive-value="0" />
         </el-form-item>
 
-        <el-form-item label="Password" prop="password" v-if="mode === 'create'">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="Enter password"
-            show-password
-          />
+        <el-form-item label="Password" prop="password">
+          <el-input v-model="form.password" type="password" placeholder="Enter password" show-password />
         </el-form-item>
 
-        <el-form-item label="Confirm Password" prop="confirmPassword" v-if="mode === 'create'">
-          <el-input
-            v-model="form.confirmPassword"
-            type="password"
-            placeholder="Confirm password"
-            show-password
-          />
+        <el-form-item label="Confirm Password" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" type="password" placeholder="Confirm password" show-password />
         </el-form-item>
       </el-form>
     </template>
 
     <template #dialog-footer>
       <el-button type="warning" @click="onCancel">Cancel</el-button>
-      <el-button type="primary" @click="onSubmit">Submit</el-button>
+      <el-button type="primary" @click="onSubmit" :loading="loading">Submit</el-button>
     </template>
+
   </FormDialog>
 </template>
 
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
-// import { userApi } from '@/api/user'
-import type { UserFormModel, DialogExpose } from '@/types/userManagement'
+import type { UserInfo } from '@/types/user'
+import { removeEmpty } from '@/utils/common'
+import { getRoleList, operationUser } from '@/api/user'
+
+export interface UserFormModel {
+  id?: number
+  username?: string
+  roleId?: number | undefined
+  state?: number
+  password?: string
+  confirmPassword?: string
+  orgId?: number
+  email?: string
+  phone?: string
+}
+interface DialogExpose {
+  dialogVisible: boolean
+}
 
 const formRef = ref<FormInstance>()
 const dialogRef = ref<DialogExpose>()
 
 const getDefaultForm = (): UserFormModel => ({
   username: '',
-  role_id: 1,
-  is_active: true,
+  roleId: undefined,
+  state: 1,
   password: '',
   confirmPassword: '',
+  orgId: 1,
+  email: '',
 })
 
 const form = ref<UserFormModel>(getDefaultForm())
 const roleGroupRef = ref<HTMLElement>()
-const roleOptions = [
-  { label: 'Admin', value: 1 },
-  { label: 'Engineer', value: 2 },
-  { label: 'Viewer', value: 3 },
-]
-const roleId = ref<number>(1)
+const roleOptions = ref<{ label: string, value: number }[]>([])
 // 密码确认验证函数
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
-  if (value === '') {
+  if (mode.value === 'create' && value === '') {
     callback(new Error('Please confirm your password'))
   } else if (value !== form.value.password) {
     callback(new Error('Passwords do not match'))
+  } else {
+    callback()
+  }
+}
+
+// 密码校验：6-12位，必须包含字母和数字
+const validatePassword = (rule: any, value: string, callback: any) => {
+  if (mode.value === 'create' && !value) {
+    callback(new Error('Please input password'))
+  } else if (value && (value.length < 6 || value.length > 12)) {
+    callback(new Error('Password length must be 6-12 characters'))
+  } else if (value && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$/.test(value)) {
+    callback(new Error('Password must contain both letters and numbers'))
+  } else {
+    callback()
+  }
+
+
+}
+
+const validateEmail = (rule: any, value: string, callback: any) => {
+  if (value && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+    callback(new Error('Please enter a valid email address'))
   } else {
     callback()
   }
@@ -109,17 +118,21 @@ const rules = computed(() => {
       { required: true, message: 'Please input username', trigger: 'blur' },
       { min: 3, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
     ],
-    role_id: [{ required: true, message: 'Please select role', trigger: 'change' }],
-    is_active: [{ required: true, message: 'Please select status', trigger: 'change' }],
+    roleId: [{ required: true, message: 'Please select role', trigger: 'change' }],
+    state: [{ required: true, message: 'Please select status', trigger: 'change' }],
+    password: [
+      { validator: validatePassword, trigger: 'blur' },
+    ],
+    confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
+    email: [{ required: true, message: 'Please input email', trigger: 'blur' }, { validator: validateEmail, trigger: 'blur' }],
   }
 
-  // 只在创建模式下添加密码验证规则
+  // 只在创建模式下添加密码必填验证
   if (mode.value === 'create') {
     return {
       ...baseRules,
       password: [
-        { required: true, message: 'Please input password', trigger: 'blur' },
-        { min: 6, message: 'Password must be at least 6 characters', trigger: 'blur' },
+        { required: true, validator: validatePassword, trigger: 'blur' },
       ],
       confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
     }
@@ -127,25 +140,24 @@ const rules = computed(() => {
 
   return baseRules
 })
-
+const loading = ref(false)
 const mode = ref<'create' | 'edit'>('create')
 const dialogTitle = computed(() => (mode.value === 'edit' ? 'Edit User' : 'Add User'))
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj))
 }
 
-async function open(userId: number, openMode: 'create' | 'edit' = 'create') {
+async function open(userItem: UserInfo, openMode: 'create' | 'edit' = 'create') {
   mode.value = openMode
   form.value = getDefaultForm()
-  if (userId) {
-    roleId.value = userId
-    // const user = await userApi.getUserDetail(userId)
-
-    // if (user.success) {
-    //   form.value.username = user.data.username
-    //   form.value.role_id = user.data.role.id
-    //   form.value.is_active = user.data.is_active
-    // }
+  if (userItem) {
+    form.value.id = userItem.sysUserPo?.id
+    form.value.username = userItem.sysUserPo?.username
+    form.value.roleId = userItem.sysRolePo?.id
+    form.value.state = userItem.sysUserPo?.state
+    form.value.email = userItem.sysUserPo?.email
+    form.value.password = ''
+    form.value.confirmPassword = ''
   }
   nextTick(() => {
     setTimeout(() => {
@@ -172,57 +184,80 @@ function onCancel() {
 async function onSubmit() {
   formRef.value?.validate(async (valid) => {
     if (!valid) return
-    if (mode.value === 'create') {
-      // const res = await userApi.addUser({
-      //   username: form.value.username,
-      //   password: form.value.password,
-      //   role_id: form.value.role_id,
-      // })
-      // if (res.success) {
-      //   ElMessage.success('User added successfully')
-      //   emit('submit', form.value)
-      // }
-      close()
-    } else if (mode.value === 'edit') {
-      // const res = await userApi.updateUser(roleId.value, {
-      //   role_id: form.value.role_id,
-      //   is_active: form.value.is_active,
-      // })
-      // if (res.success) {
-      //   ElMessage.success('User updated successfully')
-      //   emit('submit', form.value)
-      //   close()
-      // }
+    try {
+      loading.value = true
+      const { confirmPassword, ...submitData } = form.value
+      if (mode.value === 'create') {
+        // 只提交form中除confirmPassword以外的字段
+
+        const res = await operationUser({
+          ...submitData,
+        })
+        if (res.code === 200) {
+          ElMessage.success('User added successfully')
+          emit('submit', submitData)
+        }
+        close()
+      } else if (mode.value === 'edit') {
+        const res = await operationUser({
+          ...removeEmpty(submitData),
+        })
+        if (res.code === 200) {
+          ElMessage.success('User updated successfully')
+          emit('submit', submitData)
+          close()
+        }
+      }
+    } finally {
+      loading.value = false
     }
   })
 }
 
+onMounted(() => {
+  // console.log(form.value, 'form')
+  getRoleList({ current: -1 }).then((res) => {
+    if (res.code === 200) {
+      roleOptions.value = res.data.records.map((item) => ({
+        label: item.sysRolePo?.roleName,
+        value: item.sysRolePo?.id,
+      }))
+    }
+  })
+})
 defineExpose({ open, close })
 </script>
 
 <style scoped lang="scss">
 .voltage-class {
+
   .monitor-data-group,
   .role-group,
   .condition-group {
     display: flex;
     gap: 0.16rem;
   }
+
   .status-group {
     width: 100%;
     display: flex;
   }
+
   :deep(.el-input__inner) {
     width: 2.4rem;
   }
+
   // 让Status输入框占据整行
-  .user-form__status-row {
-    width: 100%;
-    display: block;
-    :deep(.el-form-item__content) {
-      width: 6.6rem;
-    }
+  // .user-form__status-row {
+  //   width: 100%;
+  //   display: block;
+
+  :deep(.el-form-item__content) {
+    width: 6.6rem;
   }
+
+  // }
+
   :deep(.el-select__popper.el-popper) {
     top: 0.44rem !important;
   }

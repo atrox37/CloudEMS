@@ -25,17 +25,18 @@
 
 <script setup lang="ts">
 interface DashboardItem {
-    title: string
-    value: string | number
+    title?: string
+    value?: string | number
     unit?: string
-    icon: string
+    icon?: string
 }
-interface DashboardProps {
+export interface DashboardProps {
     dashboardData: DashboardItem
     bgColor?: string
     valueColor?: string
     iconBgColor?: string
     isDesc?:boolean
+    id?: number
 }
 const props = defineProps<DashboardProps>()
 const { dashboardData } = props

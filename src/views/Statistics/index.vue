@@ -1,58 +1,62 @@
 <template>
   <div class="statistics">
     <div class="statistics__header">
-      <div class="statistics__header-item" v-for="item in statisticsList" :key="item.id">
-        <DashboardCard :dashboardData="item.data" :iconBgColor="item.iconBgColor" :isDesc="true" />
-      </div>
+      <LoadingBg :loading="statisticsTotalLoading">
+        <div class="statisticsTotal">
+          <div class="statisticsTotal__item" v-for="item in statisticsTotalLost" :key="item.id">
+            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" :isDesc="true" />
+          </div>
+        </div>
+
+      </LoadingBg>
     </div>
+    <el-row :gutter="20">
+      <el-col :span="8">
+        <div class="statistics__content-item">
+          <ModuleCard title="Storage state" :loading="storageStateLoading">
+            <DoughnutChart :series="StorageStateSeries" />
+          </ModuleCard>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="statistics__content-item">
+          <ModuleCard title="Energy Structure Analysis(Today)" :loading="energyStructureAnalysisLoading">
+            <DoughnutChart :series="EnergyStructureAnalysisSeries" />
+          </ModuleCard>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="statistics__content-item">
+          <ModuleCard title="Diesel Generator Status" :loading="dieselGeneratorStatusLoading">
+            <DoughnutChart :series="DieselGeneratorStatusSeries" />
+          </ModuleCard>
+        </div>
+      </el-col>
+    </el-row>
     <el-row :gutter="20">
       <el-col :span="12">
         <div class="statistics__content-item">
-          <ModuleCard title="Storage Performance">
-            <LineChart :xAxiosOption="storagePerformanceData.xAxiosOption"
-              :yAxiosOption="storagePerformanceData.yAxiosOption" :series="storagePerformanceData.series" />
+          <ModuleCard title="Power Curve (Today)" :loading="powerCurveLoading">
+            <LineChart :xAxiosOption="powerCurveData.xAxiosOption" :yAxiosOption="powerCurveData.yAxiosOption"
+              :series="powerCurveData.series" />
           </ModuleCard>
         </div>
       </el-col>
       <el-col :span="12">
         <div class="statistics__content-item">
-          <ModuleCard title="Energy Consumption">
+          <ModuleCard title="Self-sufficiency rate curve (hourly)" :loading="energyConsumptionLoading">
             <LineChart :xAxiosOption="energyConsumptionData.xAxiosOption"
               :yAxiosOption="energyConsumptionData.yAxiosOption" :series="energyConsumptionData.series" />
           </ModuleCard>
         </div>
       </el-col>
     </el-row>
-    <el-row :gutter="20">
-      <el-col :span="8">
-        <div class="statistics__content-item">
-          <ModuleCard title="Station Status">
-            <DoughnutChart :series="stationStatusSeries" />
-          </ModuleCard>
-        </div>
-      </el-col>
-      <el-col :span="8">
-        <div class="statistics__content-item">
-          <ModuleCard title="Efficiency Trends">
-            <LineChart :xAxiosOption="efficiencyTrendsData.xAxiosOption"
-              :yAxiosOption="efficiencyTrendsData.yAxiosOption" :series="efficiencyTrendsData.series" />
-          </ModuleCard>
-        </div>
-      </el-col>
-      <el-col :span="8">
-        <div class="statistics__content-item">
-          <ModuleCard title="Battery Health">
-            <SimpleBarChart :xAxiosOption="batteryHealthData.xAxiosOption"
-              :yAxiosOption="batteryHealthData.yAxiosOption" :series="batteryHealthData.series" />
-          </ModuleCard>
-        </div>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
+
+    <!-- <el-row :gutter="20">
       <el-col :span="12">
         <div class="statistics__content-item">
           <ModuleCard title="Daily cost savings vs Pure Diesel">
-            <SimpleBarChart :xAxiosOption="costSavingsData.xAxiosOption" :yAxiosOption="costSavingsData.yAxiosOption"
+            <MultiBarChart :xAxiosOption="costSavingsData.xAxiosOption" :yAxiosOption="costSavingsData.yAxiosOption"
               :series="costSavingsData.series" />
           </ModuleCard>
         </div>
@@ -65,60 +69,58 @@
           </ModuleCard>
         </div>
       </el-col>
-    </el-row>
+    </el-row> -->
     <div class="statistic__list">
       <div class="statistic__list-header">
         <div class="header__title">Analytics Dashboard</div>
         <div class="header__btn">
-          <IconButton :icon="refreshIcon" type="warning" text="refresh" />
+          <IconButton :icon="refreshIcon" type="warning" text="refresh" :disabled="analyticsLineLoading" @click="getAnalyticsLine" />
         </div>
       </div>
       <div class="statistic__list-content">
-        <el-table :data="tableData" style="width: 100%" table-layout="fixed">
-          <el-table-column prop="stationName" label="Station Name" />
-          <el-table-column prop="region" label="Region">
-            <template #default="scope">
-              <img :src="addressIcon" alt="address-icon" style="margin-right: 0.03rem;" />
-              <div>{{ scope.row.region }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="Status">
-            <template #default="scope">
-              <!-- <div class="statistic__list-content-item-status"> -->
-              <img :src="scope.row.status === 1 ? onlineIcon : offlineIcon" style="margin-right: 0.03rem;" />
-              <div>{{ scope.row.status === 1 ? 'Online' : 'Offline' }}</div>
-              <!-- </div> -->
-            </template>
-          </el-table-column>
-          <el-table-column prop="powerOutput" label="Power Output" show-overflow-tooltip>
-            <template #default="scope">
-              {{ scope.row.powerOutput }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="batteryStatus" label="Battery Status" show-overflow-tooltip>
+        <LoadingBg :loading="analyticsLineLoading">
+          <el-table :data="tableData" style="width: 100%" table-layout="fixed">
+            <el-table-column prop="stationName" label="Station Name" />
+            <el-table-column prop="address" label="Address">
+              <template #default="scope">
+                <img :src="addressIcon" alt="address-icon" style="margin-right: 0.03rem;" />
+                <div>{{ scope.row.address }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="Status">
+              <template #default="scope">
+                <!-- <div class="statistic__list-content-item-status"> -->
+                <img :src="scope.row.status === 'online' ? onlineIcon : offlineIcon" style="margin-right: 0.03rem;" />
+                <div style="">{{ scope.row.status }}</div>
+                <!-- </div> -->
+              </template>
+            </el-table-column>
 
-          </el-table-column>
-          <el-table-column prop="efficiency" label="Efficiency">
+            <el-table-column prop="battery(soc)" label="Battery(soc)">
+
+            </el-table-column>
+            <el-table-column prop="loadPower" label="Load Power"></el-table-column>
+            <el-table-column prop="dieselPower" label="Diesel Power"></el-table-column>
+            <!-- <el-table-column prop="efficiency" label="Efficiency">
             <template #default="scope">
               {{ scope.row.efficiency }}%
             </template>
-          </el-table-column>
-          <el-table-column prop="Alarm" label="Alarm">
-          </el-table-column>
-          <el-table-column prop="lastUpdate" label="Last Update" />
-        </el-table>
+          </el-table-column> -->
+            <el-table-column prop="Alarm" label="Alarm">
+            </el-table-column>
+            <el-table-column prop="lastUpdate" label="Last Update" />
+          </el-table>
+        </LoadingBg>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import DashboardCard from '@/components/card/DashboardCard.vue'
-import ModuleCard from '@/components/card/ModuleCard.vue'
-import SimpleBarChart from '@/components/charts/SimpleBarChar.vue'
-import LineChart from '@/components/charts/lineChart.vue'
-import StackedBarChart from '@/components/charts/StackedBarChart.vue'
-import DoughnutChart from '@/components/charts/DoughnutChart.vue'
+
+import { getStatisticsTotalData, getStorageStateData, getEnergyStructureAnalysisData, getDieselGeneratorStatusData, getPowerCurveData, getEnergyConsumptionData, getAnalyticsLineData } from '@/api/statistics'
+import type { AnalyticsAllData } from '@/types/statistics'
+
 
 import totalStationIcon from '@/assets/icons/dashboard-totalStation.svg'
 import currentOutputIcon from '@/assets/icons/dashboard-output.svg'
@@ -128,21 +130,45 @@ import refreshIcon from '@/assets/icons/button-refresh.svg'
 import onlineIcon from '@/assets/icons/station-status__online.svg'
 import offlineIcon from '@/assets/icons/station-status__offline.svg'
 import addressIcon from '@/assets/icons/address.svg'
-const statisticsList = ref([
+import type { DashboardProps } from '@/components/card/DashboardCard.vue'
+// import { getEnergyConsumptionData } from '@/api/statistics'
+interface TableData {
+  id: number
+  stationName: string
+  address: string
+  status: string
+  'battery(soc)': number
+  loadPower: number
+  dieselPower: number
+  Alarm: number
+  lastUpdate: string
+}
+
+const statisticsTotalLoading = ref(false)
+const storageStateLoading = ref(false)
+const energyStructureAnalysisLoading = ref(false)
+const dieselGeneratorStatusLoading = ref(false)
+const powerCurveLoading = ref(false)
+const energyConsumptionLoading = ref(false)
+const analyticsLineLoading = ref(false)
+
+
+
+const statisticsTotalLost = ref<DashboardProps[]>([
   {
     id: 1,
-    data: {
+    dashboardData: {
       title: 'Total stations',
-      value: 24,
+      value: '-',
       icon: totalStationIcon
     },
     iconBgColor: 'rgba(29, 134, 255, 0.1)'
   },
   {
     id: 2,
-    data: {
-      title: 'Current Output',
-      value: 24,
+    dashboardData: {
+      title: 'Current PV power',
+      value: '-',
       unit: 'kW',
       icon: currentOutputIcon
     },
@@ -150,9 +176,9 @@ const statisticsList = ref([
   },
   {
     id: 3,
-    data: {
-      title: 'Today\'s Energy',
-      value: 424,
+    dashboardData: {
+      title: 'Current Load Power',
+      value: '-',
       unit: 'kWh',
       icon: todayEnergyIcon
     },
@@ -160,9 +186,9 @@ const statisticsList = ref([
   },
   {
     id: 4,
-    data: {
-      title: 'Cost Saving»',
-      value: '$24',
+    dashboardData: {
+      title: 'Cost saving Today',
+      value: '$0',
       unit: 'vs pure diesel',
       icon: costSavingIcon
     },
@@ -171,270 +197,181 @@ const statisticsList = ref([
 ])
 
 // 第一个el-row的图表数据
-const storagePerformanceData = ref({
+const powerCurveData = ref({
   xAxiosOption: {
-    xAxiosData: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00']
+    xAxiosData: [] as string[]
   },
   yAxiosOption: {
     yUnit: 'kWh'
   },
   series: [
     {
-      name: 'Storage Level',
-      data: [65, 72, 85, 92, 88, 95, 78],
+      name: 'PV',
+      data: [] as number[],
+      color: '#ee6666'
+    },
+    {
+      name: 'ESS',
+      data: [] as number[],
       color: '#1d86ff'
     },
     {
-      name: 'Battery Capacity',
-      data: [45, 58, 72, 89, 76, 82, 65],
-      color: '#6ac161'
+      name: 'DG',
+      data: [] as number[],
+      color: '#ffe58f'
     },
     {
-      name: 'Reserve Power',
-      data: [25, 32, 45, 52, 48, 55, 38],
-      color: '#c9b23f'
-    }
+      name: 'Load',
+      data: [] as number[],
+      color: '#1d86ff'
+    },
+
   ]
 })
 
 const energyConsumptionData = ref({
   xAxiosOption: {
-    xAxiosData: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00']
+    xAxiosData: [] as string[]
   },
   yAxiosOption: {
     yUnit: 'kW'
   },
   series: [
     {
-      name: 'Total Consumption',
-      data: [120, 180, 220, 280, 240, 200, 150],
+      name: 'Self-sufficiency rate',
+      data: [] as number[],
       color: '#6ac161'
-    },
-    {
-      name: 'Peak Demand',
-      data: [180, 240, 280, 320, 290, 250, 200],
-      color: '#ff6b6b'
-    },
-    {
-      name: 'Base Load',
-      data: [80, 120, 160, 200, 180, 150, 100],
-      color: '#ffa726'
     }
   ]
 })
 
-// 第二个el-row的图表数据
-const stationStatusData = ref([
-  { value: 18, name: 'Online', color: '#6ac161' },
-  { value: 4, name: 'Offline', color: '#ff6b6b' },
-  { value: 2, name: 'Maintenance', color: '#ffa726' }
+const StorageStateSeries = ref([
+  { value: 0, name: 'Charging ', color: '#fc8452' },
+  { value: 0, name: 'Discharging ', color: '#597ef7' },
+  { value: 0, name: 'Idle ', color: '#ffa726' }
 ])
-
-// 修复DoughnutChart的props格式
-const stationStatusSeries = ref([
-  { value: 18, name: 'Online', color: '#6ac161' },
-  { value: 4, name: 'Offline', color: '#ff6b6b' },
-  { value: 2, name: 'Maintenance', color: '#ffa726' }
+const EnergyStructureAnalysisSeries = ref([
+  { value: 0, name: 'PV', color: '#ee6666' },
+  { value: 0, name: 'DG', color: '#ffe58f' }
 ])
-
-const efficiencyTrendsData = ref({
-  xAxiosOption: {
-    xAxiosData: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  },
-  yAxiosOption: {
-    yUnit: '%'
-  },
-  series: [
-    {
-      name: 'Overall Efficiency',
-      data: [85, 88, 92, 89, 91, 87, 90],
-      color: '#c9b23f'
-    },
-    {
-      name: 'Solar Efficiency',
-      data: [78, 82, 86, 84, 88, 85, 87],
-      color: '#6ac161'
-    },
-    {
-      name: 'Battery Efficiency',
-      data: [92, 94, 96, 93, 95, 91, 94],
-      color: '#1d86ff'
+const DieselGeneratorStatusSeries = ref([
+  { value: 0, name: 'Running', color: '#6ac161' },
+  { value: 0, name: 'Standby', color: '#ff6b6b' },
+  { value: 0, name: 'Maintenance', color: '#ffa726' }
+])
+const tableData = ref<TableData[]>([])
+const getStatisticsTotal = async () => {
+  try {
+    statisticsTotalLoading.value = true
+    const res = await getStatisticsTotalData()
+    if (res.code === 200) {
+      statisticsTotalLost.value[0].dashboardData.value = res.data.statisticsCount
+      statisticsTotalLost.value[1].dashboardData.value = res.data.statisticsPv
+      statisticsTotalLost.value[2].dashboardData.value = res.data.statisticsLoad
+      statisticsTotalLost.value[3].dashboardData.value = res.data.statisticsBenefit
     }
-  ]
-})
-
-const batteryHealthData = ref({
-  xAxiosOption: {
-    xAxiosData: ['Station 1', 'Station 2', 'Station 3', 'Station 4', 'Station 5', 'Station 6', 'Station 7', 'Station 8']
-  },
-  yAxiosOption: {
-    yUnit: '%'
-  },
-  series: [
-    {
-      name: 'Battery Health',
-      data: [95, 87, 92, 78, 89, 94, 91, 85],
-      color: '#ff6b6b'
-    },
-    {
-      name: 'Cycle Count',
-      data: [1200, 1800, 950, 2200, 1100, 800, 1350, 1600],
-      color: '#1d86ff'
-    }
-  ]
-})
-
-// 第三个el-row的图表数据
-const costSavingsData = ref({
-  xAxiosOption: {
-    xAxiosData: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
-  },
-  yAxiosOption: {
-    yUnit: '$'
-  },
-  series: [
-    {
-      name: 'Cost Savings',
-      data: [1200, 1350, 1100, 1600, 1400, 1800, 1550, 1700],
-      color: '#6ac161'
-    },
-    {
-      name: 'Fuel Cost',
-      data: [800, 750, 900, 650, 800, 600, 750, 650],
-      color: '#ff6b6b'
-    },
-    {
-      name: 'Maintenance Cost',
-      data: [300, 250, 200, 350, 300, 250, 300, 350],
-      color: '#ffa726'
-    }
-  ]
-})
-
-const powerOutputData = ref({
-  xAxiosOption: {
-    xAxiosData: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00']
-  },
-  yAxiosOption: {
-    yUnit: 'kW'
-  },
-  series: [
-    {
-      name: 'Total Output',
-      data: [180, 220, 280, 320, 290, 250, 200],
-      color: '#1d86ff'
-    },
-    {
-      name: 'Solar Output',
-      data: [120, 160, 200, 240, 220, 180, 140],
-      color: '#6ac161'
-    },
-    {
-      name: 'Battery Output',
-      data: [60, 60, 80, 80, 70, 70, 60],
-      color: '#c9b23f'
-    }
-  ]
-})
-
-// 表格数据
-const tableData = ref([
-  {
-    id:1,
-    stationName: 'North Valley Solar',
-    region: 'North Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 88,
-    Alarm: 2,
-    lastUpdate: '2024-01-15 14:30:25'
-  },
-  {
-    id:2,
-    stationName: 'North Valley Solar',
-    region: 'South Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 85,
-    Alarm: 0,
-    lastUpdate: '2024-01-15 14:28:10'
-  },
-  {
-    id:3,
-    stationName: 'North Valley Solar',
-    region: 'East Region',
-    status: 0,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 0,
-    Alarm: 5,
-    lastUpdate: '2024-01-15 14:25:45'
-  },
-  {
-    id:4,
-    stationName: 'North Valley Solar',
-    region: 'West Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 91,
-    Alarm: 1,
-    lastUpdate: '2024-01-15 14:32:15'
-  },
-  {
-    id:5,
-    stationName: 'North Valley Solar',
-    region: 'Central Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 82,
-    Alarm: 3,
-    lastUpdate: '2024-01-15 14:29:30'
-  },
-  {
-    id:6,
-    stationName: 'North Valley Solar',
-    region: 'North Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 87,
-    Alarm: 0,
-    lastUpdate: '2024-01-15 14:31:20'
-  },
-  {
-    id: 7,
-    stationName: 'North Valley Solar',
-    region: 'South Region',
-    status: 0,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 0,
-    Alarm: 8,
-    lastUpdate: '2024-01-15 14:24:55'
-  },
-  {
-    id: 8,
-    stationName: 'North Valley Solar',
-    region: 'East Region',
-    status: 1,
-    powerOutput: '120 / 150 kW 80.0% capacity',
-    batteryStatus: '85% Charging',
-    efficiency: 84,
-    Alarm: 1,
-    lastUpdate: '2024-01-15 14:30:40'
+  } finally {
+    statisticsTotalLoading.value = false
   }
-])
 
-// 获取电池状态标签类型
-function getBatteryStatusType(batteryStatus: number) {
-  if (batteryStatus >= 80) return 'success'
-  if (batteryStatus >= 60) return 'warning'
-  return 'danger'
 }
+const getStorageState = async () => {
+  try {
+    storageStateLoading.value = true
+    const res = await getStorageStateData()
+    if (res.code === 200) {
+      // debugger
+      StorageStateSeries.value[0].value = res.data.totalCharging
+      StorageStateSeries.value[1].value = res.data.totalDischarging
+      StorageStateSeries.value[2].value = res.data.totalIdle
+    }
+  } finally {
+    storageStateLoading.value = false
+  }
+}
+const getEnergyStructureAnalysis = async () => {
+  try {
+    energyStructureAnalysisLoading.value = true
+    const res = await getEnergyStructureAnalysisData()
+    if (res.code === 200) {
+      EnergyStructureAnalysisSeries.value[0].value = res.data.totalGF
+      EnergyStructureAnalysisSeries.value[1].value = res.data.totalCF
+    }
+  } finally {
+    energyStructureAnalysisLoading.value = false
+  }
+}
+const getDieselGeneratorStatus = async () => {
+  try {
+    dieselGeneratorStatusLoading.value = true
+    const res = await getDieselGeneratorStatusData()
+    if (res.code === 200) {
+      DieselGeneratorStatusSeries.value[0].value = res.data.totalRunning
+      DieselGeneratorStatusSeries.value[1].value = res.data.totalIdle
+      DieselGeneratorStatusSeries.value[2].value = res.data.totalError
+    }
+  } finally {
+    dieselGeneratorStatusLoading.value = false
+  }
+}
+const getPowerCurve = async () => {
+  try {
+    powerCurveLoading.value = true
+    const res = await getPowerCurveData()
+    if (res.code === 200) {
+      powerCurveData.value.series[0].data = res.data.gfResult
+      powerCurveData.value.series[1].data = res.data.cnResult
+      powerCurveData.value.series[2].data = res.data.cfResult
+      powerCurveData.value.series[3].data = res.data.fzResult
+    }
+  } finally {
+    powerCurveLoading.value = false
+  }
+}
+const getEnergyConsumption = async () => {
+  try {
+    energyConsumptionLoading.value = true
+    const res = await getEnergyConsumptionData()
+    if (res.code === 200) {
+      energyConsumptionData.value.series[0].data = res.data
+    }
+  } finally {
+    energyConsumptionLoading.value = false
+  }
+}
+// const getAnalyticsLine
+const getAnalyticsLine = async () => {
+  try {
+    analyticsLineLoading.value = true
+    const res = await getAnalyticsLineData()
+    if (res.code === 200) {
+      tableData.value = res.data.map((item: AnalyticsAllData) => ({
+        id: item.deviceInstancePo.id,
+        stationName: item.deviceInstancePo.name,
+        address: item.deviceInstancePo.description.address,
+        status: item.deviceInstancePo.status,
+        'battery(soc)': item.batteryRate,
+        Alarm: item.alarmCount,
+        lastUpdate: item.deviceInstancePo.statusTime,
+        loadPower: item.loadPower,
+        dieselPower: item.dieselPower
+      }))
+    }
+  } finally {
+    analyticsLineLoading.value = false
+  }
+}
+
+onMounted(() => {
+  getStatisticsTotal()
+  getStorageState()
+  getEnergyStructureAnalysis()
+  getDieselGeneratorStatus()
+  getPowerCurve()
+  getEnergyConsumption()
+  getAnalyticsLine()
+
+})
 </script>
 
 <style scoped lang="scss">
@@ -447,14 +384,22 @@ function getBatteryStatusType(batteryStatus: number) {
 
   .statistics__header {
     height: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
+    width: 100%;
 
-    .statistics__header-item {
-      width: calc((100% - 0.6rem) / 4);
-      height: 100%
+    .statisticsTotal {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+
+
+      .statisticsTotal__item {
+        width: calc((100% - 0.6rem) / 4);
+        height: 100%
+      }
     }
+
   }
 
   .statistics__content {}
@@ -468,7 +413,7 @@ function getBatteryStatusType(batteryStatus: number) {
 
   .statistic__list {
     width: 100%;
-    margin-top: 0.45rem;
+    margin-top: 0.2rem;
 
 
     .statistic__list-header {
@@ -486,8 +431,9 @@ function getBatteryStatusType(batteryStatus: number) {
       }
 
     }
-    .statistic__list-content{
-      img{
+
+    .statistic__list-content {
+      img {
         width: 0.12rem;
         height: 0.12rem;
         object-fit: contain;

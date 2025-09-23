@@ -15,12 +15,10 @@ export const useUserStore = defineStore(
     const routesInjected = ref<boolean>(false) // 是否已注入动态路由
 
     // 计算属性
-    const isLoggedIn = computed(() => !!token.value && !!userInfo.value)
-    const displayName = computed(() => userInfo.value?.username || '')
+    const isLoggedIn = computed(() => !!token.value)
+    const displayName = computed(() => userInfo.value?.sysUserPo.username || '')
 
-    const roles = computed(() =>
-      ['Admin'],
-    )
+    const roles = computed(() => ['Admin'])
 
     // 用户登录
     const login = async (params: LoginParams) => {
@@ -29,16 +27,14 @@ export const useUserStore = defineStore(
         const encryptedParams = {
           ...params,
           // password: MD5(params.password).toString(),
-          
         }
-
         const response = await userLogin(encryptedParams)
 
         if (response.code === 200) {
           // 更新状态（会自动持久化）
           token.value = response.data
           // refreshToken.value = ''
-          ElMessage.success(response.msg || 'Login successful')
+          // ElMessage.success(response.msg || 'Login successful')
           return { success: true, message: response.msg || 'Login successful' }
         } else {
           return { success: false, message: response.msg || 'Login failed' }
@@ -49,21 +45,8 @@ export const useUserStore = defineStore(
     }
 
     // 用户登出
-    const logout = async () => {
-      try {
-        // 调用登出API
-        if (token.value) {
-          const res = await userLogout()
-            if (res.code === 200) {
-            ElMessage.success('Logout successful')
-            clearUserData()
-          } else {
-            ElMessage.error(res.msg || 'Logout failed')
-          }
-        }
-      } catch (error) {
-        console.error('Logout API call failed:', error)
-      }
+    const logout = () => {
+      clearUserData()
     }
 
     // 获取用户信息
@@ -73,7 +56,6 @@ export const useUserStore = defineStore(
 
         if (response.code === 200) {
           userInfo.value = response.data
-
           return { success: true, message: response.msg || 'Get user info successful' }
         } else {
           return { success: false, message: response.msg || 'Get user info failed' }
@@ -109,6 +91,7 @@ export const useUserStore = defineStore(
       token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置
+      
       // refreshToken.value = ''
     }
 

@@ -8,9 +8,9 @@
     </div>
     <div class="security__body">
       <SettingCard title="Password Policy">
-        <!-- <template #control>
+        <template #control>
           <el-button type="primary">submit</el-button>
-        </template> -->
+        </template>
         <SettingItem title="Minimum password length">
           <el-input v-model="passwordForm.minLength" placeholder="Enter password" />
         </SettingItem>
@@ -29,9 +29,9 @@
 
       </SettingCard>
       <SettingCard title="Two-Factor Authentication">
-        <!-- <template #control>
+        <template #control>
           <el-button type="primary">submit</el-button>
-        </template> -->
+        </template>
         <SettingItem title="Require 2FA for all users">
           <el-switch v-model="twoFactorForm.require2FA" style="margin-right:2.04rem" />
         </SettingItem>

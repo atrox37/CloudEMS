@@ -1,11 +1,19 @@
 <template>
-  <el-button :type="type" class="icon-button" :class="customClass" @click="handleClick">
+  <el-button
+    :type="type"
+    class="icon-button"
+    :class="customClass"
+    v-bind="attrs"
+    v-on="listeners"
+  >
     <img :src="icon" class="icon-button__icon" :class="iconClass" />
     {{ text }}
   </el-button>
 </template>
 
 <script setup lang="ts">
+import { useAttrs } from 'vue'
+
 interface Props {
   icon: string
   text: string
@@ -14,21 +22,23 @@ interface Props {
   iconClass?: string
 }
 
-interface Emits {
-  (e: 'click'): void
-}
-
 const props = withDefaults(defineProps<Props>(), {
   type: 'primary',
   customClass: '',
   iconClass: 'icon-button__icon',
 })
 
-const emit = defineEmits<Emits>()
+// 获取所有透传的属性和事件
+const attrs = useAttrs()
 
-const handleClick = () => {
-  emit('click')
-}
+// 事件监听（只保留onXxx的事件）
+const listeners = {}
+Object.keys(attrs).forEach(key => {
+  if (key.startsWith('on')) {
+    // @ts-ignore
+    listeners[key] = attrs[key]
+  }
+})
 </script>
 
 <style scoped lang="scss">

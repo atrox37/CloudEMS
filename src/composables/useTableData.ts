@@ -62,7 +62,7 @@ export interface TableConfig {
 
 // 表格数据响应接口
 export interface TableDataResponse<T = any> {
-  list?: T[] // 数据列表
+  records?: T[] // 数据列表
   total?: number // 总记录数
 }
 
@@ -107,8 +107,8 @@ export function useTableData<T = any>(config: TableConfig) {
 
       // 构建请求参数
       const params: QueryParams = {
-        page: pagination.page,
-        page_size: pagination.pageSize,
+        current: pagination.page,
+        size: pagination.pageSize,
         ...queryParams,
         ...filters,
       }
@@ -122,13 +122,13 @@ export function useTableData<T = any>(config: TableConfig) {
         }
       }
 
-      const response: ApiResponse<TableDataResponse<T>> = await server.get(
+      const response: ApiResponse<TableDataResponse<T>> = await server.post(
         config.listUrl,
         filteredParams,
       )
 
-      if (response.success) {
-        tableData.value = response.data.list || []
+      if (response.code===200) {
+        tableData.value = response.data.records || []
         pagination.total = response.data.total || 0
         Object.assign(nowFilters, filteredParams)
       }
@@ -246,7 +246,7 @@ export function useTableData<T = any>(config: TableConfig) {
       const deleteUrl = config.deleteUrl.replace('{id}', String(id))
       const response = await server.delete(deleteUrl)
 
-      if (response.success) {
+      if (response.code===200) {
         ElMessage.success('Deleted successfully')
         await fetchTableData()
         return true
@@ -296,7 +296,7 @@ export function useTableData<T = any>(config: TableConfig) {
         ids: ids,
       })
 
-      if (response.success) {
+      if (response.code===200) {
         ElMessage.success(`成功删除 ${ids.length} 条记录`)
         await fetchTableData()
         return true

@@ -4,7 +4,6 @@
 // 日期选择器头部
 .voltage-class {
   .el-picker__popper.el-popper {
-    background: transparent !important;
     border-radius: 0 !important;
     border: 0.01rem solid !important;
     border-image: linear-gradient(
@@ -18,17 +17,82 @@
       1 !important;
     box-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0, 0, 0, 0.25) !important;
     backdrop-filter: blur(0.2rem) !important;
-    background-color: rgba(30, 47, 80, 0.3) !important;
+    background-color: transparent !important;
+    z-index: 99;
+
+    .el-date-range-picker__content {
+      padding:0.16rem;
+      &.is-left{
+        border-right: 0.01rem solid rgba(255,255,255,0.5);
+      }
+      .el-date-range-picker__header {
+        height: 0.28rem;
+        & div {
+          margin-left: 0.5rem;
+          margin-right: 0.5rem;
+          font-size: 0.16rem;
+        }
+        .el-picker-panel__icon-btn {
+          font-size: 0.12rem;
+          color: #fff;
+          margin-top: 0.08rem;
+          &:hover {
+            color: #fff;
+          }
+        }
+
+        .el-date-range-picker__header-label {
+          font-size: 0.16rem;
+          font-weight: 500;
+          color: #fff;
+          line-height: 22px;
+          padding: 0 0.05rem;
+        }
+      }
+    }
+    .el-month-table,.el-year-table{
+      font-size:0.12rem;
+      margin:-0.01rem;
+      border-spacing:0.02rem !important;
+      td{
+        width:0.68rem;
+        padding:0.08rem 0;
+        .el-date-table-cell{
+          height:0.48rem;
+          padding:0.06rem 0;
+          .el-date-table-cell__text{
+            width:0.54rem;
+            height: 0.36rem;
+            line-height: 0.36rem;
+            border-radius:0;
+            color:#fff;
+          }
+        }
+        &.current:not(.disabled) .el-date-table-cell{
+          border-radius:0;
+          margin:0 0.03rem;
+          .el-date-table-cell__text{
+            background-color:rgba(255, 105, 0, 1);
+          }
+        }
+      }
+
+    }
     .el-date-picker {
       width: 3.32rem !important;
+    }
+    .el-date-range-picker {
+      width: 6.46rem !important;
     }
     .el-picker-panel {
       background: transparent !important;
       line-height: 0.3rem;
+      border-radius: 0;
       .el-picker-panel__body {
+        min-width: 5.13rem !important;
         color: #fff !important;
-        .el-date-picker__time-header {
-          border-bottom: 0.01rem solid rgb(128, 128, 128);
+        .el-date-picker__time-header,.el-date-range-picker__time-header {
+          border-bottom: 0.01rem solid rgba(255,255,255,0.5);
           font-size: 0.12rem;
           padding: 0.08rem 0.05rem 0.05rem;
           .el-date-picker__editor-wrap {
@@ -65,7 +129,7 @@
             th {
               color: #fff;
               padding: 0.05rem;
-              border-bottom: 0.01rem solid rgb(128, 128, 128);
+              border-bottom: 0.01rem solid rgba(255,255,255,0.5);
             }
             td {
               height: 0.3rem;
@@ -81,7 +145,7 @@
       .el-picker-panel__footer {
         background: transparent !important;
         padding: 0.04rem 0.12rem;
-        border-top: 0.01rem solid rgb(128, 128, 128);
+        border-top: 0.01rem solid rgba(255,255,255,0.5);
         .el-picker-panel__link-btn {
           color: #fff !important;
           padding: 0.04rem 0.12rem;
@@ -97,8 +161,11 @@
   .el-time-panel {
     // 时间选择器头部
     border-radius: 0;
-    border: 0.01rem solid rgba(128, 128, 128, 0.5);
-    background-color: rgba(30, 47, 80, 0.1) !important;
+    margin:0.05rem 0;
+    border: 0.01rem solid rgba(255,255,255,0.7) !important;
+    background-color: #2f4a78 !important;
+    backdrop-filter: blur(0.2rem);
+    box-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0,0,0,0.25);
 
     margin: 0;
     width: 1.8rem;
@@ -106,7 +173,7 @@
     .el-time-panel__header {
       padding: 0.16rem 0.2rem;
       color: #fff;
-      border-bottom: 0.01rem solid rgb(128, 128, 128);
+      border-bottom: 0.01rem solid rgba(255,255,255,0.5);
       background: transparent;
 
       .el-time-panel__title {
@@ -123,15 +190,15 @@
         height: 0.32rem;
         padding-top: 0.06rem;
         margin-top: -0.16rem;
-        border-bottom: 0.01rem solid rgb(128, 128, 128);
-        border-top: 0.01rem solid rgb(128, 128, 128);
+        border-bottom: 0.01rem solid rgba(255,255,255,0.5);
+        border-top: 0.01rem solid rgba(255,255,255,0.5);
       }
       &:after {
         height: 0.32rem;
         margin-top: -0.16rem;
         padding-top: 0.06rem;
       }
-      .el-time-spinner__wrapper{
+      .el-time-spinner__wrapper {
         max-height: 1.92rem;
       }
       // 时间列表
@@ -187,7 +254,7 @@
       height: 0.36rem;
       line-height: 0.25rem;
       padding: 0.04rem;
-      border-top: 0.01rem solid rgb(128, 128, 128);
+      border-top: 0.01rem solid rgba(255,255,255,0.5);
       background-color: rgba(30, 47, 80, 0.1) !important;
       .el-time-panel__btn {
         font-size: 0.14rem;
@@ -202,28 +269,77 @@
       }
     }
   }
-}
-.el-date-table td .el-date-table-cell {
-  height: 0.3rem !important;
-  padding: 0.03rem 0 !important;
-  line-height: 0.3rem !important;
-}
-.el-date-table td.current:not(.disabled) .el-date-table-cell__text {
-  height: 0.24rem;
-  width: 0.24rem;
-  line-height: 0.24rem;
-  background-color: rgba(255, 105, 0, 1) !important;
-}
+  .el-range-editor.el-input__wrapper {
+    width: 4rem;
+    &:hover {
+      box-shadow: none;
+    }
+    .el-range__icon,
+    .el-range__close-icon {
+      width: 0.16rem !important;
+      height: 0.16rem !important;
+      color: #fff !important;
+      font-size: 0.16rem !important;
+      margin: 0 0.04rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .el-range-separator {
+      color: #fff !important;
+      font-size: 0.14rem !important;
+      padding: 0 0.05rem !important;
+    }
+  }
+  .el-date-table td .el-date-table-cell {
+    height: 0.3rem !important;
+    padding: 0.03rem 0 !important;
+    line-height: 0.3rem !important;
+  }
+  .el-date-table td.in-range .el-date-table-cell {
+    background-color: rgba(255, 105, 0, 0.5);
+    &:hover {
+      background-color: rgba(255, 105, 0, 0.8);
+    }
+  }
+  .el-date-table td.start-date .el-date-table-cell {
+    margin-left: 0.05rem !important;
+    border-top-left-radius: 0.15rem !important;
+    border-bottom-left-radius: 0.15rem !important;
+    background-color: rgba(255, 105, 0, 0.5);
+  }
 
-.el-date-table td .el-date-table-cell .el-date-table-cell__text {
-  height: 0.24rem !important;
-  line-height: 0.24rem !important;
-  width: 0.24rem !important;
-  color: #fff !important;
-}
-.el-date-table td.today .el-date-table-cell__text {
-  color: rgba(255, 105, 0, 1) !important;
-}
-.el-popper.el-picker__popper {
-  bottom: 0.44rem !important;
+  .el-date-table td.end-date .el-date-table-cell {
+    margin-right: 0.05rem !important;
+    border-top-right-radius: 0.15rem !important;
+    border-bottom-right-radius: 0.15rem !important;
+    background-color: rgba(255, 105, 0, 0.5) !important;
+  }
+  .el-date-table td.start-date .el-date-table-cell__text,
+  .el-date-table td.end-date .el-date-table-cell__text {
+    background-color: rgba(255, 105, 0, 1);
+  }
+  .el-date-table td.start-date .el-date-table-cell__text,
+  .el-date-table td.end-date .el-date-table-cell__text {
+    color: rgba(255, 105, 0, 1);
+  }
+  .el-date-table td.current:not(.disabled) .el-date-table-cell__text {
+    height: 0.24rem;
+    width: 0.24rem;
+    line-height: 0.24rem;
+    background-color: rgba(255, 105, 0, 1);
+  }
+
+  .el-date-table td .el-date-table-cell .el-date-table-cell__text {
+    height: 0.24rem !important;
+    line-height: 0.24rem !important;
+    width: 0.24rem !important;
+    color: #fff;
+  }
+  .el-date-table td.today .el-date-table-cell__text {
+    color: rgba(255, 105, 0, 1);
+  }
+  .el-popper.el-picker__popper {
+    top: 0.44rem !important;
+  }
 }

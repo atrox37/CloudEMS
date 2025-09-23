@@ -19,6 +19,7 @@ declare module 'vue' {
     ElCollapse: typeof import('element-plus/es')['ElCollapse']
     ElCollapseItem: typeof import('element-plus/es')['ElCollapseItem']
     ElConfigProvider: typeof import('element-plus/es')['ElConfigProvider']
+    ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDropdown: typeof import('element-plus/es')['ElDropdown']
     ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
@@ -26,6 +27,7 @@ declare module 'vue' {
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElIcon: typeof import('element-plus/es')['ElIcon']
+    ElImage: typeof import('element-plus/es')['ElImage']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
@@ -49,6 +51,7 @@ declare module 'vue' {
     LineChart: typeof import('./src/components/charts/lineChart.vue')['default']
     LoadingBg: typeof import('./src/components/common/LoadingBg.vue')['default']
     ModuleCard: typeof import('./src/components/card/ModuleCard.vue')['default']
+    MultiBarChar: typeof import('./src/components/charts/MultiBarChar.vue')['default']
     NegativeLineChart: typeof import('./src/components/charts/NegativeLineChart.vue')['default']
     NegativeLineChartExample: typeof import('./src/components/charts/NegativeLineChartExample.vue')['default']
     PVCard: typeof import('./src/components/card/PVCard.vue')['default']
@@ -56,8 +59,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SettingCard: typeof import('./src/components/card/settingCard.vue')['default']
     SettingItem: typeof import('./src/components/card/settingItem.vue')['default']
-    SimpleBarChar: typeof import('./src/components/charts/SimpleBarChar.vue')['default']
-    StackedBarChart: typeof import('./src/components/charts/StackedBarChart.vue')['default']
+    SingleBarChart: typeof import('./src/components/charts/SingleBarChart.vue')['default']
     USAMapChart: typeof import('./src/components/charts/USAMapChart.vue')['default']
   }
 }

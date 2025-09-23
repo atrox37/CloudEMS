@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 9;
 }
 
 :deep(.el-loading-spinner) {
@@ -87,8 +87,8 @@ onBeforeUnmount(() => {
 }
 
 :deep(.circular) {
-  height: 0.42rem;
-  width: 0.42rem;
+  height: 0.3rem;
+  width: 0.3rem;
   animation: loading-rotate 1.2s linear infinite;
 
 }
@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
 
 :deep(.el-loading-text) {
   color: #ff6900 !important;
-  font-size: 0.14rem;
+  font-size: 0.12rem;
   margin: 0.03rem 0;
 }
 </style>

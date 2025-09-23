@@ -1,37 +1,40 @@
 <template>
   <div class="Alarm-container">
     <div class="Alarm-summary">
-      <ModuleCard title="Alarm Summary">
+      <ModuleCard title="Alarm Summary" :loading="!stationLoading && dashboardListLoading">
         <div class="Alarm-summary__content">
           <div v-for="item in dashboardList" :key="item.id" class="Alarm-item">
-            <DashboardCard :dashboardData="item.data" :iconBgColor="item.iconBgColor" />
+            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" />
           </div>
 
         </div>
       </ModuleCard>
     </div>
     <div class="critical-Alarm">
-      <ModuleCard title="Critical Alarm (2)">
+      <ModuleCard :title="`Critical Alarm (${stationAlarm.level1?.length})`"
+        :loading="!stationLoading && stationAlarmLoading">
         <div class="critical-Alarm__content">
-          <div v-for="item in criticalList" class="critical-Alarm__item" :key="item.title">
+          <div v-for="item in stationAlarm.level1" class="critical-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" />
           </div>
         </div>
       </ModuleCard>
     </div>
     <div class="warning-Alarm">
-      <ModuleCard title="Warning Alarm (9)">
+      <ModuleCard :title="`Warning Alarm (${stationAlarm.level2?.length})`"
+        :loading="!stationLoading && stationAlarmLoading">
         <div class="warning-Alarm__content">
-          <div v-for="item in warningList" class="warning-Alarm__item" :key="item.title">
+          <div v-for="item in stationAlarm.level2" class="warning-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" />
           </div>
         </div>
       </ModuleCard>
     </div>
     <div class="info-Alarm">
-      <ModuleCard title="Info Alarm (23)">
+      <ModuleCard :title="`Info Alarm (${stationAlarm.level3?.length})`"
+        :loading="!stationLoading && stationAlarmLoading">
         <div class="info-Alarm__content">
-          <div v-for="item in infoList" class="info-Alarm__item" :key="item.title">
+          <div v-for="item in stationAlarm.level3" class="info-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" />
           </div>
         </div>
@@ -45,134 +48,31 @@ import ModuleCard from '@/components/card/ModuleCard.vue';
 import criticalIcon from '@/assets/icons/station-dashboard-critical.svg'
 import warningIcon from '@/assets/icons/station-dashboard-warning.svg'
 import infoIcon from '@/assets/icons/station-dashboard-info.svg'
-import AlarmCard from './components/AlarmCard.vue'
+import AlarmCard, { type AlarmData } from './components/AlarmCard.vue'
+import { getStationAlarm, getStationAlarmStatistics } from '@/api/station'
+import type { DashboardProps } from '@/components/card/DashboardCard.vue'
+import type { StationAlarm, StationAlarmStatistics } from '@/types/Stations'
+import { useRoute } from 'vue-router'
 
 
-const criticalList = [
-  {
+defineProps<{
+  stationLoading: boolean
+}>()
+const route = useRoute()
+const stationAlarmLoading = ref(false)
+const dashboardListLoading = ref(false)
+const stationAlarm = ref<StationAlarm>({
+  level1: [],
+  level2: [],
+  level3: [],
+})
 
-    title: 'Battery System',
-    level: 0,
-    detail: 'Battery temperature exceeds safe operating range (65°C)',
-    requirement: 'Immediate attention required',
-    time: '2024-12-21 15:11:21',
-  },
-  {
-
-    title: 'Generator',
-    level: 0,
-    detail: 'Diesel generator fuel level critically low (8%)',
-    requirement: 'Immediate attention required',
-    time: '2024-12-21 15:11:21',
-  },
-
-]
-const warningList = [
-  {
-    title: 'Solar Array',
-    level: 1,
-    detail: 'Solar panel efficiency dropped below 85%',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Battery System',
-    level: 1,
-    detail: 'Battery discharge rate higher than normal',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Network',
-    level: 1,
-    detail: 'Network connection unstable - 3 disconnections in 1 hour',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  }, {
-    title: 'PV System',
-    level: 1,
-    detail: 'Inverter operating temperature elevated (78°C)',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Grid Connection',
-    level: 1,
-    detail: 'Grid voltage fluctuation detected (+8V)',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  }, {
-    title: 'Network',
-    level: 1,
-    detail: 'Backup communication channel activated',
-    requirement: 'Schedule cleaning',
-    time: '2024-07-24 13:32:45',
-  }
-]
-const infoList = [
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-  {
-    title: 'Maintenance',
-    level: 2,
-    detail: 'Scheduled maintenance reminder: Generator service due in 3 days',
-    requirement: 'Schedule appointment',
-    time: '2024-07-24 13:32:45',
-  },
-]
-const dashboardList = ref([
+const dashboardList = ref<DashboardProps[]>([
   {
     id: 1,
-    data: {
+    dashboardData: {
       title: 'Critical Alarm',
-      value: '2',
+      value: '-',
       icon: criticalIcon,
     },
     iconBgColor: 'rgba(255, 59, 59, 0.1)'
@@ -180,23 +80,58 @@ const dashboardList = ref([
   },
   {
     id: 2,
-    data: {
+    dashboardData: {
       title: 'Warning Alarm',
-      value: '9',
+      value: '-',
       icon: warningIcon,
     },
     iconBgColor: 'rgba(255, 105, 0, 0.1)'
   },
   {
     id: 3,
-    data: {
+    dashboardData: {
       title: 'Info Alarm',
-      value: 23,
+      value: '-',
       icon: infoIcon,
     },
     iconBgColor: 'rgba(29, 134, 255, 0.1)'
   },
 ])
+
+const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
+  try {
+    dashboardListLoading.value = true
+    const res2 = await getStationAlarmStatistics(stationId)
+    if (res2.code === 200) {
+      dashboardList.value[0].dashboardData.value = res2.data.level1
+      dashboardList.value[1].dashboardData.value = res2.data.level2
+      dashboardList.value[2].dashboardData.value = res2.data.level3
+    }
+  } finally {
+    dashboardListLoading.value = false
+  }
+}
+
+
+const fetchStationAlarmData = async (stationId: string | number) => {
+  try {
+    stationAlarmLoading.value = true
+    const res = await getStationAlarm(stationId)
+    if (res.code === 200) {
+      stationAlarm.value.level1 = res.data.level1
+      stationAlarm.value.level2 = res.data.level2
+      stationAlarm.value.level3 = res.data.level3
+    }
+  } finally {
+    stationAlarmLoading.value = false
+  }
+}
+
+onMounted(() => {
+  const stationId = route.query.stationId as string | number
+  fetchStationAlarmStatisticsData(stationId)
+  fetchStationAlarmData(stationId)
+})
 </script>
 
 <style scoped lang="scss">

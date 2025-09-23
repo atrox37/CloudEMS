@@ -10,13 +10,31 @@
       <ModuleCard title="Monarch">
         <div class="loginPage__form-content">
           <el-form :model="form" label-position="top" ref="formRef" :rules="formRules">
-            <el-form-item label="Username" prop="username">
-              <el-input v-model="form.username" />
+            <el-form-item label="Email" prop="account">
+              <el-input v-model="form.account" />
             </el-form-item>
             <el-form-item label="Password" prop="password">
               <el-input v-model="form.password" type="password" />
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)">Log in</el-button>
+            <el-form-item label="Verify Code" prop="captcha">
+              <div class="loginPage__form-captch">
+                <el-input v-model="form.captcha" />
+                <el-image class="loginPage__form-captch-img" :src="captchImgUrl" alt="click to refresh"
+                  @click="getCaptchImg">
+                  <template #error>
+                    <div class="image-viewer-slot image-slot">
+                      <el-icon class="is-loading">
+                        <Loading />
+                      </el-icon>
+                    </div>
+                  </template>
+                </el-image>
+                <!-- <img :src="captchImgUrl" alt="Verify Code" /> -->
+
+              </div>
+
+            </el-form-item>
+            <el-button type="primary" @click="handleLogin(formRef)" :loading="loginLoading">Log in</el-button>
           </el-form>
         </div>
       </ModuleCard>
@@ -27,19 +45,30 @@
 <script setup lang="ts">
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { getVerifyCode } from '@/api/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
 import wsManager from '@/utils/websocket'
+import { Loading } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loginFormContainer = ref()
+const loginLoading = ref(false)
+const captchImgUrl = ref('')
 const form = reactive<LoginParams>({
-  username: '',
+  account: '',
   password: '',
+  captcha: '',
 })
 const formRules = reactive<FormRules<LoginParams>>({
-  username: [{ required: true, message: 'Please enter your username', trigger: 'blur' }],
+  account: [{ required: true, message: 'Please enter your account', trigger: 'blur' },
+  {
+    pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    message: 'Please enter a valid email address',
+    trigger: 'blur',
+  },
+  ],
   password: [
     { required: true, message: 'Please enter your password', trigger: 'blur' },
     // {
@@ -48,44 +77,56 @@ const formRules = reactive<FormRules<LoginParams>>({
     //   trigger: 'blur',
     // },
   ],
+  captcha: [{ required: true, message: 'Please enter your verify code', trigger: 'blur' }],
 })
 const userStore = useUserStore()
 
 const handleLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate(async (valid: boolean) => {
-    if (valid) {
-      const res = await userStore.login(form)
-      if (res.success) {
-        // const userInfo = await userStore.getUserInfo()
-        wsManager.connect()
-        
-          const redirect = router.currentRoute.value.query.redirect as string
-          if (redirect) {
-            router.push({ path: redirect })
+    try {
+      if (valid) {
+        loginLoading.value = true
+        const res = await userStore.login(form)
+        if (res.success) {
+          const userInfo = await userStore.getUserInfo()
+          if (userInfo.success) {
+            ElMessage.success('Login successful!')
+            wsManager.connect()
+            const { redirect, ...query } = router.currentRoute.value.query
+            if (redirect) {
+
+              router.push({ path: redirect as string, query: query })
+            } else {
+              router.push({ path: '/' })
+            }
           } else {
-            router.push({ path: '/' })
+            ElMessage.error(userInfo.message)
           }
-        // if (userInfo.success) {
-        //   await wsManager.connect()
-        //   const redirect = router.currentRoute.value.query.redirect as string
-        //   if (redirect) {
-        //     router.push({ path: redirect })
-        //   } else {
-        //     router.push({ path: '/' })
-        //   }
-        // } else {
-        //   // ElMessage.error(userInfo.message)
-        // }
+        } else {
+          ElMessage.error(res.message)
+          getCaptchImg()
+        }
+        // 这里可以添加登录请求逻辑
       } else {
-        // ElMessage.error(res.message)
+        console.log('表单校验未通过')
       }
-      // 这里可以添加登录请求逻辑
-    } else {
-      console.log('表单校验未通过')
+    } finally {
+      loginLoading.value = false
     }
   })
 }
+const getCaptchImg = async () => {
+  captchImgUrl.value = ''
+  const res = await getVerifyCode()
+  if (captchImgUrl.value) {
+    URL.revokeObjectURL(captchImgUrl.value)
+  }
+  captchImgUrl.value = URL.createObjectURL(res)
+}
+onMounted(() => {
+  getCaptchImg()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -101,13 +142,11 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   background-repeat: no-repeat;
   border: 0.01rem solid;
 
-  border-image-source: linear-gradient(
-    117.31deg,
-    rgba(148, 166, 197, 0.3) 2.77%,
-    rgba(148, 166, 197, 0) 32.18%,
-    rgba(148, 166, 197, 0.103266) 72.63%,
-    rgba(148, 166, 197, 0.3) 99.05%
-  );
+  border-image-source: linear-gradient(117.31deg,
+      rgba(148, 166, 197, 0.3) 2.77%,
+      rgba(148, 166, 197, 0) 32.18%,
+      rgba(148, 166, 197, 0.103266) 72.63%,
+      rgba(148, 166, 197, 0.3) 99.05%);
 
   // 顶部标题栏
   .loginPage__header {
@@ -123,6 +162,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       display: flex;
       align-items: center;
       margin-left: 0.3rem;
+
       .loginpage__head-icon {
         width: 0.24rem;
         height: 0.24rem;
@@ -131,6 +171,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         background-position: center;
         background-repeat: no-repeat;
       }
+
       .loginPage__head-text {
         font-family: 'Montserrat', sans-serif;
         font-weight: 600;
@@ -139,6 +180,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         color: #ffffff;
       }
     }
+
     .loginPage__form-button {
       margin-top: 0.2rem;
     }
@@ -150,22 +192,59 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     top: 3.28rem;
     left: 14.62rem;
     width: 3.24rem;
+
     .loginPage__form-content {
       padding: 0.4rem 0.21rem;
+
+      .loginPage__form-captch {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .el-input {
+          width: 1.2rem !important;
+        }
+
+        .loginPage__form-captch-img {
+          border: 0.01rem solid #536890;
+          width: 1.1rem;
+          height: 0.32rem;
+          cursor: pointer;
+
+          .image-viewer-slot {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+
+            .is-loading {
+              font-size: 0.16rem;
+              color: #ff6900;
+            }
+          }
+        }
+      }
     }
   }
 }
+
 :deep(.el-button.el-button--primary) {
   height: 0.32rem;
   width: 2.4rem;
   margin-top: 0.2rem;
 }
+
 :deep(.el-form-item__label::before) {
   display: none !important;
 }
+
 :deep(.el-select__popper.el-popper) {
   top: 1.66rem !important;
 }
+
 :deep(.el-form-item .el-form-item__label) {
   height: 0.22rem !important;
 }

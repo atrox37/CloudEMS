@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import * as echarts from 'echarts/core'
 import { PieChart } from 'echarts/charts'
-import { TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components'
+import { TooltipComponent, LegendComponent, TitleComponent, ToolboxComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
@@ -89,8 +89,8 @@ const props = withDefaults(defineProps<{
   gridConfig: () => ({
     left: 0,
     right: 0,
-    top: 55,
-    bottom: 10
+    top: 100,
+    bottom: 0
   }),
   fullScreenGridConfig: () => ({
     left: 50,
@@ -111,7 +111,6 @@ function customTooltipFormatter(
   params: any,
   sizeConfig: {
     width: number
-    minHeight: number
     fontSize: number
     itemFontSize: number
     itemLineHeight: number
@@ -119,7 +118,7 @@ function customTooltipFormatter(
     gap: number
   },
 ) {
-  const { width, minHeight, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
+  const { width, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
   const name = params.name || ''
   const value = params.value || 0
   const percent = params.percent || 0
@@ -127,7 +126,6 @@ function customTooltipFormatter(
   let html = `
     <div style="
       max-width:${width}px;
-      min-height:${minHeight}px;
       display:flex;
       flex-direction:column;
       gap:${gap}px;
@@ -184,19 +182,19 @@ function customTooltipFormatter(
 
 function getGridConfig(isFullScreen: boolean) {
   return isFullScreen ? {
-    left: pxToResponsive(props.gridConfig.left || 0),
-    right: pxToResponsive(props.gridConfig.right || 0),
-    top: pxToResponsive(props.gridConfig.top || 45),
-    bottom: pxToResponsive(props.gridConfig.bottom || 15),
+    left: pxToResponsive(props.fullScreenGridConfig.left || 50),
+    right: pxToResponsive(props.fullScreenGridConfig.right || 50),
+    top: pxToResponsive(props.fullScreenGridConfig.top || 80),
+    bottom: pxToResponsive(props.fullScreenGridConfig.bottom || -10),
   }
     : {
-      left: pxToResponsive(props.fullScreenGridConfig.left || 0),
-      right: pxToResponsive(props.fullScreenGridConfig.right || 0),
-      top: pxToResponsive(props.fullScreenGridConfig.top || 45),
-      bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 15),
+      left: pxToResponsive(props.gridConfig.left || 0),
+      right: pxToResponsive(props.gridConfig.right || 0),
+      top: pxToResponsive(props.gridConfig.top || 80),
+      bottom: pxToResponsive(props.gridConfig.bottom || 0),
     }
-}
 
+}
 // 统一生成option的方法
 function getChartOption({
   isFullScreen = false,
@@ -214,7 +212,6 @@ function getChartOption({
   const tooltipSize = isFullScreen
     ? {
       width: pxToResponsive(300),
-      minHeight: pxToResponsive(120),
       fontSize: pxToResponsive(32),
       itemFontSize: pxToResponsive(24),
       itemLineHeight: pxToResponsive(32),
@@ -223,7 +220,6 @@ function getChartOption({
     }
     : {
       width: pxToResponsive(220),
-      minHeight: pxToResponsive(100),
       fontSize: pxToResponsive(14),
       itemFontSize: pxToResponsive(12),
       itemLineHeight: pxToResponsive(18),
@@ -238,7 +234,7 @@ function getChartOption({
       type: 'plain',
       orient: 'horizontal',
       right: pxToResponsive(50),
-      top: pxToResponsive(30),
+      top: pxToResponsive(50),
       itemWidth: pxToResponsive(20),
       itemHeight: pxToResponsive(20),
       itemGap: pxToResponsive(40),
@@ -269,7 +265,7 @@ function getChartOption({
     }
 
   const grid = getGridConfig(isFullScreen)
-
+  // debugger
   // tooltip
   const tooltip = isFullScreen
     ? {
@@ -283,7 +279,6 @@ function getChartOption({
           border-radius: ${pxToResponsive(24)}px;
           box-shadow: 0 ${pxToResponsive(16)}px ${pxToResponsive(32)}px 0 rgba(0,0,0,0.15);
           max-width: ${pxToResponsive(500)}px;
-          min-height: ${pxToResponsive(120)}px;
         `,
       textStyle: {
         fontFamily: 'Arimo',
@@ -305,7 +300,6 @@ function getChartOption({
           border-radius: ${pxToResponsive(8)}px;
           box-shadow: 0 ${pxToResponsive(4)}px ${pxToResponsive(16)}px 0 rgba(0,0,0,0.12);
           max-width: ${pxToResponsive(220)}px;
-          min-height: ${pxToResponsive(100)}px;
         `,
       textStyle: {
         fontFamily: 'Arimo',
@@ -359,7 +353,7 @@ function getChartOption({
         position: 'outside',
         formatter: '{b}\n{d}%',
         color: 'rgba(255, 255, 255, 0.8)',
-        fontSize: isFullScreen ? pxToResponsive(18) : pxToResponsive(12),
+        fontSize: isFullScreen ? pxToResponsive(20) : pxToResponsive(12),
         fontFamily: 'Arimo',
         fontWeight: 400,
       },
@@ -374,7 +368,7 @@ function getChartOption({
         scale: true,
         scaleSize: isFullScreen ? pxToResponsive(8) : pxToResponsive(5),
         label: {
-          fontSize: isFullScreen ? pxToResponsive(20) : pxToResponsive(14),
+          fontSize: isFullScreen ? pxToResponsive(24) : pxToResponsive(14),
           fontWeight: 600,
         },
       },
@@ -383,11 +377,49 @@ function getChartOption({
       animationDelay: (idx: number) => Math.random() * 200,
     },
   ]
-
+  const toolbox = isFullScreen ? {
+    itemSize: pxToResponsive(20),
+    itemGap: pxToResponsive(26),
+    top: pxToResponsive(-10),
+    right: pxToResponsive(40),
+    iconStyle: {
+      // color: '#fff',
+      borderColor: '#fff',
+      borderWidth: pxToResponsive(1),
+    },
+    emphasis: {
+      iconStyle: {
+        // color: '#fff',
+        borderColor: '#fff',
+        borderWidth: pxToResponsive(1),
+      }
+    },
+    textStyle: {
+      fontFamily: 'Arimo',
+      fontWeight: 400,
+      fontSize: pxToResponsive(12),
+      color: 'rgba(255,255,255,1)',
+    },
+    feature: {
+      myDownload: {
+        show: true,
+        title: '',
+        icon: 'path:// M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-253.696 236.288-236.352 45.248 45.248L508.8 704 192 387.2l45.248-45.248L480 584.704V128h64z',
+        onclick: handleExport,
+        iconStyle: {
+          color: '#fff',
+        },
+      },
+      // saveAsImage: {
+      //   pixelRatio: 2
+      // }
+    }
+  } : {}
   return {
     title: titleConfig,
     grid,
     legend,
+    toolbox,
     tooltip,
     series,
   }
@@ -522,11 +554,11 @@ onBeforeUnmount(() => {
     right: 0;
     display: flex;
     align-items: center;
-    gap: 0.1rem;
+    gap: 0.2rem;
 
     .doughnut-chart-toolbox-item {
-      width: 0.3rem;
-      height: 0.3rem;
+      width: 0.14rem;
+      height: 0.14rem;
       cursor: pointer;
     }
   }

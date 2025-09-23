@@ -61,9 +61,9 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/user-app': {
-        target: 'http://192.168.40.114:9000',
+        target: 'http://192.168.40.51:9000',
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/user-app/, ''),
       },
     },
   },

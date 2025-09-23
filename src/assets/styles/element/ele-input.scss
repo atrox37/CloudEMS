@@ -13,64 +13,6 @@
         box-shadow: none !important;
       }
     }
-    .el-input__wrapper {
-      padding: 0 !important;
-      height: 0.32rem !important;
-      display: flex !important;
-      align-items: center !important;
-      position: relative !important;
-      background-color: $bg-color-input !important;
-      box-shadow: none !important;
-      border: 0.01rem solid $border-color-base !important;
-      border-radius: $border-radius-base !important;
-      // outline: none !important;
-      // 聚焦状态
-      &.is-focus {
-        border-color: $border-color-base !important;
-        box-shadow: none !important;
-        //   outline: none !important;
-      }
-
-      // 错误状态
-      &.is-error {
-        border-color: $danger-color !important;
-      }
-
-      // 禁用状态
-      &.is-disabled {
-        background-color: transparent !important;
-      }
-
-      // 只读状态
-      &.is-readonly {
-      }
-    }
-    // 输入框
-    .el-input__inner {
-      border: none !important;
-      outline: none !important;
-      background: transparent !important;
-      color: $text-color-primary !important;
-      font-size: $font-size-base !important;
-      line-height: $line-height-normal !important;
-      width: 100% !important;
-      height: 100% !important;
-      padding: 0 0.12rem !important;
-      border-radius: $border-radius-base !important;
-      border-color: $border-color-base !important;
-      &::placeholder {
-        color: $text-color-placeholder !important;
-      }
-
-      &:disabled {
-        color: #999 !important;
-        cursor: not-allowed !important;
-      }
-
-      &:read-only {
-        color: $text-color-secondary !important ;
-      }
-    }
 
     // 前缀图标
     .el-input__prefix,
@@ -132,7 +74,67 @@
       margin-left: $spacing-xs !important;
     }
   }
+  
+  .el-input__wrapper {
+    padding: 0 !important;
+    height: 0.32rem !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    background-color: $bg-color-input !important;
+    box-shadow: none !important;
+    border: 0.01rem solid $border-color-base !important;
+    border-radius: $border-radius-base !important;
+    // outline: none !important;
+    // 聚焦状态
+    &.is-focus {
+      border-color: $border-color-base !important;
+      box-shadow: none !important;
+      //   outline: none !important;
+    }
 
+    // 错误状态
+    &.is-error {
+      border-color: $danger-color !important;
+    }
+
+    // 禁用状态
+    &.is-disabled {
+      background-color: transparent !important;
+    }
+
+    // 只读状态
+    &.is-readonly {
+    }
+  }
+  // 输入框
+  .el-range-input,
+  .el-input__inner {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: $text-color-primary !important;
+    font-size: $font-size-base !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 0.12rem !important;
+    border-radius: $border-radius-base !important;
+    border-color: $border-color-base !important;
+    &::placeholder {
+      color: $text-color-placeholder !important;
+    }
+
+    &:disabled {
+      color: #999 !important;
+      cursor: not-allowed !important;
+    }
+
+    &:read-only {
+      color: $text-color-secondary !important ;
+    }
+  }
   // Input 尺寸变体
   .el-input {
     // 小尺寸

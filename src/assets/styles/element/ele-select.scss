@@ -209,6 +209,7 @@ $hover-bg: rgba(30, 47, 80, 0.3);
     box-shadow: none !important;
 
     .el-dropdown-menu {
+      z-index: 1000;
       min-width: 1.50rem;
       max-height: 3.2rem;
       padding: 0.2rem 0.1rem;
@@ -216,6 +217,7 @@ $hover-bg: rgba(30, 47, 80, 0.3);
       border-radius: 0 !important;
       background-color: transparent;
       box-shadow: none;
+      z-index: 1000;
 
       .el-dropdown-menu__item {
         display: flex;

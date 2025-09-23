@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import * as echarts from 'echarts/core'
 import { BarChart } from 'echarts/charts'
-import { TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
+import { TooltipComponent, GridComponent, LegendComponent, ToolboxComponent, DataZoomComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
@@ -40,25 +40,26 @@ const fullScreenChartRef = ref<HTMLDivElement | null>(null)
 const globalStore = useGlobalStore()
 let fullScreenChartInstance: echarts.ECharts | null = null
 
-echarts.use([BarChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
+echarts.use([BarChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer, ToolboxComponent, DataZoomComponent])
 
-interface SeriesData {
+export interface SeriesData {
     name: string
     data: number[]
     color: string
+    stack?: string
 }
 
-interface XAxisOption {
+export interface XAxisOption {
     xAxiosData: string[]
     xUnit?: string
 }
 
-interface YAxisOption {
+export interface YAxisOption {
     yUnit?: string
 }
 
 // Grid配置接口
-interface GridConfig {
+export interface GridConfig {
     left?: number
     right?: number
     top?: number
@@ -77,6 +78,9 @@ const props = withDefaults(defineProps<{
     showToolbox?: boolean
     showFullScreen?: boolean
     showDownload?: boolean
+    // 自动滑动动画配置
+    enableAutoScroll?: boolean
+    autoScrollInterval?: number
 }>(), {
     // 默认值
     gridConfig: () => ({
@@ -88,23 +92,30 @@ const props = withDefaults(defineProps<{
     fullScreenGridConfig: () => ({
         left: 50,
         right: 80,
-        top: 80,
+        top: 90,
         bottom: 50
     }),
     showToolbox: true,
     showFullScreen: true,
-    showDownload: true
+    showDownload: true,
+    enableAutoScroll: true,
+    autoScrollInterval: 2000
 })
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
+
+// 自动滑动相关变量
+const isAutoScrolling = ref(false)
+const currentScrollIndex = ref(0)
+let autoScrollTimer: number | null = null
+const isHovered = ref(false)
 
 // 通用tooltip formatter，支持自定义大小
 function customTooltipFormatter(
     params: any,
     sizeConfig: {
         width: number
-        minHeight: number
         fontSize: number
         itemFontSize: number
         itemLineHeight: number
@@ -112,12 +123,11 @@ function customTooltipFormatter(
         gap: number
     },
 ) {
-    const { width, minHeight, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
+    const { width, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
     const name = params[0]?.axisValueLabel || params[0]?.name || ''
     let html = `
       <div style="
         max-width:${width}px;
-        min-height:${minHeight}px;
         display:flex;
         flex-direction:column;
         gap:${gap}px;
@@ -167,15 +177,15 @@ function customTooltipFormatter(
 function getGridConfig(isFullScreen: boolean) {
     return isFullScreen ?
         {
-            left: pxToResponsive(props.fullScreenGridConfig.left || 0),
-            right: pxToResponsive(props.fullScreenGridConfig.right || 0),
-            top: pxToResponsive(props.fullScreenGridConfig.top || 45),
-            bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 15),
+            left: pxToResponsive(props.fullScreenGridConfig.left || 50),
+            right: pxToResponsive(props.fullScreenGridConfig.right || 50),
+            top: pxToResponsive(props.fullScreenGridConfig.top || 90),
+            bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 50),
         } : {
 
             left: pxToResponsive(props.gridConfig.left || 0),
             right: pxToResponsive(props.gridConfig.right || 0),
-            top: pxToResponsive(props.gridConfig.top || 45),
+            top: pxToResponsive(props.gridConfig.top || 35),
             bottom: pxToResponsive(props.gridConfig.bottom || 15),
         }
 }
@@ -206,16 +216,11 @@ function getChartOption({
     //     )
     //     : Math.min(pxToResponsive(60), (chartWidth - margin - barSpacing * (dataCount - 1)) / dataCount)
 
-    // 背景柱
-    const totalData = props.xAxiosOption.xAxiosData.map((_, index) => {
-        return props.series.reduce((sum, s) => sum + (s.data[index] || 0), 0)
-    })
 
     // Tooltip样式参数
     const tooltipSize = isFullScreen
         ? {
             width: pxToResponsive(300),
-            minHeight: pxToResponsive(120),
             fontSize: pxToResponsive(32),
             itemFontSize: pxToResponsive(24),
             itemLineHeight: pxToResponsive(32),
@@ -224,7 +229,6 @@ function getChartOption({
         }
         : {
             width: pxToResponsive(220),
-            minHeight: pxToResponsive(100),
             fontSize: pxToResponsive(14),
             itemFontSize: pxToResponsive(12),
             itemLineHeight: pxToResponsive(18),
@@ -235,12 +239,12 @@ function getChartOption({
     // legend/grid/axis样式参数
     const legend = isFullScreen
         ? {
-            icon: 'circle',
+            icon: 'rect',
             show: true,
             type: 'plain',
             orient: 'horizontal',
             right: pxToResponsive(50),
-            top: pxToResponsive(30),
+            top: pxToResponsive(40),
             itemWidth: pxToResponsive(20),
             itemHeight: pxToResponsive(20),
             itemGap: pxToResponsive(40),
@@ -253,7 +257,7 @@ function getChartOption({
             data: props.series.map((s) => s.name),
         }
         : {
-            icon: 'circle',
+            icon: 'rect',
             show: true,
             type: 'plain',
             orient: 'horizontal',
@@ -382,23 +386,74 @@ function getChartOption({
                 },
             },
         }
+    const toolbox = isFullScreen ? {
+        itemSize: pxToResponsive(20),
+        itemGap: pxToResponsive(26),
+        top: pxToResponsive(-18),
+        right: pxToResponsive(40),
+        iconStyle: {
+            // color: '#fff',
+            borderColor: '#fff',
+            borderWidth: pxToResponsive(1),
+        },
+        emphasis: {
+            iconStyle: {
+                // color: '#fff',
+                borderColor: '#fff',
+                borderWidth: pxToResponsive(1),
+            }
+        },
+        feature: {
 
+            myDownload: {
+                show: true,
+                title: '',
+                icon: 'path:// M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-253.696 236.288-236.352 45.248 45.248L508.8 704 192 387.2l45.248-45.248L480 584.704V128h64z',
+                onclick: handleExport,
+                iconStyle: {
+                    color: '#fff',
+                },
+            },
+            dataZoom: {
+                yAxisIndex: false,
+                title: {
+                    zoom: '',
+                    back: '',
+                },
+                iconStyle: {
+                    borderWidth: pxToResponsive(2),
+                },
+                emphasis: {
+                    iconStyle: {
+                        borderWidth: pxToResponsive(2),
+                    },
+                },
+            },
+            // saveAsImage: {
+            //   pixelRatio: 2
+            // }
+        }
+    } : {}
     // series
     const seriesData = [
-        ...props.series.map((s) => ({
-            name: s.name,
-            type: 'bar',
-            data: s.data,
-            emphasis: { focus: 'series' },
-            // barWidth: barWidth,
-            // barGap: '-100%',
-            itemStyle: {
-                color: s.color,
-            },
-            z: 1,
-        })),
+        ...props.series.map((s) => {
+            if (s.stack) {
+                console.log(s, 's');
+            }
+            return {
+                name: s.name,
+                type: 'bar',
+                data: s.data,
+                emphasis: { focus: 'series' },
+                stack: s.stack || undefined,
+                // barWidth: barWidth,
+                // barGap: '-100%',
+                itemStyle: {
+                    color: s.color,
+                },
+            }
+        }),
     ]
-
     // tooltip
     const tooltip = isFullScreen
         ? {
@@ -443,7 +498,6 @@ function getChartOption({
             border-radius: ${pxToResponsive(8)}px;
             box-shadow: 0 ${pxToResponsive(4)}px ${pxToResponsive(16)}px 0 rgba(0,0,0,0.12);
             max-width: ${pxToResponsive(220)}px;
-            min-height: ${pxToResponsive(100)}px;
           `,
             textStyle: {
                 fontFamily: 'Arimo',
@@ -464,13 +518,85 @@ function getChartOption({
             formatter: (params: any) => customTooltipFormatter(params, tooltipSize),
         }
 
+    // 计算滑动范围
+    const totalDataLength = props.xAxiosOption.xAxiosData.length
+    const visibleCount = isFullScreen ? 30 : 15
+    const shouldAutoScroll = props.enableAutoScroll && totalDataLength > visibleCount
+
+    // 计算当前滑动位置
+    const scrollStart = shouldAutoScroll ?
+        Math.min(currentScrollIndex.value, totalDataLength - visibleCount) : 0
+    const scrollEnd = shouldAutoScroll ?
+        Math.min(scrollStart + visibleCount, totalDataLength) : totalDataLength
+
+    const dataZoom = isFullScreen ? [{
+        type: 'inside',
+        show: true,
+        start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (30 / totalDataLength) * 100),
+    }] : [{
+        type: 'inside',
+        show: true,
+        start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (15 / totalDataLength) * 100),
+    }]
+
     return {
         legend,
         grid,
         tooltip,
+        toolbox,
         xAxis,
         yAxis,
         series: seriesData,
+        dataZoom
+    }
+}
+
+// 自动滑动控制方法
+const startAutoScroll = () => {
+    if (!props.enableAutoScroll || isHovered.value) return
+
+    const totalDataLength = props.xAxiosOption.xAxiosData.length
+    const visibleCount = 15 // 普通模式固定15个
+
+    if (totalDataLength <= visibleCount) return
+
+    isAutoScrolling.value = true
+
+    autoScrollTimer = setInterval(() => {
+        if (isHovered.value) return
+
+        currentScrollIndex.value += 1
+
+        // 无缝循环回到起点
+        if (currentScrollIndex.value >= totalDataLength - visibleCount) {
+            currentScrollIndex.value = 0
+        }
+
+        // 更新图表
+        if (chartInstance) {
+            chartInstance.setOption(getChartOption({ isFullScreen: false }), false)
+        }
+    }, props.autoScrollInterval)
+}
+
+const stopAutoScroll = () => {
+    if (autoScrollTimer) {
+        clearInterval(autoScrollTimer)
+        autoScrollTimer = null
+    }
+    isAutoScrolling.value = false
+}
+
+const pauseAutoScroll = () => {
+    isHovered.value = true
+}
+
+const resumeAutoScroll = () => {
+    isHovered.value = false
+    if (props.enableAutoScroll && !isAutoScrolling.value) {
+        startAutoScroll()
     }
 }
 
@@ -483,6 +609,12 @@ const initChart = () => {
     const chartWidth = chartRef.value.clientWidth || 600
     chartInstance = echarts.init(chartRef.value)
     chartInstance.setOption(getChartOption({ isFullScreen: false, chartWidth }))
+
+    // 添加鼠标事件监听 - 监听整个图表容器
+    if (chartRef.value) {
+        chartRef.value.addEventListener('mouseenter', pauseAutoScroll)
+        chartRef.value.addEventListener('mouseleave', resumeAutoScroll)
+    }
 }
 
 // 初始化全屏图表
@@ -494,6 +626,12 @@ const initFullScreenChart = () => {
     const chartWidth = fullScreenChartRef.value.clientWidth || 1200
     fullScreenChartInstance = echarts.init(fullScreenChartRef.value)
     fullScreenChartInstance.setOption(getChartOption({ isFullScreen: true, chartWidth }))
+
+    // 添加鼠标事件监听 - 监听整个图表容器
+    if (fullScreenChartRef.value) {
+        fullScreenChartRef.value.addEventListener('mouseenter', pauseAutoScroll)
+        fullScreenChartRef.value.addEventListener('mouseleave', resumeAutoScroll)
+    }
 }
 
 const handleFullScreen = () => {
@@ -570,7 +708,17 @@ const resizeChart = () => {
 watch(
     () => [props.xAxiosOption.xAxiosData, props.series],
     () => {
+        // 重置滑动位置
+        currentScrollIndex.value = 0
+        stopAutoScroll()
         initChart()
+
+        // 重新启动自动滑动
+        if (props.enableAutoScroll) {
+            nextTick(() => {
+                startAutoScroll()
+            })
+        }
     },
     { deep: true },
 )
@@ -579,11 +727,30 @@ onMounted(() => {
     initChart()
     window.addEventListener('resize', resizeChart)
     window.addEventListener('resize', resizeFullScreenChart)
+
+    // 启动自动滑动
+    if (props.enableAutoScroll) {
+        nextTick(() => {
+            startAutoScroll()
+        })
+    }
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', resizeChart)
     window.removeEventListener('resize', resizeFullScreenChart)
+
+    // 清理鼠标事件监听器
+    if (chartRef.value) {
+        chartRef.value.removeEventListener('mouseenter', pauseAutoScroll)
+        chartRef.value.removeEventListener('mouseleave', resumeAutoScroll)
+    }
+    if (fullScreenChartRef.value) {
+        fullScreenChartRef.value.removeEventListener('mouseenter', pauseAutoScroll)
+        fullScreenChartRef.value.removeEventListener('mouseleave', resumeAutoScroll)
+    }
+
+    stopAutoScroll()
     chartInstance?.dispose()
     fullScreenChartInstance?.dispose()
 })
@@ -606,11 +773,11 @@ onBeforeUnmount(() => {
         right: 0;
         display: flex;
         align-items: center;
-        gap: 0.1rem;
+        gap: 0.2rem;
 
         .stacked-bar-chart-toolbox-item {
-            width: 0.3rem;
-            height: 0.3rem;
+            width: 0.14rem;
+            height: 0.14rem;
             cursor: pointer;
         }
     }

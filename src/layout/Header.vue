@@ -12,19 +12,19 @@
 
     <div class="header__right">
       <div class="header__right-avatar">
-        <el-dropdown @command="handleUserCommand" trigger="click" :teleported="false">
+        <el-dropdown @command="handleUserCommand" trigger="click" :teleported="false" @visible-change="handleDropdownChange">
           <div class="header__user">
             <!-- 头像图片无法显示的常见原因有：路径写法不对、图片未被正确引入、打包后路径丢失等。推荐用import方式引入图片资源。 -->
             <!-- <el-avatar  :src="userStore.userInfo?.avatar" class="header__user-avatar" /> -->
             <!-- <el-avatar :src="headerAvatar" class="header__user-avatar" /> -->
             <div class="header__user-avatar">
               <div class="header__user-avatar-initials">
-                {{ getAvatarName(userStore.userInfo?.username || 'Admin') }}
+                {{ getAvatarName(userStore.userInfo?.sysUserPo?.username) }}
               </div>
             </div>
-            <span class="header__user-name">{{ userStore.userInfo?.username || 'Admin' }}</span>
+            <span class="header__user-name">{{ userStore.userInfo?.sysUserPo?.username }}</span>
             <!-- <span class="header__user-name">Esthera Jackson</span> -->
-            <img :src="arrowDownIcon" class="header__user-arrow" />
+            <img :src="arrowDownIcon" class="header__user-arrow" :class="{ 'rotate': isDropdownVisible }" />
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -60,7 +60,7 @@ import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
 const router = useRouter()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
-
+const isDropdownVisible = ref(false)
 
 // // 切换通知
 const toggleNotifications = () => {
@@ -77,13 +77,23 @@ const handleUserCommand = async (command: string) => {
   }
 }
 
-const getAvatarName = (name: string): string => {
-  const nameStr = name.split(' ')
-  if (nameStr.length === 1) {
-    return name.charAt(0).toUpperCase()
+const getAvatarName = (name: string | undefined): string | undefined => {
+  if (!name) {
+    // userStore.logout()
+    // router.push('/login')
   } else {
-    return nameStr[0].charAt(0).toUpperCase() + nameStr[1].charAt(0).toUpperCase()
+    const nameStr = name.split(' ')
+    if (nameStr.length === 1) {
+      return name.charAt(0).toUpperCase()
+    } else {
+      return nameStr[0].charAt(0).toUpperCase() + nameStr[1].charAt(0).toUpperCase()
+    }
   }
+
+}
+
+const handleDropdownChange = (visible: boolean) => {
+  isDropdownVisible.value = visible
 }
 </script>
 
@@ -261,6 +271,11 @@ const getAvatarName = (name: string): string => {
   width: 0.1rem;
   font-size: 0.12rem;
   color: #909399;
+  transition: all 0.3s ease;
+
+  &.rotate {
+    transform: rotate(180deg);
+  }
 }
 
 :deep(.el-badge__content.is-fixed) {

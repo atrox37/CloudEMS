@@ -1,15 +1,15 @@
 <template>
-    <div class="Alarm-card" :class="`${levelList[AlarmData.level]}`">
+    <div class="Alarm-card" :class="`${levelList[AlarmData.level-1]}`">
         <div class="Alarm-card__header">
-            <div class="header-icon" :class="`${levelList[AlarmData.level]}`"></div>
-            <div class="header-level" :class="`${levelList[AlarmData.level]}`">{{ levelList[AlarmData.level] }}</div>
-            <div class="header-title">{{ AlarmData.title }}</div>
+            <div class="header-icon" :class="`${levelList[AlarmData.level-1]}`"></div>
+            <div class="header-level" :class="`${levelList[AlarmData.level-1]}`">{{ levelList[AlarmData.level-1] }}</div>
+            <div class="header-device">{{ AlarmData.device }}</div>
         </div>
         <div class="Alarm-card__content">
             <div class="card-left">
-                <div class="Alarm-detail">{{ AlarmData.detail }}</div>
+                <div class="Alarm-message">{{ AlarmData.message }}</div>
 
-                <div class="Alarm-time">{{ AlarmData.time }}</div>
+                <div class="Alarm-time">{{ AlarmData.alarm_id }}</div>
 
             </div>
             <!-- <div v-if="AlarmData.level !== 2" class="card-right">
@@ -21,17 +21,16 @@
 </template>
 <script setup lang="ts">
 
-interface AlarmData {
-    title: string,
+export interface AlarmData {
+    device: string,
     level: number,
-    detail: string,
-    requirement: string,
-    time: string,
+    message: string,
+    alarm_id: string,
 }
 interface AlarmProps {
     AlarmData: AlarmData,
 }
-const props = defineProps<AlarmProps>()
+defineProps<AlarmProps>()
 
 const levelList = ['Critical', 'Warning', 'Info']
 </script>
@@ -42,15 +41,15 @@ const levelList = ['Critical', 'Warning', 'Info']
     padding: 0.2rem;
 
     &.Critical {
-        background-color: rgba(218, 51, 51, 0.1);
+        background-color: rgba(218, 51, 51, 0.3);
     }
 
     &.Warning {
-        background-color: rgba(201, 178, 63, 0.1);
+        background-color: rgba(201, 178, 63, 0.3);
     }
 
     &.Info {
-        background-color: rgba(29, 134, 255, 0.1);
+        background-color: rgba(29, 134, 255, 0.3);
     }
 
     .Alarm-card__header {
@@ -99,7 +98,7 @@ const levelList = ['Critical', 'Warning', 'Info']
             }
         }
 
-        .header-title {
+        .header-device {
             font-size: 0.16rem;
             line-height: 0.2133rem;
             letter-spacing: 0%;
@@ -117,7 +116,7 @@ const levelList = ['Critical', 'Warning', 'Info']
             display: flex;
             flex-direction: column;
 
-            .Alarm-detail {
+            .Alarm-message {
                 font-weight: 700;
                 font-size: 0.22rem;
                 line-height: 100%;

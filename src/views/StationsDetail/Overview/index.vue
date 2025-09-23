@@ -10,10 +10,12 @@
     </div> -->
     <!-- <div class="overview-container__main"> -->
     <div class="overview-container__tuopu">
-      <Tuopu />
+      <LoadingBg :loading="!stationLoading && tuopuLoading">
+        <Tuopu :data="stationOverview" />
+      </LoadingBg>
     </div>
-    <ModuleCard title="24-Hour Energy Sources">
-      <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
+    <ModuleCard title="Weekly Energy Sources" :loading="!stationLoading && lineChartLoading">
+      <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="overviewSeries" />
     </ModuleCard>
   </div>
   <!-- </div> -->
@@ -28,92 +30,81 @@
 // import dieselPowerIcon from '@/assets/icons/station-dashboard-diesel.svg'
 // import efficiencyIcon from '@/assets/icons/station-dashboard-efficiency.svg'
 // import temperatureIcon from '@/assets/icons/station-dashboard-temperature.svg'
-import LineChart from '@/components/charts/lineChart.vue'
 import Tuopu from './tuopu.vue'
-
-// const dashboardList = ref([
-//   {
-//     id: 1,
-//     data: {
-//       title: 'Total Output',
-//       value: '176',
-//       unit: 'kWh',
-//       icon: totalOutputIcon,
-//     },
-//     iconBgColor: 'rgba(3, 93, 239, 0.1)'
-
-//   },
-//   {
-//     id: 2,
-//     data: {
-//       title: 'Battery Level',
-//       value: '23',
-//       unit: '%',
-//       icon: batteryLevelIcon,
-//     },
-//     iconBgColor: 'rgba(106, 193, 97, 0.1)'
-//   },
-//   {
-//     id: 3,
-//     data: {
-//       title: 'Diesel Power',
-//       value: 23,
-//       unit: 'kW',
-//       icon: dieselPowerIcon,
-//     },
-//     iconBgColor: 'rgba(255, 59, 59, 0.14)'
-//   },
-//   {
-//     id: 4,
-//     data: {
-//       title: 'Efficiency',
-//       value: 23,
-//       unit: '%',
-//       icon: efficiencyIcon,
-//     },
-//     iconBgColor: 'rgba(255, 105, 0, 0.1)'
-//   },
-//   {
-//     id: 5,
-//     data: {
-//       title: 'Temperature',
-//       value: 23,
-//       unit: '℉',
-//       icon: temperatureIcon,
-//     },
-//     iconBgColor: 'rgba(211, 52, 255, 0.1)'
-//   }
-// ])
-
-const exampleXAxisData = ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
-
-const exampleSeries = [
+import { getStationOverview, getStationOverchart } from '@/api/station'
+import type { StationOverview } from '@/types/Stations'
+import type { SeriesData, XAxisOption, YAxisOption } from '@/components/charts/lineChart.vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
+defineProps<{
+  stationLoading: boolean
+}>()
+const tuopuLoading = ref(false)
+const lineChartLoading = ref(false)
+const stationOverview = ref<StationOverview>({
+  pvP: 0,
+  loadP: 0,
+  essP: 0,
+  essSoc: 0,
+  dieselP: 0,
+  dieselOil: 0
+})
+const overviewSeries = ref<SeriesData[]>([
   {
     name: 'pv',
-    data: [120, 132, 101, 134, 90, 230, 210, 190, 170, 160, 150, 140],
+    data: [],
     color: '#4FADF7'
   },
   {
     name: 'diesel generator',
-    data: [220, 182, 191, 234, 290, 330, 310, 290, 270, 250, 230, 210],
+    data: [],
     color: '#F6C85F'
   },
   {
     name: 'ess',
-    data: [150, 232, 201, 154, 190, 330, 410, 390, 370, 350, 330, 310],
+    data: [],
     color: '#6DD400'
   }
-]
-
-// 传递给组件的props示例
-const xAxiosOption = {
-  xAxiosData: exampleXAxisData,
-  xUnit: 'h'
-}
-const yAxiosOption = {
+])
+const xAxiosOption = ref<XAxisOption>({
+  xAxiosData: [],
+})
+const yAxiosOption = ref<YAxisOption>({
   yUnit: 'kWh'
+})
+
+const fetchStationOverviewData = async (stationId: string | number) => {
+  try {
+    tuopuLoading.value = true
+    const res = await getStationOverview(stationId)
+    if (res.code === 200) {
+      stationOverview.value = res.data
+    }
+  } finally {
+    tuopuLoading.value = false
+  }
 }
-const series = exampleSeries
+
+const fetchStationOverchartData = async (stationId: string | number) => {
+  try {
+    lineChartLoading.value = true
+    const res2 = await getStationOverchart(stationId)
+    if (res2.code === 200) {
+      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => item.ts)
+      overviewSeries.value[0].data = res2.data.guangFu.map(item => item.numberValue)
+      overviewSeries.value[1].data = res2.data.chaiFa.map(item => item.numberValue)
+      overviewSeries.value[2].data = res2.data.chuNeng.map(item => item.numberValue)
+    }
+  } finally {
+    lineChartLoading.value = false
+  }
+}
+onMounted(() => {
+  const stationId = route.query.stationId as string | number
+  fetchStationOverviewData(stationId)
+  fetchStationOverchartData(stationId)
+})
+
 </script>
 
 <style scoped lang="scss">
@@ -121,6 +112,8 @@ const series = exampleSeries
   width: 100%;
   height: 100%;
   overflow-y: auto;
+
+
 
   .overview-container__dashborad {
     width: 100%;
@@ -149,6 +142,7 @@ const series = exampleSeries
   }
 
   .overview-container__tuopu {
+    position: relative;
     width: 100%;
     height: 6rem;
     background-color: rgba(84, 98, 140, 0.2);

@@ -13,64 +13,68 @@
     <!-- 用户操作表单 -->
     <UserOperationForm ref="userFormRef" @submit="handleUserSubmit" />
     <div class="user-management__table">
-      <!-- <LoadingBg :loading="loading"> -->
-      <el-table :data="tableData" class="user-management__table-content" align="left" table-layout="fixed">
-        <el-table-column prop="username" label="User">
-          <template #default="{ row }">
-            <div class="user-info">
-              <div class="user-avatar">
-                <div class="user-avatar-text">{{ getAvatarName(row.username) }}</div>
+      <LoadingBg :loading="loading">
+        <el-table :data="tableData" class="user-management__table-content" align="left" table-layout="fixed">
+          <el-table-column prop="sysUserPo.username" label="User">
+            <template #default="{ row }">
+              <div class="user-info">
+                <div class="user-avatar">
+                  <div class="user-avatar-text">{{ getAvatarName(row.sysUserPo?.username) }}</div>
+                </div>
+                <div class="user-text">
+                  <div class="user-name">{{ row.sysUserPo?.username }}</div>
+                  <div class="user-email">{{ row.sysUserPo?.email }}</div>
+                </div>
               </div>
-              <div class="user-name">{{ row.username }}</div>
-            </div>
-          </template>
-        </el-table-column>
-        <!-- 角色列改为纯文字类型 -->
-        <el-table-column prop="role" label="Role" show-overflow-tooltip>
-          <template #default="{ row }">
-            <div class="role-name" :class="row.role.name_en">{{ row.role.name_en }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="Status">
-          <template #default="{ row }">
-            <div class="user-status" :class="row.is_active ? 'active' : 'inactive'">{{ row.is_active ? 'Active' :
-              'Inactive'}}</div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="last_login" label="Last Login" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.last_login }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="created_at" label="Created At" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.created_at }}
-          </template>
-        </el-table-column>
-        <el-table-column label="Operation" fixed="right">
-          <template #default="{ row }">
-            <div class="user-management__operation">
-              <div class="user-management__operation-item" @click="handleEdit(row)">
-                <img :src="editIcon" />
-                <!-- <editIcon /> -->
-                <span class="user-management__operation-text">Edit</span>
-              </div>
-              <div class="user-management__operation-item" @click="handleDelete(row)">
+            </template>
+          </el-table-column>
+          <!-- 角色列改为纯文字类型 -->
+          <el-table-column prop="sysRolePo.roleName" label="Role" show-overflow-tooltip>
+            <template #default="{ row }">
+              <div class="role-name" :class="row.sysRolePo?.roleName">{{ row.sysRolePo?.roleName }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sysUserPo.state" label="Status">
+            <template #default="{ row }">
+              <div class="user-status" :class="row.sysUserPo?.state ? 'active' : 'inactive'">{{ row.sysUserPo?.state ==
+                1
+                ? 'Active' :
+                'Inactive' }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="last_login" label="Last Login" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ row.last_login }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="sysUserPo.createTime" label="Created At" show-overflow-tooltip>
+            <!-- <template #default="{ row }">
+            {{ row.sysRolePo?.updateTime }}
+          </template> -->
+          </el-table-column>
+          <el-table-column label="Operation" fixed="right">
+            <template #default="{ row }">
+              <div class="user-management__operation">
+                <div class="user-management__operation-item" @click="handleEdit(row)">
+                  <img :src="editIcon" />
+                  <!-- <editIcon /> -->
+                  <span class="user-management__operation-text">Edit</span>
+                </div>
+                <!-- <div class="user-management__operation-item" @click="handleDelete(row)">
                 <img :src="deleteIcon" />
-                <!-- <img :src="tableDeleteIcon" /> -->
                 <span class="user-management__operation-text">Delete</span>
+              </div> -->
               </div>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <div class="user-management__pagination">
-        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
-          @size-change="handlePageSizeChange" @current-change="handlePageChange" />
-      </div>
-      <!-- </LoadingBg> -->
+        <div class="user-management__pagination">
+          <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
+            @size-change="handlePageSizeChange" @current-change="handlePageChange" />
+        </div>
+      </LoadingBg>
     </div>
   </div>
 </template>
@@ -81,22 +85,17 @@
 // import tableEditIcon from '@/assets/icons/table-edit.svg'
 // import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import editIcon from '@/assets/icons/button-edit.svg'
-import deleteIcon from '@/assets/icons/button-delete.svg'
+// import deleteIcon from '@/assets/icons/button-delete.svg'
 import addUserIcon from '@/assets/icons/button-addUser.svg'
-import type { UserManagementInfo } from '@/types/user'
+import type { UserInfo } from '@/types/user'
 // import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import UserOperationForm from './UserOperationForm.vue'
 
 // 表格配置
 const tableConfig: TableConfig = {
-  listUrl: 'auth/users',
-  deleteUrl: 'auth/users/{id}',
-  enableDelete: true,
-  enableBatchDelete: true,
+  listUrl: 'sys-app/sys_user/_page',
   defaultPageSize: 20,
-  deleteConfirmMessage: 'Are you sure you want to delete this user?',
-  batchDeleteConfirmMessage: 'Are you sure you want to delete selected users?',
 }
 
 // 使用表格数据管理 composable
@@ -107,16 +106,13 @@ const {
   handlePageChange,
   handlePageSizeChange,
   fetchTableData,
-  deleteRow,
-} = useTableData<UserManagementInfo>(tableConfig)
-
+} = useTableData<UserInfo>(tableConfig)
 // 创建可写的分页数据
 const pagination = reactive({
   page: 1,
   pageSize: 20,
   total: 0,
 })
-
 // 同步分页数据
 watch(
   paginationData,
@@ -142,30 +138,30 @@ const handleUserSubmit = async (formData: any) => {
 }
 
 // 编辑用户
-const handleEdit = (row: UserManagementInfo) => {
-  userFormRef.value?.open(row.id, 'edit')
+const handleEdit = (row: UserInfo) => {
+  userFormRef.value?.open(toRaw(row), 'edit')
 }
 
 // 删除用户
-const handleDelete = async (row: UserManagementInfo) => {
-  await ElMessageBox.confirm(
-    'Are you sure you want to delete this record?',
-    'Delete Confirmation',
-    {
-      confirmButtonText: 'Confirm',
-      cancelButtonText: 'Cancel',
-      type: 'warning',
-    },
-  )
+// const handleDelete = async (row: UserListItem) => {
+//   await ElMessageBox.confirm(
+//     'Are you sure you want to delete this record?',
+//     'Delete Confirmation',
+//     {
+//       confirmButtonText: 'Confirm',
+//       cancelButtonText: 'Cancel',
+//       type: 'warning',
+//     },
+//   )
 
-  await deleteRow(row.id)
-}
+//   await deleteRow(row.sysUserPo?.id)
+// }
 /**
  * 获取用户名头像缩写：名和姓的首字母（如"张三"->"张三"，"John Smith"->"JS"，"王"->"王"）
  * @param name 用户名字符串
  * @returns string 头像缩写
  */
- const getAvatarName = (name: string): string => {
+const getAvatarName = (name: string): string => {
   const nameStr = name.split(' ')
   if (nameStr.length === 1) {
     return name.charAt(0).toUpperCase()
@@ -255,31 +251,54 @@ const handleDelete = async (row: UserManagementInfo) => {
           color: rgba(29, 134, 255, 1);
         }
 
-        .user-name {
+        .user-text {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 0.4rem;
+          padding: 0.03rem 0;
+          // gap: 0.04rem;
+
+          .user-name {
+            font-size: 0.16rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 1);
+            line-height: 1;
+            letter-spacing: 0%;
+            text-align: left;
+          }
+
+          .user-email {
+            font-size: 0.14rem;
+            letter-spacing: 0%;
+            text-align: left;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.6);
+          }
+        }
+
+        .role-name {
+          font-weight: 500;
           font-size: 0.16rem;
-          letter-spacing: 0%;
-          color: rgba(255, 255, 255, 1);
+          text-align: left !important;
+
+          &.Admin {
+            color: rgba(242, 43, 47, 1);
+          }
+
+          &.Engineer {
+            color: rgba(29, 134, 255, 1);
+          }
+
+          &.Operator {
+            color: rgba(148, 166, 197, 1);
+          }
+
+
         }
       }
 
-      .role-name {
-        font-weight: 500;
-        font-size: 0.16rem;
 
-        &.Admin {
-          color: rgba(242, 43, 47, 1);
-        }
-
-        &.Engineer {
-          color: rgba(29, 134, 255, 1);
-        }
-
-        &.Viewer {
-          color: rgba(148, 166, 197, 1);
-        }
-
-
-      }
 
       .user-status {
         font-weight: 500;

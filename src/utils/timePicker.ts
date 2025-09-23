@@ -202,6 +202,44 @@ export function useTimePickerLimits(form: TimePickerForm) {
     return seconds
   }
 
+  /**
+   * 禁用开始时间的日期
+   * 如果已选择结束时间，开始时间不能选择结束时间之后的日期
+   * @param date 当前日期对象
+   * @returns 是否禁用
+   */
+  function disabledStartDate(date: Date): boolean {
+    if (form.endTime) {
+      const endDate = new Date(form.endTime)
+      // 只比较年月日
+      return (
+        date.getFullYear() > endDate.getFullYear() ||
+        (date.getFullYear() === endDate.getFullYear() && date.getMonth() > endDate.getMonth()) ||
+        (date.getFullYear() === endDate.getFullYear() && date.getMonth() === endDate.getMonth() && date.getDate() > endDate.getDate())
+      )
+    }
+    return false
+  }
+
+  /**
+   * 禁用结束时间的日期
+   * 如果已选择开始时间，结束时间不能选择开始时间之前的日期
+   * @param date 当前日期对象
+   * @returns 是否禁用
+   */
+  function disabledEndDate(date: Date): boolean {
+    if (form.startTime) {
+      const startDate = new Date(form.startTime)
+      // 只比较年月日
+      return (
+        date.getFullYear() < startDate.getFullYear() ||
+        (date.getFullYear() === startDate.getFullYear() && date.getMonth() < startDate.getMonth()) ||
+        (date.getFullYear() === startDate.getFullYear() && date.getMonth() === startDate.getMonth() && date.getDate() < startDate.getDate())
+      )
+    }
+    return false
+  }
+
   return {
     onStartTimeChange,
     onEndTimeChange,
@@ -211,6 +249,8 @@ export function useTimePickerLimits(form: TimePickerForm) {
     disabledEndHours,
     disabledEndMinutes,
     disabledEndSeconds,
+    disabledStartDate,
+    disabledEndDate,
   }
 }
 

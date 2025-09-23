@@ -1,25 +1,25 @@
 <template>
   <div class="performance-container">
     <div class="performance-container__enery">
-      <ModuleCard title="24-Hour Energy Sources">
+      <ModuleCard title="Weekly Energy Sources" :loading="!stationLoading && chartLoading">
         <!-- <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" /> -->
-        <SimpleBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
+        <MultiBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
       </ModuleCard>
     </div>
     <div class="performance-container__system">
-      <ModuleCard title="System Efficiency">
+      <ModuleCard title="System Efficiency" :loading="!stationLoading && systemDashboardLoading">
         <div class="system-content">
           <div v-for="item in systemDashboardList" :key="item.id" class="system-content__item">
-            <DashboardCard :dashboardData="item.data" :iconBgColor="item.iconBgColor" />
+            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" />
           </div>
         </div>
       </ModuleCard>
     </div>
     <div class="performance-container__device">
-      <ModuleCard title="Device Efficiency">
+      <ModuleCard title="Device Efficiency" :loading="!stationLoading && systemDashboardLoading">
         <div class="device-content">
           <div v-for="item in deviceDashboardList" :key="item.id" class="device-content__item">
-            <DashboardCard :dashboardData="item.data" :iconBgColor="item.iconBgColor" />
+            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" />
           </div>
         </div>
       </ModuleCard>
@@ -36,14 +36,39 @@ import batterySystemIcon from '@/assets/icons/station-dashboard-batterySystem.sv
 import pvSystemIcon from '@/assets/icons/station-dashboard-pvSystem.svg'
 import dieselGeneratorIcon from '@/assets/icons/station-dashboard-dieselGenerator.svg'
 
-import SimpleBarChar from '@/components/charts/SimpleBarChar.vue'
+import { getPerformanceView, getPerformancechart } from '@/api/station'
+import { getLastWeekArray } from '@/utils/time'
+import { useRoute } from 'vue-router'
 
-const systemDashboardList = ref([
+import type { DashboardProps } from '@/components/card/DashboardCard.vue'
+import type { SeriesData, XAxisOption, YAxisOption } from '@/components/charts/MultiBarChar.vue'
+
+
+defineProps<{
+  stationLoading: boolean
+}>()
+const route = useRoute()
+
+const chartLoading = ref(true)
+const systemDashboardLoading = ref(true)
+const series = ref<SeriesData[]>([
+  {
+    name: 'PV',
+    data: [],
+    color: 'rgba(3, 93, 239, 1)'
+  },
+  {
+    name: 'DG',
+    data: [],
+    color: 'rgba(105, 203, 255, 1)'
+  },
+])
+const systemDashboardList = ref<DashboardProps[]>([
   {
     id: 1,
-    data: {
+    dashboardData: {
       title: 'Peak Efficiency',
-      value: '176',
+      value: '-',
       unit: '%',
       icon: peakEfficiencyIcon,
     },
@@ -51,9 +76,9 @@ const systemDashboardList = ref([
   },
   {
     id: 2,
-    data: {
+    dashboardData: {
       title: 'Average Efficiency',
-      value: '92.1',
+      value: '-',
       unit: '%',
       icon: averageEfficiencyIcon,
     },
@@ -61,9 +86,9 @@ const systemDashboardList = ref([
   },
   {
     id: 3,
-    data: {
+    dashboardData: {
       title: 'Minimum Efficiency',
-      value: 176,
+      value: '-',
       unit: '%',
       icon: minimumEfficiencyIcon,
     },
@@ -71,12 +96,12 @@ const systemDashboardList = ref([
   },
 ])
 
-const deviceDashboardList = ref([
+const deviceDashboardList = ref<DashboardProps[]>([
   {
     id: 1,
-    data: {
+    dashboardData: {
       title: 'Solar Panels',
-      value: '176',
+      value: '-',
       unit: '%',
       icon: solarPanelsIcon,
     },
@@ -84,9 +109,9 @@ const deviceDashboardList = ref([
   },
   {
     id: 2,
-    data: {
+    dashboardData: {
       title: 'Battery System',
-      value: '92.1',
+      value: '-',
       unit: '%',
       icon: batterySystemIcon,
     },
@@ -94,9 +119,9 @@ const deviceDashboardList = ref([
   },
   {
     id: 3,
-    data: {
+    dashboardData: {
       title: 'PV System',
-      value: 76,
+      value: '-',
       unit: '%',
       icon: pvSystemIcon,
     },
@@ -104,9 +129,9 @@ const deviceDashboardList = ref([
   },
   {
     id: 4,
-    data: {
+    dashboardData: {
       title: 'Diesel Generator',
-      value: 76,
+      value: '-',
       unit: '%',
       icon: dieselGeneratorIcon,
     },
@@ -114,28 +139,65 @@ const deviceDashboardList = ref([
   }
 ])
 
-const xAxiosOption = ref({
-  xAxiosData: ['Solar', 'Wind', 'Hydro', 'Biomass', 'Geothermal'],
+
+
+
+const xAxiosOption = ref<XAxisOption>({
+  xAxiosData: [],
   xUnit: 'Source'
 })
 
-const yAxiosOption = ref({
-  yAxiosData: [100, 200, 300, 400, 500],
+const yAxiosOption = ref<YAxisOption>({
   yUnit: 'kWh'
 })
 
-const series = ref([
-  {
-    name: 'Actual Production',
-    data: [100, 200, 300, 400, 500],
-    color: 'rgba(3, 93, 239, 1)'
-  },
-  {
-    name: 'Target Production',
-    data: [100, 200, 300, 400, 500],
-    color: 'rgba(105, 203, 255, 1)'
-  },
-])
+// 单独封装获取性能视图数据的方法
+const fetchPerformanceViewData = async (stationId: string | number) => {
+  try {
+    systemDashboardLoading.value = true
+    const res = await getPerformanceView(stationId)
+    if (res.code === 200) {
+      systemDashboardList.value[0].dashboardData.value = res.data.sysPe
+      systemDashboardList.value[1].dashboardData.value = res.data.sysAe
+      systemDashboardList.value[2].dashboardData.value = res.data.sysMe
+      deviceDashboardList.value[0].dashboardData.value = res.data.deviceSp
+      deviceDashboardList.value[1].dashboardData.value = res.data.deviceBs
+      deviceDashboardList.value[2].dashboardData.value = res.data.devicePs
+      deviceDashboardList.value[3].dashboardData.value = res.data.deviceDg
+    }
+  } catch (error) {
+    // 可以根据需要添加错误处理
+    console.error('获取性能视图数据失败', error)
+  } finally {
+    systemDashboardLoading.value = false
+  }
+}
+
+// 单独封装获取性能图表数据的方法
+const fetchPerformanceChartData = async (stationId: string | number) => {
+  try {
+    chartLoading.value = true
+    const res2 = await getPerformancechart(stationId)
+    if (res2.code === 200) {
+      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => item.ts)
+      series.value[0].data = res2.data.guangFu.map(item => item.numberValue)
+      series.value[1].data = res2.data.chaiFa.map(item => item.numberValue)
+    }
+  } catch (error) {
+    // 可以根据需要添加错误处理
+    console.error('获取性能图表数据失败', error)
+  } finally {
+    chartLoading.value = false
+  }
+}
+
+// 在onMounted中调用上面两个方法
+onMounted(() => {
+  const stationId = route.query.stationId as string | number
+    fetchPerformanceViewData(stationId)
+    fetchPerformanceChartData(stationId)
+})
+// const series = ref()
 </script>
 
 <style scoped lang="scss">
