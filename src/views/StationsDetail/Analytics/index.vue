@@ -11,18 +11,45 @@
 
         <div class="analytics__toolbar-right">
           <div class="analytics__toolbar-time-btns" @click="handleTimeBtnClick">
-            <div v-show="selectedTimeBtn === 'custom'" class="analytics__toolbar-time-interval" ref="toolbarRightRef">
-              <el-select v-model="timeInterval" @change="getAllAnalyticsData" :append-to="toolbarRightRef"
-                placeholder="Select Time Interval">
-                <el-option v-for="btn in intervalList" :key="btn.value" :label="btn.label" :value="btn.value" />
+            <div
+              v-show="selectedTimeBtn === 'custom'"
+              class="analytics__toolbar-time-interval"
+              ref="toolbarRightRef"
+            >
+              <el-select
+                v-model="timeInterval"
+                @change="getAllAnalyticsData"
+                :append-to="toolbarRightRef"
+                placeholder="Select Time Interval"
+              >
+                <el-option
+                  v-for="btn in intervalList"
+                  :key="btn.value"
+                  :label="btn.label"
+                  :value="btn.value"
+                />
               </el-select>
             </div>
-            <el-date-picker v-if="selectedTimeBtn === 'custom'" v-model="rangeArray" type="datetimerange"
-              value-format="YYYY-MM-DD HH:mm:ss" format="YYYY-MM-DD HH:mm:ss" range-separator="To"
-              :default-time="defaultTime" start-placeholder="Select Start Date" end-placeholder="Select End Date"
-              :teleported="false" @change="getAllAnalyticsData" />
-            <div v-for="btn in timeBtnList" :key="btn.value" class="analytics__toolbar-time-btn"
-              :class="{ 'is-active': selectedTimeBtn === btn.value }" :data-value="btn.value">
+            <el-date-picker
+              v-if="selectedTimeBtn === 'custom'"
+              v-model="rangeArray"
+              type="datetimerange"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              format="YYYY-MM-DD HH:mm:ss"
+              range-separator="To"
+              :default-time="defaultTime"
+              start-placeholder="Select Start Date"
+              end-placeholder="Select End Date"
+              :teleported="false"
+              @change="getAllAnalyticsData"
+            />
+            <div
+              v-for="btn in timeBtnList"
+              :key="btn.value"
+              class="analytics__toolbar-time-btn"
+              :class="{ 'is-active': selectedTimeBtn === btn.value }"
+              :data-value="btn.value"
+            >
               {{ btn.label }}
             </div>
           </div>
@@ -33,34 +60,67 @@
       <div class="analytics__charts">
         <div class="analytics__chart-item">
           <ModuleCard title="Energy Structure" :loading="!stationLoading && chart1Loading">
-            <DoughnutChart :series="chart1Series" />
+            <DoughnutChart title="Energy Structure" :series="chart1Series" />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Power Monitoring" :loading="!stationLoading && chart2Loading">
-            <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="poweryAxiosOption" :series="chart2Series" />
+            <LineChart
+              title="Power Monitoring"
+              :xAxiosOption="xAxiosOption"
+              :yAxiosOption="poweryAxiosOption"
+              :series="chart2Series"
+            />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
-          <ModuleCard title="Energy Storage Operation Status" :loading="!stationLoading && chart3Loading">
-            <LineAndBarChart :xAxiosOption="xAxiosOption" :yAxiosOption="EssyAxiosOption"
-              :lineSeries="chart3Series.lineSeries" :barSeries="chart3Series.barSeries" />
+          <ModuleCard
+            title="Energy Storage Operation Status"
+            :loading="!stationLoading && chart3Loading"
+          >
+            <LineAndBarChart
+              title="Energy Storage Operation Status"
+              :xAxiosOption="xAxiosOption"
+              :yAxiosOption="EssyAxiosOption"
+              :lineSeries="chart3Series.lineSeries"
+              :barSeries="chart3Series.barSeries"
+            />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
-          <ModuleCard title="Electricity Generation Statistics" :loading="!stationLoading && chart4Loading">
-            <MultiBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="generateyAxiosOption" :series="chart4Series" />
+          <ModuleCard
+            title="Electricity Generation Statistics"
+            :loading="!stationLoading && chart4Loading"
+          >
+            <MultiBarChar
+              title="Electricity Generation Statistics"
+              :xAxiosOption="xAxiosOption"
+              :yAxiosOption="generateyAxiosOption"
+              :series="chart4Series"
+            />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
-          <ModuleCard title="Energy Supply And Demand Balance" :loading="!stationLoading && chart5Loading">
-            <MultiBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="energyyAxiosOption" :series="chart5Series" />
+          <ModuleCard
+            title="Energy Supply And Demand Balance"
+            :loading="!stationLoading && chart5Loading"
+          >
+            <MultiBarChar
+              title="Energy Supply And Demand Balance"
+              :xAxiosOption="xAxiosOption"
+              :yAxiosOption="energyyAxiosOption"
+              :series="chart5Series"
+            />
           </ModuleCard>
         </div>
         <div class="analytics__chart-item">
           <ModuleCard title="Economic Benefit Analysis" :loading="!stationLoading && chart6Loading">
-            <SingleBarChart :xAxiosOption="xAxiosOption" :yAxiosOption="economicyAxiosOption"
-              :series="economicSeries" />
+            <SingleBarChart
+              title="Economic Benefit Analysis"
+              :xAxiosOption="xAxiosOption"
+              :yAxiosOption="economicyAxiosOption"
+              :series="economicSeries"
+            />
           </ModuleCard>
         </div>
       </div>
@@ -85,7 +145,7 @@ defineProps<{
 const route = useRoute()
 const toolbarRightRef = ref<HTMLElement | null>(null)
 // 时间按钮列表
-const timeBtnList: { label: string, value: '6hours' | '1day' | '1week' | '1month' | 'custom' }[] = [
+const timeBtnList: { label: string; value: '6hours' | '1day' | '1week' | '1month' | 'custom' }[] = [
   { label: 'Custom', value: 'custom' },
   { label: '6 Hour', value: '6hours' },
   { label: '1 Day', value: '1day' },
@@ -109,7 +169,7 @@ const intervalList = ref([
   { label: '1 Minute', value: '1m' },
   { label: '15 Minutes', value: '15m' },
   { label: '1 Hour', value: '1h' },
-  { label: '4 Hours', value: '6h' },
+  { label: '6 Hours', value: '6h' },
   { label: '1 Day', value: '1d' },
   { label: '1 Week', value: '1w' },
   { label: '1 Month', value: '1M' },
@@ -133,7 +193,11 @@ const chart1Series = ref([
   },
 ])
 const chart2Series = ref([
-
+  {
+    name: 'PV',
+    data: [] as number[],
+    color: '#ee6666',
+  },
   {
     name: 'DG',
     data: [] as number[],
@@ -143,11 +207,6 @@ const chart2Series = ref([
     name: 'ESS',
     data: [] as number[],
     color: '#91CC75',
-  },
-  {
-    name: 'PV',
-    data: [] as number[],
-    color: '#ee6666',
   },
 ])
 
@@ -167,20 +226,19 @@ const chart3Series = ref({
       name: 'discharge',
       data: [] as number[],
       color: '#597ef7',
-    }
+    },
   ],
   lineSeries: [
     {
       name: 'SOC',
       data: [] as number[],
       color: '#66bb6a',
-    }
-  ]
+    },
+  ],
 })
 const EssyAxiosOption = {
   yUnit: ['kw', '%'],
 }
-
 
 const chart4Series = ref([
   {
@@ -198,7 +256,6 @@ const generateyAxiosOption = {
   yUnit: 'kWh',
 }
 
-
 const chart5Series = ref([
   {
     name: 'PV',
@@ -213,13 +270,13 @@ const chart5Series = ref([
     stack: 'generation',
   },
   {
-    name: 'ESS',
+    name: 'ESS charge',
     data: [] as number[],
     color: '#91CC75',
     stack: 'generation',
   },
   {
-    name: 'ESS1',
+    name: 'ESS discharge',
     data: [] as number[],
     color: '#91CC75',
     stack: 'load',
@@ -236,7 +293,6 @@ const energyyAxiosOption = {
   yUnit: 'kWh',
 }
 
-
 const economicSeries = ref([
   {
     name: 'total revenue',
@@ -251,7 +307,6 @@ const xAxiosOption = ref({
   xAxiosData: [] as string[],
 })
 const rangeArray = ref<string[]>([])
-
 
 // 事件代理处理时间按钮点击
 const handleTimeBtnClick = (event: MouseEvent) => {
@@ -281,10 +336,9 @@ const fetchChart1Data = async () => {
       isInterval: false,
     })
     if (res.code === 200) {
-
-      chart1Series.value[0].value = res.data.data1 as number || 0
-      chart1Series.value[1].value = res.data.data2 as number || 0
-      chart1Series.value[2].value = res.data.data3 as number || 0
+      chart1Series.value[0].value = (res.data.data1 as number) || 0
+      chart1Series.value[1].value = (res.data.data2 as number) || 0
+      chart1Series.value[2].value = (res.data.data3 as number) || 0
     }
   } finally {
     chart1Loading.value = false
@@ -306,7 +360,9 @@ const fetchChart2Data = async () => {
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) => item.ts.replace(' ', '\n'))
+      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        item.ts.replace(' ', '\n'),
+      )
       chart2Series.value.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
         if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
@@ -336,7 +392,9 @@ const fetchChart3Data = async () => {
       isInterval: true,
     })
     if (res.code === 200) {
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) => item.ts.replace(' ', '\n'))
+      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        item.ts.replace(' ', '\n'),
+      )
       chart3Series.value.barSeries.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 2}` as keyof AnalyticsIntervalData
         if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
@@ -370,7 +428,9 @@ const fetchChart4Data = async () => {
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) => item.ts.replace(' ', '\n'))
+      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        item.ts.replace(' ', '\n'),
+      )
       chart4Series.value.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
         if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
@@ -400,7 +460,9 @@ const fetchChart5Data = async () => {
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) => item.ts.replace(' ', '\n'))
+      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        item.ts.replace(' ', '\n'),
+      )
       chart5Series.value.forEach((item1: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
         if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
@@ -428,7 +490,9 @@ const fetchChart6Data = async () => {
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) => item.ts.replace(' ', '\n'))
+      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        item.ts.replace(' ', '\n'),
+      )
       economicSeries.value.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
         if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
@@ -442,8 +506,8 @@ const fetchChart6Data = async () => {
   }
 }
 const getAllAnalyticsData = () => {
-
   cancelAllPendingRequests()
+
   // chart1Loading.value = true
   // chart2Loading.value = true
   // chart3Loading.value = true
@@ -453,8 +517,8 @@ const getAllAnalyticsData = () => {
   setTimeout(() => {
     if (selectedTimeBtn.value === 'custom') {
       interval.value = timeInterval.value
-    }
-    else {
+      if (rangeArray.value.every((item: string) => item === '')) return
+    } else {
       rangeArray.value = getTimeRangeArray(selectedTimeBtn.value)
       switch (selectedTimeBtn.value) {
         case '6hours':
@@ -481,17 +545,11 @@ const getAllAnalyticsData = () => {
     fetchChart5Data()
     fetchChart6Data()
   }, 100)
-
 }
-
-
 
 onMounted(() => {
   getAllAnalyticsData()
 })
-
-
-
 </script>
 
 <style scoped lang="scss">
@@ -540,7 +598,6 @@ onMounted(() => {
         display: flex;
         align-items: center;
 
-
         .analytics__toolbar-time-interval {
           position: relative;
           margin-right: 0.2rem;
@@ -566,8 +623,6 @@ onMounted(() => {
         }
       }
     }
-
-
   }
 
   .analytics__charts {
@@ -659,6 +714,5 @@ onMounted(() => {
       // }
     }
   }
-
 }
 </style>

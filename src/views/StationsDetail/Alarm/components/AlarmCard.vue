@@ -1,15 +1,15 @@
 <template>
-    <div class="Alarm-card" :class="`${levelList[AlarmData.level-1]}`">
+    <div class="Alarm-card" :class="`${levelList[level-1]}`">
         <div class="Alarm-card__header">
-            <div class="header-icon" :class="`${levelList[AlarmData.level-1]}`"></div>
-            <div class="header-level" :class="`${levelList[AlarmData.level-1]}`">{{ levelList[AlarmData.level-1] }}</div>
-            <div class="header-device">{{ AlarmData.device }}</div>
+            <div class="header-icon" :class="`${levelList[level-1]}`"></div>
+            <div class="header-level" :class="`${levelList[level-1]}`">{{ levelList[level-1] }}</div>
+            <div class="header-device">{{ AlarmData.deviceId }}</div>
         </div>
         <div class="Alarm-card__content">
             <div class="card-left">
-                <div class="Alarm-message">{{ AlarmData.message }}</div>
+                <div class="Alarm-message">{{ AlarmData.rawValue }}</div>
 
-                <div class="Alarm-time">{{ AlarmData.alarm_id }}</div>
+                <div class="Alarm-time">{{ AlarmData.ts }}</div>
 
             </div>
             <!-- <div v-if="AlarmData.level !== 2" class="card-right">
@@ -20,15 +20,10 @@
     </div>
 </template>
 <script setup lang="ts">
-
-export interface AlarmData {
-    device: string,
-    level: number,
-    message: string,
-    alarm_id: string,
-}
+import type { StationAlarmItem } from '@/types/Stations'
 interface AlarmProps {
-    AlarmData: AlarmData,
+    AlarmData: StationAlarmItem,
+    level: number
 }
 defineProps<AlarmProps>()
 

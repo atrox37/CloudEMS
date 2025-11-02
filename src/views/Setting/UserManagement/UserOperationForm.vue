@@ -1,10 +1,21 @@
 <template>
   <FormDialog width="9.24rem" ref="dialogRef" :title="dialogTitle">
     <template #dialog-body>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="1.24rem" class="user-form" label-position="right"
-        inline>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="1.24rem"
+        class="user-form"
+        label-position="right"
+        inline
+      >
         <el-form-item label="username" prop="username">
-          <el-input v-model="form.username" placeholder="Enter username" :disabled="mode === 'edit'" />
+          <el-input
+            v-model="form.username"
+            placeholder="Enter username"
+            :disabled="mode === 'edit'"
+          />
         </el-form-item>
         <el-form-item label="Email" prop="email">
           <el-input v-model="form.email" placeholder="Enter email" :disabled="mode === 'edit'" />
@@ -13,22 +24,42 @@
         <el-form-item label="Role" prop="roleId">
           <div class="role-group" ref="roleGroupRef">
             <el-select v-model="form.roleId" placeholder="Select role" :append-to="roleGroupRef">
-              <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+              <el-option
+                v-for="item in roleOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
             </el-select>
           </div>
         </el-form-item>
 
         <!-- Status 独占一行，去除 inline 并设置宽度100% -->
-        <el-form-item v-if="mode === 'edit'" label="status" prop="state" class="user-form__status-row">
+        <el-form-item
+          v-if="mode === 'edit'"
+          label="status"
+          prop="state"
+          class="user-form__status-row"
+        >
           <el-switch v-model="form.state" :active-value="1" :inactive-value="0" />
         </el-form-item>
 
         <el-form-item label="Password" prop="password">
-          <el-input v-model="form.password" type="password" placeholder="Enter password" show-password />
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="Enter password"
+            show-password
+          />
         </el-form-item>
 
         <el-form-item label="Confirm Password" prop="confirmPassword">
-          <el-input v-model="form.confirmPassword" type="password" placeholder="Confirm password" show-password />
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="Confirm password"
+            show-password
+          />
         </el-form-item>
       </el-form>
     </template>
@@ -37,7 +68,6 @@
       <el-button type="warning" @click="onCancel">Cancel</el-button>
       <el-button type="primary" @click="onSubmit" :loading="loading">Submit</el-button>
     </template>
-
   </FormDialog>
 </template>
 
@@ -46,7 +76,7 @@ import type { FormInstance } from 'element-plus'
 import type { UserInfo } from '@/types/user'
 import { removeEmpty } from '@/utils/common'
 import { getRoleList, operationUser } from '@/api/user'
-
+import MD5 from 'crypto-js/md5'
 export interface UserFormModel {
   id?: number
   username?: string
@@ -77,7 +107,7 @@ const getDefaultForm = (): UserFormModel => ({
 
 const form = ref<UserFormModel>(getDefaultForm())
 const roleGroupRef = ref<HTMLElement>()
-const roleOptions = ref<{ label: string, value: number }[]>([])
+const roleOptions = ref<{ label: string; value: number }[]>([])
 // 密码确认验证函数
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
   if (mode.value === 'create' && value === '') {
@@ -100,8 +130,6 @@ const validatePassword = (rule: any, value: string, callback: any) => {
   } else {
     callback()
   }
-
-
 }
 
 const validateEmail = (rule: any, value: string, callback: any) => {
@@ -116,24 +144,23 @@ const rules = computed(() => {
   const baseRules = {
     username: [
       { required: true, message: 'Please input username', trigger: 'blur' },
-      { min: 3, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
+      { min: 2, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
     ],
     roleId: [{ required: true, message: 'Please select role', trigger: 'change' }],
     state: [{ required: true, message: 'Please select status', trigger: 'change' }],
-    password: [
-      { validator: validatePassword, trigger: 'blur' },
-    ],
+    password: [{ validator: validatePassword, trigger: 'blur' }],
     confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
-    email: [{ required: true, message: 'Please input email', trigger: 'blur' }, { validator: validateEmail, trigger: 'blur' }],
+    email: [
+      { required: true, message: 'Please input email', trigger: 'blur' },
+      { validator: validateEmail, trigger: 'blur' },
+    ],
   }
 
   // 只在创建模式下添加密码必填验证
   if (mode.value === 'create') {
     return {
       ...baseRules,
-      password: [
-        { required: true, validator: validatePassword, trigger: 'blur' },
-      ],
+      password: [{ required: true, validator: validatePassword, trigger: 'blur' }],
       confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
     }
   }
@@ -143,9 +170,6 @@ const rules = computed(() => {
 const loading = ref(false)
 const mode = ref<'create' | 'edit'>('create')
 const dialogTitle = computed(() => (mode.value === 'edit' ? 'Edit User' : 'Add User'))
-function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj))
-}
 
 async function open(userItem: UserInfo, openMode: 'create' | 'edit' = 'create') {
   mode.value = openMode
@@ -192,6 +216,7 @@ async function onSubmit() {
 
         const res = await operationUser({
           ...submitData,
+          password: MD5(submitData.password as string).toString(),
         })
         if (res.code === 200) {
           ElMessage.success('User added successfully')
@@ -199,6 +224,9 @@ async function onSubmit() {
         }
         close()
       } else if (mode.value === 'edit') {
+        if (submitData.password) {
+          submitData.password = MD5(submitData.password).toString()
+        }
         const res = await operationUser({
           ...removeEmpty(submitData),
         })
@@ -230,7 +258,6 @@ defineExpose({ open, close })
 
 <style scoped lang="scss">
 .voltage-class {
-
   .monitor-data-group,
   .role-group,
   .condition-group {

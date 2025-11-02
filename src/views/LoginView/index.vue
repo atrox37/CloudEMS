@@ -19,8 +19,12 @@
             <el-form-item label="Verify Code" prop="captcha">
               <div class="loginPage__form-captch">
                 <el-input v-model="form.captcha" />
-                <el-image class="loginPage__form-captch-img" :src="captchImgUrl" alt="click to refresh"
-                  @click="getCaptchImg">
+                <el-image
+                  class="loginPage__form-captch-img"
+                  :src="captchImgUrl"
+                  alt="click to refresh"
+                  @click="getCaptchImg"
+                >
                   <template #error>
                     <div class="image-viewer-slot image-slot">
                       <el-icon class="is-loading">
@@ -30,11 +34,11 @@
                   </template>
                 </el-image>
                 <!-- <img :src="captchImgUrl" alt="Verify Code" /> -->
-
               </div>
-
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)" :loading="loginLoading">Log in</el-button>
+            <el-button type="primary" @click="handleLogin(formRef)" :loading="loginLoading"
+              >Log in</el-button
+            >
           </el-form>
         </div>
       </ModuleCard>
@@ -62,12 +66,13 @@ const form = reactive<LoginParams>({
   captcha: '',
 })
 const formRules = reactive<FormRules<LoginParams>>({
-  account: [{ required: true, message: 'Please enter your account', trigger: 'blur' },
-  {
-    pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    message: 'Please enter a valid email address',
-    trigger: 'blur',
-  },
+  account: [
+    { required: true, message: 'Please enter your account', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      message: 'Please enter a valid email address',
+      trigger: 'blur',
+    },
   ],
   password: [
     { required: true, message: 'Please enter your password', trigger: 'blur' },
@@ -95,7 +100,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             wsManager.connect()
             const { redirect, ...query } = router.currentRoute.value.query
             if (redirect) {
-
               router.push({ path: redirect as string, query: query })
             } else {
               router.push({ path: '/' })
@@ -142,11 +146,13 @@ onMounted(() => {
   background-repeat: no-repeat;
   border: 0.01rem solid;
 
-  border-image-source: linear-gradient(117.31deg,
-      rgba(148, 166, 197, 0.3) 2.77%,
-      rgba(148, 166, 197, 0) 32.18%,
-      rgba(148, 166, 197, 0.103266) 72.63%,
-      rgba(148, 166, 197, 0.3) 99.05%);
+  border-image-source: linear-gradient(
+    117.31deg,
+    rgba(148, 166, 197, 0.3) 2.77%,
+    rgba(148, 166, 197, 0) 32.18%,
+    rgba(148, 166, 197, 0.103266) 72.63%,
+    rgba(148, 166, 197, 0.3) 99.05%
+  );
 
   // 顶部标题栏
   .loginPage__header {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import en from 'element-plus/es/locale/lang/en'
 import wsManager from '@/utils/websocket'
+import stompManager from '@/utils/stomp'
 import { useRouter } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
@@ -17,28 +18,133 @@ const handleAlarmDetail = () => {
 let idCount = 0
 const alarmMap = new Map()
 // 初始化WebSocket连接（只在用户登录后）
-const initWebSocket = async () => {
+// const initWebSocket = async () => {
+//   // 检查用户是否已登录
+//   if (!userStore.isLoggedIn || !userStore.token) {
+//     console.log('[main] 用户未登录，跳过WebSocket连接')
+//     return
+//   }
+
+//   try {
+//     await wsManager.connect()
+//     console.log('[main] WebSocket连接成功')
+//     // 设置全局监听器
+//     wsManager.setGlobalListeners({
+//       onConnect: () => {
+//         console.log('[main] WebSocket已连接')
+//       },
+//       onDisconnect: () => {
+//         console.log('[main] WebSocket连接断开')
+//       },
+//       onError: (error) => {
+//         console.error('[main] WebSocket错误:', error)
+//       },
+//       onAlarm: (alarm) => {
+//         if (alarm.status == 1) {
+//           // 告警触发状态，显示带跳转按钮的消息
+//           const currentId = idCount++
+//           const message = ElMessage({
+//             type: 'error',
+//             showClose: true,
+//             dangerouslyUseHTMLString: true,
+//             message: `
+//               <div style="display: flex; align-items: center; gap: 0.08rem;">
+//                 <span>${alarm.message}</span>
+//                 <button id="to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
+//               </div>
+//             `,
+//             duration: 0,
+//             onClose: () => {
+//               // 通过ID映射表清理事件监听，防止内存泄漏
+//               const buttonId = `to-detail-btn-${currentId}`
+
+//               const eventInfo = document.getElementById(buttonId)
+//               if (eventInfo) {
+//                 // 移除事件监听器
+//                 eventInfo.removeEventListener('click', handleAlarmDetail)
+//                 console.log(`[App] 通过ID映射表清理告警按钮事件监听: ${buttonId}`)
+//               }
+
+//               // 从告警映射中移除
+//               alarmMap.delete(alarm.alarm_id)
+//             },
+//           })
+
+//           // 存储告警消息到映射中
+//           alarmMap.set(alarm.alarm_id, message)
+
+//           // 添加按钮点击事件监听
+//           nextTick(() => {
+//             const buttonId = `to-detail-btn-${currentId}`
+//             const btn = document.getElementById(buttonId)
+//             if (btn) {
+//               btn.addEventListener('click', handleAlarmDetail)
+//             }
+//           })
+//         } else {
+//           // 告警恢复状态，显示成功消息并关闭对应的告警消息
+//           ElMessage.success({
+//             message: alarm.message,
+//             duration: 3000,
+//           })
+
+//           // 关闭对应的告警消息
+//           const existingMessage = alarmMap.get(alarm.alarm_id)
+//           if (existingMessage) {
+//             existingMessage.close()
+//             alarmMap.delete(alarm.alarm_id)
+//             console.log(`[App] 关闭告警消息: ${alarm.alarm_id}`)
+//           }
+//         }
+//         console.log('[main] 告警:', alarm)
+//       },
+//       onAlarmNum: (alarmNum) => {
+//         console.log('[main] 告警数量更新:', alarmNum)
+//         globalStore.alarmNum = alarmNum.current_alarms
+//       },
+//     })
+//   } catch (error) {
+//     console.error('[main] WebSocket连接失败:', error)
+//   }
+// }
+
+// 初始化 STOMP 连接（只在用户登录后）
+const initStomp = async () => {
   // 检查用户是否已登录
   if (!userStore.isLoggedIn || !userStore.token) {
-    console.log('[main] 用户未登录，跳过WebSocket连接')
+    console.log('[main] 用户未登录，跳过STOMP连接')
     return
   }
 
   try {
-    await wsManager.connect()
-    console.log('[main] WebSocket连接成功')
+    await stompManager.connect()
+    console.log('[main] STOMP连接成功')
+
     // 设置全局监听器
-    wsManager.setGlobalListeners({
+    stompManager.setGlobalListeners({
       onConnect: () => {
-        console.log('[main] WebSocket已连接')
+        console.log('[main] STOMP已连接')
       },
       onDisconnect: () => {
-        console.log('[main] WebSocket连接断开')
+        console.log('[main] STOMP连接断开')
+      },
+      onReconnect: () => {
+        console.log('[main] STOMP正在重连...')
       },
       onError: (error) => {
-        console.error('[main] WebSocket错误:', error)
+        console.error('[main] STOMP错误:', error)
+      }
+    })
+
+    // 订阅告警主题
+    stompManager.subscribe(
+      {
+        destination: '/topic/report_property_8', // 根据实际后端配置修改
       },
-      onAlarm: (alarm) => {
+      (alarm) => {
+        
+        console.log(alarm,'//////////////////////////////');
+        const rowData = JSON.parse(alarm.rawValue)
         if (alarm.status == 1) {
           // 告警触发状态，显示带跳转按钮的消息
           const currentId = idCount++
@@ -48,42 +154,39 @@ const initWebSocket = async () => {
             dangerouslyUseHTMLString: true,
             message: `
               <div style="display: flex; align-items: center; gap: 0.08rem;">
-                <span>${alarm.message}</span>
-                <button id="to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
+                <span>${alarm.deviceId}</span>&nbsp;&nbsp;
+                <span>${rowData.msg}</span>
+                <button id="stomp-to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
               </div>
             `,
             duration: 0,
             onClose: () => {
-              // 通过ID映射表清理事件监听，防止内存泄漏
-              const buttonId = `to-detail-btn-${currentId}`
-
+              // 清理事件监听器
+              const buttonId = `stomp-to-detail-btn-${currentId}`
               const eventInfo = document.getElementById(buttonId)
               if (eventInfo) {
-                // 移除事件监听器
                 eventInfo.removeEventListener('click', handleAlarmDetail)
-                console.log(`[App] 通过ID映射表清理告警按钮事件监听: ${buttonId}`)
+                console.log(`[App] 清理STOMP告警按钮事件监听: ${buttonId}`)
               }
-
-              // 从告警映射中移除
               alarmMap.delete(alarm.alarm_id)
             },
           })
 
-          // 存储告警消息到映射中
+          // 存储告警消息
           alarmMap.set(alarm.alarm_id, message)
 
-          // 添加按钮点击事件监听
+          // 添加按钮点击事件
           nextTick(() => {
-            const buttonId = `to-detail-btn-${currentId}`
+            const buttonId = `stomp-to-detail-btn-${currentId}`
             const btn = document.getElementById(buttonId)
             if (btn) {
               btn.addEventListener('click', handleAlarmDetail)
             }
           })
         } else {
-          // 告警恢复状态，显示成功消息并关闭对应的告警消息
+          // 告警恢复状态
           ElMessage.success({
-            message: alarm.message,
+            message: rowData.msg,
             duration: 3000,
           })
 
@@ -92,18 +195,15 @@ const initWebSocket = async () => {
           if (existingMessage) {
             existingMessage.close()
             alarmMap.delete(alarm.alarm_id)
-            console.log(`[App] 关闭告警消息: ${alarm.alarm_id}`)
+            console.log(`[App] 关闭STOMP告警消息: ${alarm.alarm_id}`)
           }
         }
-        console.log('[main] 告警:', alarm)
+        console.log('[main] STOMP告警:', alarm)
+        // 消息已通过全局监听器的 onAlarm 处理
       },
-      onAlarmNum: (alarmNum) => {
-        console.log('[main] 告警数量更新:', alarmNum)
-        globalStore.alarmNum = alarmNum.current_alarms
-      },
-    })
+    )
   } catch (error) {
-    console.error('[main] WebSocket连接失败:', error)
+    console.error('[main] STOMP连接失败:', error)
   }
 }
 
@@ -112,13 +212,15 @@ watch(
   () => userStore.isLoggedIn,
   (isLoggedIn) => {
     if (isLoggedIn) {
-      // 用户登录成功，连接WebSocket
-      console.log('[main] 用户登录成功，尝试连接WebSocket')
-      initWebSocket()
+      // 用户登录成功，连接WebSocket和STOMP
+      console.log('[main] 用户登录成功，尝试连接WebSocket和STOMP')
+      // initWebSocket()
+      initStomp()
     } else {
-      // 用户登出，断开WebSocket连接
-      console.log('[main] 用户登出，断开WebSocket连接')
-      wsManager.disconnect()
+      // 用户登出，断开WebSocket和STOMP连接
+      console.log('[main] 用户登出，断开WebSocket和STOMP连接')
+      // wsManager.disconnect()
+      stompManager.disconnect()
     }
   },
   { immediate: true } // 立即执行一次

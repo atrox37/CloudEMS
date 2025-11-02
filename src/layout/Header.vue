@@ -68,18 +68,19 @@ const toggleNotifications = () => {
 }
 
 // 用户操作
-const handleUserCommand = async (command: string) => {
+const handleUserCommand = (command: string) => {
   switch (command) {
     case 'logout':
-      await userStore.logout()
-      router.push('/login')
+      
+      userStore.logout()
       break
   }
 }
 
 const getAvatarName = (name: string | undefined): string | undefined => {
   if (!name) {
-    // userStore.logout()
+    
+    userStore.logout()
     // router.push('/login')
   } else {
     const nameStr = name.split(' ')

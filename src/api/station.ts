@@ -1,4 +1,4 @@
-import { defaultRequest, type ApiResponse } from '@/utils/request'
+import Request, { type ApiResponse } from '@/utils/request'
 import type {
   Stations,
   StationOverview,
@@ -12,6 +12,7 @@ import type {
   AnalyticsIntervalData,
   AnalyticsNoIntervalData,
   AnalyticsParams,
+  MainteranceData,
 } from '@/types/Stations'
 
 /**
@@ -19,7 +20,7 @@ import type {
  * @returns Promise<ApiResponse<Stations[]>> 电站信息数组
  */
 export const getStations = (): Promise<ApiResponse<Stations[]>> => {
-  return defaultRequest.get('/user-app/station/_page')
+  return Request.get('/user-app/station/_page')
 }
 
 /**
@@ -30,7 +31,7 @@ export const getStations = (): Promise<ApiResponse<Stations[]>> => {
 export const getStationOverview = (
   stationId: string | number,
 ): Promise<ApiResponse<StationOverview>> => {
-  return defaultRequest.post(`/user-app/station/_overview`, { stationId })
+  return Request.post(`/user-app/station/_overview`, { stationId })
 }
 
 /**
@@ -41,7 +42,7 @@ export const getStationOverview = (
 export const getStationOverchart = (
   stationId: string | number,
 ): Promise<ApiResponse<Overviewchart>> => {
-  return defaultRequest.post(`/user-app/station/_overchart`, { stationId })
+  return Request.post(`/user-app/station/_overchart`, { stationId })
 }
 
 /**
@@ -52,7 +53,7 @@ export const getStationOverchart = (
 export const getPerformancechart = (
   stationId: string | number,
 ): Promise<ApiResponse<Performancechart>> => {
-  return defaultRequest.post(`/user-app/station/_performancehart`, { stationId })
+  return Request.post(`/user-app/station/_performancehart`, { stationId })
 }
 
 /**
@@ -63,7 +64,7 @@ export const getPerformancechart = (
 export const getPerformanceView = (
   stationId: string | number,
 ): Promise<ApiResponse<PerformanceView>> => {
-  return defaultRequest.post(`/user-app/station/_performancView`, { stationId })
+  return Request.post(`/user-app/station/_performancView`, { stationId })
 }
 
 /**
@@ -74,7 +75,7 @@ export const getPerformanceView = (
 export const getStationDetail = (
   stationId: string | number,
 ): Promise<ApiResponse<StationDetail>> => {
-  return defaultRequest.post(`/user-app/station/_information`, { stationId })
+  return Request.post(`/user-app/station/_information`, { stationId })
 }
 /**
  * 获取指定电站的告警信息
@@ -82,7 +83,7 @@ export const getStationDetail = (
  * @returns Promise<ApiResponse<StationAlarm>> 告警信息
  */
 export const getStationAlarm = (stationId: string | number): Promise<ApiResponse<StationAlarm>> => {
-  return defaultRequest.post(`/user-app/station/_alarmMessage`, { stationId })
+  return Request.post(`/user-app/station/_alarmMessage`, { stationId })
 }
 /**
  * 获取指定电站的告警统计信息
@@ -92,7 +93,7 @@ export const getStationAlarm = (stationId: string | number): Promise<ApiResponse
 export const getStationAlarmStatistics = (
   stationId: string | number,
 ): Promise<ApiResponse<StationAlarmStatistics>> => {
-  return defaultRequest.post(`/user-app/station/_alarmTotal`, { stationId })
+  return Request.post(`/user-app/station/_alarmTotal`, { stationId })
 }
 
 /**
@@ -100,11 +101,16 @@ export const getStationAlarmStatistics = (
  * @returns Promise<ApiResponse<StationList>> 列表信息
  */
 export const getStationList = (): Promise<ApiResponse<StationListItem[]>> => {
-  return defaultRequest.get(`/user-app/station/_all`)
+  return Request.get(`/user-app/station/_all`)
 }
 
 export const getAnalyticsData = (
   params: AnalyticsParams,
 ): Promise<ApiResponse<AnalyticsIntervalData | AnalyticsNoIntervalData>> => {
-  return defaultRequest.post(`/user-app/station/_analytics`, params)
+  return Request.post(`/user-app/station/_analytics`, params)
+}
+export const getMainteranceData = (deviceId: number): Promise<ApiResponse<MainteranceData[]>> => {
+  return Request.post(`/iot-app/device_tag/_search_all`, {
+    terms: [{ column: 't.device_id', value: deviceId }],
+  })
 }

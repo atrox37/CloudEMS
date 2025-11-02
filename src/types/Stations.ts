@@ -2,14 +2,16 @@ export interface Stations {
   stationId: number
   stationName: string
   stationStatus: string
-  power: number
-  battery: number
-  efficiency: number
-  energy: number
-  temperature: number
+  pv_power: number
+  rate_power: number
+  rate_capacity: number
+  soc: number
+  out_power: number
+  in_power: number
+  today_out_battery: number
+  today_in_battery: number
   time: string
 }
-
 export interface StationOverview {
   pvP: number
   loadP: number
@@ -77,6 +79,9 @@ export interface StationAlarmStatistics {
   level1: number //等级一二三的数量
   level2: number
   level3: number
+  level1Data: StationAlarmItem[]
+  level2Data: StationAlarmItem[]
+  level3Data: StationAlarmItem[]
 }
 export interface StationAlarm {
   level1: StationAlarmItem[]
@@ -84,17 +89,10 @@ export interface StationAlarm {
   level3: StationAlarmItem[]
 }
 export interface StationAlarmItem {
-  point_id: number
-  service_type: string
-  level: number
-  data_type: string
-  source: string
-  alarm_id: string
-  message: string
-  device: string
-  channel_id: number
-  value: number
-  status: number
+  deviceId: number
+  property: string
+  rawValue: string
+  ts: string
 }
 export interface StationListItem {
   deviceInstancePo: StationDetail
@@ -122,4 +120,10 @@ export interface AnalyticsParams {
   chartType: 'CHART1' | 'CHART2' | 'CHART3' | 'CHART4' | 'CHART5' | 'CHART6'
   interval: string
   isInterval: boolean
+}
+export interface MainteranceData {
+  id: number
+  tagKey: string
+  tagValue: string
+  deviceId: number
 }

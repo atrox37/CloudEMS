@@ -1,32 +1,52 @@
 <template>
   <div class="voltage-class notification">
-
     <HeaderCard title="Notification" desc="Configure system Alarm and notifications" />
     <div class="notification__body">
-      <LoadingBg :loading="settingLoading">
+      <LoadingBg :loading="globalStore.loading">
         <SettingCard title="Notifications Configuration" :icon="mailIcon">
           <template #control>
             <div class="notification__switch">
-              <el-checkbox v-model="mailChecked" :indeterminate="isMailIndeterminate"
-                @change="onMailCheckedChange">mail</el-checkbox>
-              <el-checkbox v-model="smsChecked" :indeterminate="isSmsIndeterminate" @change="onSmsCheckedChange"
-                style="margin-right: 2.04rem;">sms</el-checkbox>
+              <el-checkbox
+                v-model="mailChecked"
+                :indeterminate="isMailIndeterminate"
+                @change="onMailCheckedChange"
+                >mail</el-checkbox
+              >
+              <el-checkbox
+                v-model="smsChecked"
+                :indeterminate="isSmsIndeterminate"
+                @change="onSmsCheckedChange"
+                style="margin-right: 2.04rem"
+                >sms</el-checkbox
+              >
               <!-- <el-button type="primary">submit</el-button> -->
             </div>
           </template>
-          <SettingItem v-for="item in emailList" :key="item.id" :title="item.title" :desc="item.desc">
+          <SettingItem
+            v-for="item in emailList"
+            :key="item.id"
+            :title="item.title"
+            :desc="item.desc"
+          >
             <el-checkbox v-model="item.isMail" @change="onMailItemCheckedChange">mail</el-checkbox>
-            <el-checkbox v-model="item.isSms" @change="onSmsItemCheckedChange"
-              style="margin-right: 2.04rem;">sms</el-checkbox>
-
+            <el-checkbox
+              v-model="item.isSms"
+              @change="onSmsItemCheckedChange"
+              style="margin-right: 2.04rem"
+              >sms</el-checkbox
+            >
           </SettingItem>
         </SettingCard>
       </LoadingBg>
       <div class="notification__submit-btn">
-        <el-button type="primary" @click="onSubmit" :disabled="globalStore.loading" :loading="submitLoading">Submit</el-button>
+        <el-button
+          type="primary"
+          @click="onSubmit"
+          :loading="globalStore.loading"
+          >Submit</el-button
+        >
       </div>
     </div>
-
   </div>
 </template>
 
@@ -36,7 +56,6 @@ import SettingCard from '@/components/card/settingCard.vue'
 import SettingItem from '@/components/card/settingItem.vue'
 import mailIcon from '@/assets/icons/header-mail.svg'
 import { updateUserNotification } from '@/api/user'
-
 
 import type { CheckboxValueType } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -48,7 +67,6 @@ const smsChecked = ref(false)
 const isMailIndeterminate = ref(false)
 const isSmsIndeterminate = ref(false)
 const submitLoading = ref(false)
-const settingLoading = ref(false)
 
 const emailList = ref([
   {
@@ -106,26 +124,26 @@ const notificationData = computed(() => {
 })
 // 监听AllChecked变化，联动所有item.checkedGroup
 function onMailCheckedChange(val: CheckboxValueType) {
-  emailList.value.forEach(item => {
+  emailList.value.forEach((item) => {
     item.isMail = val as boolean
   })
   isMailIndeterminate.value = false
 }
 
 function onSmsCheckedChange(val: CheckboxValueType) {
-  emailList.value.forEach(item => {
+  emailList.value.forEach((item) => {
     item.isSms = val as boolean
   })
   isSmsIndeterminate.value = false
 }
 function onMailItemCheckedChange() {
-  const mailNum = emailList.value.filter(item => item.isMail).length
+  const mailNum = emailList.value.filter((item) => item.isMail).length
   mailChecked.value = mailNum === emailList.value.length
   isMailIndeterminate.value = mailNum > 0 && mailNum < emailList.value.length
 }
 
 function onSmsItemCheckedChange() {
-  const smsNum = emailList.value.filter(item => item.isSms).length
+  const smsNum = emailList.value.filter((item) => item.isSms).length
   smsChecked.value = smsNum === emailList.value.length
   isSmsIndeterminate.value = smsNum > 0 && smsNum < emailList.value.length
 }
@@ -145,30 +163,18 @@ async function onSubmit() {
     submitLoading.value = false
   }
 }
-const getUserInfo = async () => {
-  try {
-    settingLoading.value = true
-    const res = await userStore.getUserInfo()
-    if (res.success) {
-      const rawUserInfo = toRaw(userStore.userInfo)
-      emailList.value[0].isMail = rawUserInfo?.sysUserPo?.metadata?.systemNotify?.email || false
-      emailList.value[0].isSms = rawUserInfo?.sysUserPo?.metadata?.systemNotify?.sms || false
-      emailList.value[1].isMail = rawUserInfo?.sysUserPo?.metadata?.reminders?.email || false
-      emailList.value[1].isSms = rawUserInfo?.sysUserPo?.metadata?.reminders?.sms || false
-      emailList.value[2].isMail = rawUserInfo?.sysUserPo?.metadata?.dayReport?.email || false
-      emailList.value[2].isSms = rawUserInfo?.sysUserPo?.metadata?.dayReport?.sms || false
-      emailList.value[3].isMail = rawUserInfo?.sysUserPo?.metadata?.weekReport?.email || false
-      emailList.value[3].isSms = rawUserInfo?.sysUserPo?.metadata?.weekReport?.sms || false
-      onMailItemCheckedChange()
-      onSmsItemCheckedChange()
-    }
-  } finally {
-    settingLoading.value = false
-  }
-}
 onMounted(() => {
   // 将userStore.userInfo转为非响应式对象
-  getUserInfo()
+  emailList.value[0].isMail = userStore.userInfo?.sysUserPo?.metadata?.systemNotify?.email || false
+  emailList.value[0].isSms = userStore.userInfo?.sysUserPo?.metadata?.systemNotify?.sms || false
+  emailList.value[1].isMail = userStore.userInfo?.sysUserPo?.metadata?.reminders?.email || false
+  emailList.value[1].isSms = userStore.userInfo?.sysUserPo?.metadata?.reminders?.sms || false
+  emailList.value[2].isMail = userStore.userInfo?.sysUserPo?.metadata?.dayReport?.email || false
+  emailList.value[2].isSms = userStore.userInfo?.sysUserPo?.metadata?.dayReport?.sms || false
+  emailList.value[3].isMail = userStore.userInfo?.sysUserPo?.metadata?.weekReport?.email || false
+  emailList.value[3].isSms = userStore.userInfo?.sysUserPo?.metadata?.weekReport?.sms || false
+  onMailItemCheckedChange()
+  onSmsItemCheckedChange()
 })
 </script>
 
@@ -201,7 +207,7 @@ onMounted(() => {
       }
     }
 
-    &>div {
+    & > div {
       margin-bottom: 0.2rem;
 
       &:last-child {

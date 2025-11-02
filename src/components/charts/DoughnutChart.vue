@@ -13,7 +13,7 @@
         </el-icon>
       </div>
     </div>
-    <FullSceenDialog ref="fullScreenDialogRef" title="Doughnut Chart Full Screen" fullscreen :append-to-body="true"
+    <FullSceenDialog ref="fullScreenDialogRef" :title="props.title || 'Doughnut Chart Full Screen'" fullscreen :append-to-body="true"
       :modal-append-to-body="true" :close-on-click-modal="false">
       <template #dialog-body>
         <div class="doughnut-chart-full-screen">
@@ -61,6 +61,7 @@ interface SeriesData {
   name: string
   value: number
   color: string
+  unit?: string
 }
 
 // Grid配置接口
@@ -122,7 +123,7 @@ function customTooltipFormatter(
   const name = params.name || ''
   const value = params.value || 0
   const percent = params.percent || 0
-
+  const unit = params.data.unit ? ' ' + params.data.unit : ''
   let html = `
     <div style="
       max-width:${width}px;
@@ -158,9 +159,9 @@ function customTooltipFormatter(
             background:${params.color};
             margin-right:${dotSize / 2}px;
           "></span>
-          <span>数值</span>
+          <span>Value</span>
         </div>
-        <div style="font-weight:600;">${value}</div>
+        <div style="font-weight:600;">${value}${unit}</div>
       </div>
       <div style="
         display:flex;
@@ -172,7 +173,7 @@ function customTooltipFormatter(
         line-height:${itemLineHeight}px;
         gap:${gap * 2}px;
       ">
-        <span>占比</span>
+        <span>Proportion</span>
         <div style="font-weight:600;">${percent}%</div>
       </div>
     </div>
@@ -204,7 +205,6 @@ function getChartOption({
   chartWidth?: number
 }) {
   // 获取配置参数，使用默认值
-  const title = props.title || ''
   const radius = props.radius || ['40%', '70%']
   const center = props.center || ['50%', '50%']
 
@@ -265,7 +265,7 @@ function getChartOption({
     }
 
   const grid = getGridConfig(isFullScreen)
-  // debugger
+  // 
   // tooltip
   const tooltip = isFullScreen
     ? {
@@ -313,7 +313,6 @@ function getChartOption({
 
   const titleConfig = isFullScreen
     ? {
-      text: title,
       left: 'center',
       top: pxToResponsive(20),
       textStyle: {
@@ -324,7 +323,6 @@ function getChartOption({
       },
     }
     : {
-      text: title,
       left: 'center',
       top: pxToResponsive(10),
       textStyle: {
@@ -337,13 +335,13 @@ function getChartOption({
 
   const series = [
     {
-      name: title || '数据分布',
       type: 'pie',
       radius: radius,
       center: center,
       data: props.series.map((s: SeriesData) => ({
         name: s.name,
         value: s.value,
+        unit: s.unit || '',
         itemStyle: {
           color: s.color,
         },
@@ -361,7 +359,7 @@ function getChartOption({
         show: true,
         lineStyle: {
           color: 'rgba(255, 255, 255, 0.3)',
-          width: isFullScreen ? 2 : 1,
+          width: isFullScreen ? pxToResponsive(2) : pxToResponsive(1),
         },
       },
       emphasis: {

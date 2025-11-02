@@ -15,7 +15,7 @@
       </LoadingBg>
     </div>
     <ModuleCard title="Weekly Energy Sources" :loading="!stationLoading && lineChartLoading">
-      <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="overviewSeries" />
+      <LineChart title="Weekly Energy Sources" :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="overviewSeries" />
     </ModuleCard>
   </div>
   <!-- </div> -->

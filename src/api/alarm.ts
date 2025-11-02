@@ -1,23 +1,8 @@
-import { alarmRequest } from '@/utils/request'
+import Request from '@/utils/request'
 
-export const getRuleDetail = (id: string) => {
-  return alarmRequest.get(`/user-app/rules/${id}`)
-}
-
-export const createRule = (data: any) => {
-  return alarmRequest.post('/user-app/rules', data)
-}
-
-export const updateRule = (id: string, data: any) => {
-  return alarmRequest.put(`/user-app/rules/${id}`, data)
-}
-
-export const deleteRule = (id: string) => {
-  return alarmRequest.delete(`/user-app/rules/${id}`)
-}
-export const enableRule = (id: string | number) => {
-  return alarmRequest.patch(`/user-app/rules/${id}/enable`)
-}
-export const disableRule = (id: string | number) => {
-  return alarmRequest.patch(`/user-app/rules/${id}/disable`)
+export const getAlarmDeviceList = (deviceIdList: number[]) => {
+  return Request.post(`/iot-app/device/_page`, {
+    size: -1,
+    terms: [{ column: 't.id', termType: 'in', value: deviceIdList }],
+  })
 }

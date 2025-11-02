@@ -30,6 +30,9 @@ export interface ApiResponse<T = any> {
   msg: string // 响应消息
   data: T // 响应数据
 }
+// 统一静态方法配置
+export type RequestConfig = AxiosRequestConfig
+const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha']
 /**
  * 创建axios实例
  * 设置基础配置项
@@ -43,17 +46,7 @@ const service = axios.create({
   withCredentials: false,
 })
 
-/**
- * 创建端口6002的axios实例
- */
-const alarmService = axios.create({
-  baseURL: import.meta.env.VITE_API_ALARM_URL || '/alarmApi',
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json;charset=UTF-8',
-  },
-  withCredentials: false,
-})
+// 已统一为单一请求通道
 
 /**
  * 请求拦截器
@@ -83,6 +76,14 @@ const requestInterceptor = (config: any) => {
   if (token && config.headers) {
     // config.headers.Authorization = `Bearer ${token}`
     config.headers.Authorization = `${token}`
+  } else if (!WHITE_LIST.includes(config.url)) {
+    
+    userStore.logout()
+    // const router = getRouter()
+    // router.push({
+    //   path: '/login',
+    //   query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query },
+    // })
   }
 
   if (config.url?.includes('/login')) {
@@ -114,7 +115,6 @@ const requestErrorInterceptor = (error: any) => {
 }
 
 service.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
-alarmService.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 
 // // 用于防止重复刷新token的标志
 // let isRefreshing = false
@@ -184,13 +184,10 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           // 未授权，清除token并跳转到登录页
           const userStore = useUserStore()
-          userStore.clearUserData()
+          
+          userStore.logout()
           errorMessage = 'Login expired, please log in again'
           ElMessage.error(errorMessage)
-          // 跳转到登录页
-          const router = getRouter()
-          router.push({ path: '/login', query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query } })
-          // window.location.href = '/login'
           break
         case 403:
           errorMessage = 'No permission to access this resource'
@@ -311,10 +308,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           errorMessage = 'Login expired, please log in again'
           const userStore = useUserStore()
-          userStore.clearUserData()
+          
+          userStore.logout()
           ElMessage.error(errorMessage)
-          const router = getRouter()
-          router.push({ path: '/login', query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query } })
           break
         case 403:
           errorMessage = 'Access denied'
@@ -358,9 +354,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
   return [responseSuccessHandler, responseErrorHandler]
 }
 
-// 为两个服务实例添加响应拦截器
+// 为服务实例添加响应拦截器
 service.interceptors.response.use(...createResponseInterceptor(service))
-alarmService.interceptors.response.use(...createResponseInterceptor(alarmService, '[6002]'))
 
 /**
  * 封装的请求方法类
@@ -372,100 +367,90 @@ class Request {
     this.axiosInstance = axiosInstance
   }
 
+  // 静态：统一返回单一 axios 实例
+  private static getAxiosInstance() {
+    return service
+  }
+
   /**
-   * GET请求
-   * @param url 请求地址
-   * @param params 请求参数
-   * @param config 请求配置
+   * 静态 GET 请求
    */
-  async get<T = any>(
+  static async get<T = any>(
     url: string,
     params?: any,
-    config?: AxiosRequestConfig,
+    config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.get(url, { params, ...config })
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.get(url, { params, ...config })
     return response.data
   }
 
   /**
-   * POST请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 请求配置
+   * 静态 POST 请求
    */
-  async post<T = any>(
+  static async post<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig,
+    config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.post(url, data, config)
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.post(url, data, config)
     return response.data
   }
 
   /**
-   * PUT请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 请求配置
+   * 静态 PUT 请求
    */
-  async put<T = any>(
+  static async put<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig,
+    config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.put(url, data, config)
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.put(url, data, config)
     return response.data
   }
 
   /**
-   * DELETE请求
-   * @param url 请求地址
-   * @param config 请求配置
+   * 静态 DELETE 请求
    */
-  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.delete(url, config)
+  static async delete<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.delete(url, config)
     return response.data
   }
 
   /**
-   * PATCH请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 请求配置
+   * 静态 PATCH 请求
    */
-  async patch<T = any>(
+  static async patch<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig,
+    config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.patch(url, data, config)
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.patch(url, data, config)
     return response.data
   }
 
   /**
-   * 文件上传
-   * @param url 上传地址
-   * @param file 文件对象
-   * @param data 额外数据
-   * @param config 请求配置
+   * 静态 文件上传
    */
-  async upload<T = any>(
+  static async upload<T = any>(
     url: string,
     file: File,
     data?: any,
-    config?: AxiosRequestConfig,
+    config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
     const formData = new FormData()
     formData.append('file', file)
-
-    // 添加额外数据
     if (data) {
       Object.keys(data).forEach((key) => {
         formData.append(key, data[key])
       })
     }
-
-    const response = await this.axiosInstance.post(url, formData, {
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.post(url, formData, {
       ...config,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -474,58 +459,46 @@ class Request {
     return response.data
   }
 
-  /*
-   * 接受图片地址
-   * @param url 图片地址
-   * @param params 请求参数
+  /**
+   * 静态 获取图片/文件 Blob
    */
-  async getUrl<T = any>(url: string, params?: any): Promise<Blob> {
-    const response = await this.axiosInstance.get(url, { params, responseType: 'blob' })
+  static async getUrl<T = any>(url: string, params?: any, config?: RequestConfig): Promise<Blob> {
+    const axiosIns = Request.getAxiosInstance()
+    const response = await axiosIns.get(url, { params, responseType: 'blob', ...config })
     return response.data
   }
+
   /**
-   * 下载文件
-   * @param url 下载地址
-   * @param params 请求参数
-   * @param filename 文件名
+   * 静态 下载文件
    */
-  async download(url: string, params?: any, filename?: string): Promise<void> {
+  static async download(url: string, params?: any, filename?: string, config?: RequestConfig): Promise<void> {
     try {
-      const response = await this.axiosInstance.get(url, {
+      const axiosIns = Request.getAxiosInstance()
+      const response = await axiosIns.get(url, {
         params,
         responseType: 'blob',
+        ...config,
       })
-      console.log('response', response)
-      // 创建blob链接
       const blob = new Blob([response.data])
       const downloadUrl = window.URL.createObjectURL(blob)
-      console.log('downloadUrl', downloadUrl)
-      // 创建下载链接
       const link = document.createElement('a')
       link.href = downloadUrl
       link.download = filename || `download_${Date.now()}`
-
-      // 触发下载
       document.body.appendChild(link)
       link.click()
-
-      // 清理
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
-
       ElMessage.success('File downloaded successfully')
     } catch (error) {
       console.error('File download failed:', error)
       ElMessage.error('File download failed')
     }
   }
+
+ 
 }
 
-// 创建默认的请求实例（使用默认service）
-const defaultRequest = new Request(service)
-
-// 创建端口6002的请求实例
-const alarmRequest = new Request(alarmService)
+// 不再导出实例形式
 
 // 取消所有pending请求的方法
 export const cancelAllPendingRequests = () => {
@@ -535,6 +508,5 @@ export const cancelAllPendingRequests = () => {
   pendingRequests.clear()
 }
 
-// 导出请求实例和封装的方法
-export { service, alarmService, defaultRequest, alarmRequest }
+// 导出仅限默认类与工具方法
 export default Request

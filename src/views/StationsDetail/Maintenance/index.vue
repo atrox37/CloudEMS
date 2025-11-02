@@ -1,42 +1,45 @@
 <template>
   <div class="maintenance-container">
-    <div class="maintenance-container__station">
-      <ModuleCard title="Station Information">
-        <div class="station-info">
-          <div v-for="item in dashboardList" :key="item.id" class="station-info__item">
-            <DashboardCard :dashboardData="item.data" isDesc />
+    <LoadingBg :loading="!stationLoading && loading">
+      <div class="maintenance-container__station">
+        <ModuleCard title="Station Information">
+          <div class="station-info">
+            <div v-for="item in dashboardList" :key="item.id" class="station-info__item">
+              <DashboardCard :dashboardData="item.data" isDesc />
+            </div>
           </div>
-        </div>
-
-      </ModuleCard>
-    </div>
-    <div class="network-configuration">
-      <ModuleCard title="Network Configuration">
-        <div class="netword-content">
-          <div class="netword-item">
-            <DashboardCard :dashboardData="NetworkDashboardList[0].data" :bgColor="NetworkDashboardList[0].bgColor"
-              isDesc>
-              <!-- <template #right-action>
+        </ModuleCard>
+      </div>
+      <div class="network-configuration">
+        <ModuleCard title="Network Configuration">
+          <div class="netword-content">
+            <div class="netword-item">
+              <DashboardCard
+                :dashboardData="NetworkDashboardList[0].data"
+                :bgColor="NetworkDashboardList[0].bgColor"
+                isDesc
+              >
+                <!-- <template #right-action>
                 <el-button type="default">configure</el-button>
               </template> -->
-            </DashboardCard>
-          </div>
-          <div class="netword-item">
-            <DashboardCard :dashboardData="NetworkDashboardList[1].data" isDesc>
-              <!-- <template #right-action>
+              </DashboardCard>
+            </div>
+            <div class="netword-item">
+              <DashboardCard :dashboardData="NetworkDashboardList[1].data" isDesc>
+                <!-- <template #right-action>
                 <el-button type="warning">Setup</el-button>
               </template> -->
-            </DashboardCard>
-          </div>
-          <div class="netword-item">
-            <DashboardCard :dashboardData="NetworkDashboardList[2].data" isDesc>
-              <!-- <template #right-action>
+              </DashboardCard>
+            </div>
+            <div class="netword-item">
+              <DashboardCard :dashboardData="NetworkDashboardList[2].data" isDesc>
+                <!-- <template #right-action>
                 <el-button type="warning">Enable</el-button>
               </template> -->
-            </DashboardCard>
+              </DashboardCard>
+            </div>
           </div>
-        </div>
-        <!-- <div class="network-description">
+          <!-- <div class="network-description">
           <div class="network-description__left">
             <div class="network-description-title">Primary Connection: Ethernet</div>
             <div class="network-description-desc">Signal strength: Strong • Last sync: 2 minutes ago</div>
@@ -49,10 +52,9 @@
 
           </div>
         </div> -->
-
-      </ModuleCard>
-    </div>
-    <!-- <div class="system-update">
+        </ModuleCard>
+      </div>
+      <!-- <div class="system-update">
       <ModuleCard title="System Updates (OTA)">
         <div class="system-update-content">
           <div class="system-update__left">
@@ -98,6 +100,7 @@
         </div>
       </ModuleCard>
     </div> -->
+    </LoadingBg>
   </div>
 </template>
 
@@ -115,13 +118,17 @@ import wifiIcon from '@/assets/icons/station-dashboard-wifi.svg'
 import cellularIcon from '@/assets/icons/station-dashboard-cellular.svg'
 import onlineIcon from '@/assets/icons/station-status__online.svg'
 import offlineIcon from '@/assets/icons/station-status__offline.svg'
-
-
-
+import { getMainteranceData } from '@/api/station'
+import type { MainteranceData } from '@/types/Stations'
+import { arrayToObjectByKey } from '@/utils/common'
+import { useRoute } from 'vue-router'
+const route = useRoute()
 import { useStationStore } from '@/stores/station'
 const { stationDetail } = storeToRefs(useStationStore())
+defineProps<{
+  stationLoading: boolean
+}>()
 const dashboardList = ref([
-
   {
     id: 1,
     data: {
@@ -136,7 +143,7 @@ const dashboardList = ref([
   //   valueColor: 'rgba(106, 193, 97, 1)'
   // },
   {
-    id: 3,
+    id: 2,
     data: {
       title: 'Installation Date',
       value: '-',
@@ -152,7 +159,7 @@ const dashboardList = ref([
   //   },
   // },
   {
-    id: 5,
+    id: 3,
     data: {
       title: 'Assigned Technician',
       value: '-',
@@ -160,13 +167,13 @@ const dashboardList = ref([
     },
   },
   {
-    id: 6,
+    id: 4,
     data: {
       title: 'System Capacity',
       value: '-',
       icon: capacityIcon,
     },
-  }
+  },
 ])
 const NetworkDashboardList = ref([
   {
@@ -177,27 +184,45 @@ const NetworkDashboardList = ref([
   },
   {
     id: 2,
-    data: { title: 'Wi-Fi', value: '-', icon: wifiIcon }
+    data: { title: 'Wi-Fi', value: '-', icon: wifiIcon },
   },
   {
     id: 3,
-    data: { title: 'Cellular', value: '-', icon: cellularIcon }
-  }
+    data: { title: 'Cellular', value: '-', icon: cellularIcon },
+  },
 ])
-watchEffect(() => {
-  dashboardList.value[0].data.value = stationDetail.value.description.address
-  // dashboardList.value[1].data.value = stationDetail.value.description.system
-  dashboardList.value[1].data.value = stationDetail.value.description.installationate
-  // dashboardList.value[3].data.value = stationDetail.value.description.nextMaintenance
-  dashboardList.value[2].data.value = stationDetail.value.description.assign
-  dashboardList.value[3].data.value = stationDetail.value.description.system
-  NetworkDashboardList.value[0].data.value = stationDetail.value.description.netEthernet
-  NetworkDashboardList.value[1].data.value = stationDetail.value.description.netWifi
-  NetworkDashboardList.value[2].data.value = stationDetail.value.description.netCellular
+const loading = ref(false)
+const fetchMainteranceData = async (stationId: number | string) => {
+  try {
+    loading.value = true
+    const res = await getMainteranceData(Number(stationId))
+    if (res.code === 200) {
+      const mainteranceData = arrayToObjectByKey(res.data, 'tagKey')
+      dashboardList.value[0].data.value = mainteranceData['Location'].tagValue
+      dashboardList.value[1].data.value = mainteranceData['Installatonate'].tagValue
+      dashboardList.value[2].data.value = mainteranceData['AssignedTechnician'].tagValue
+      dashboardList.value[3].data.value = mainteranceData['SystemCapacity'].tagValue
+    }
+  } finally {
+    loading.value = false
+  }
+}
+// watchEffect(() => {
+//   dashboardList.value[0].data.value = stationDetail.value.description.address
+//   // dashboardList.value[1].data.value = stationDetail.value.description.system
+//   dashboardList.value[1].data.value = stationDetail.value.description.installationate
+//   // dashboardList.value[3].data.value = stationDetail.value.description.nextMaintenance
+//   dashboardList.value[2].data.value = stationDetail.value.description.assign
+//   dashboardList.value[3].data.value = stationDetail.value.description.system
+//   NetworkDashboardList.value[0].data.value = stationDetail.value.description.netEthernet
+//   NetworkDashboardList.value[1].data.value = stationDetail.value.description.netWifi
+//   NetworkDashboardList.value[2].data.value = stationDetail.value.description.netCellular
+// })
+
+onMounted(() => {
+  const stationId = route.query.stationId as number | string
+  fetchMainteranceData(stationId)
 })
-
-
-
 
 // const systemDashboardList = ref([
 //   {
@@ -244,6 +269,7 @@ watchEffect(() => {
   width: 100%;
   height: 100%;
   overflow-y: auto;
+  position: relative;
 
   .maintenance-container__station {
     width: 100%;
@@ -326,7 +352,6 @@ watchEffect(() => {
     //         line-height: 100%;
     //         letter-spacing: 0%;
 
-
     //       }
     //     }
     //   }
@@ -349,8 +374,6 @@ watchEffect(() => {
         flex-direction: column;
         gap: 0.2rem;
         width: calc(50% - 0.1rem);
-
-
       }
 
       .system-update__left {
@@ -373,10 +396,8 @@ watchEffect(() => {
         display: flex;
         justify-content: flex-end;
         gap: 0.1rem;
-
       }
     }
-
   }
 
   :deep(.el-button.el-button--default) {

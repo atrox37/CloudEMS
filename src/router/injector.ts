@@ -7,17 +7,17 @@ import { useUserStore } from '@/stores/user'
 /**
  * 递归过滤路由，根据用户角色筛选可访问的路由
  */
-function filterByRoles(routes: RouteItem[], roles: string[]): RouteItem[] {
+function filterByRoles(routes: RouteItem[], role: string): RouteItem[] {
   const res: RouteItem[] = []
   for (const r of routes) {
     const allow = (r.meta?.roles as string[] | undefined)
-      ? roles.some((role) => (r.meta!.roles as string[]).includes(role))
-      : true // 没写 roles 默认放行
+      ? (r.meta!.roles as string[]).includes(role)
+      : true // 没写 role 默认放行
     if (!allow) continue
 
     const route: RouteItem = { ...r }
     if (route.children?.length) {
-      route.children = filterByRoles(route.children, roles)
+      route.children = filterByRoles(route.children, role)
     }
 
     // 避免被响应式代理（如果你会把 route 存到响应式容器里）
@@ -33,8 +33,16 @@ export async function ensureRoutesInjected() {
   const user = useUserStore()
   if (user.routesInjected) return
 
-  // 如果没有用户信息，使用默认的 Admin 角色
-  const userRoles = user.roles.length > 0 ? user.roles : ['Admin']
+  const res = await user.getUserInfo()
+  if (!res.success) {
+    user.logout()
+    return
+  }
+  if (!user.role) {
+    user.logout()
+    return
+  }
+  const userRoles = user.role
   const allowed = filterByRoles(dynamicRoutes, userRoles)
   // 递归添加路由及其子路由
   function addRouteWithChildren(route: RouteItem, parentName?: string) {
@@ -127,6 +135,6 @@ function getAllRouteNames(routes: RouteItem[]): string[] {
 export function getFilteredRoutesForSidebar() {
   const user = useUserStore()
   // 如果没有用户信息，使用默认的 Admin 角色
-  const userRoles = user.roles.length > 0 ? user.roles : ['Admin']
+  const userRoles = user.role || 'Admin'
   return filterByRoles(dynamicRoutes, userRoles)
 }

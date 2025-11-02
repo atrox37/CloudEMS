@@ -13,7 +13,7 @@
                 </el-icon>
             </div>
         </div>
-        <FullSceenDialog ref="fullScreenDialogRef" title="Line and Bar Chart Full Screen" fullscreen
+        <FullSceenDialog ref="fullScreenDialogRef" :title="props.title || 'Line and Bar Chart Full Screen'" fullscreen
             :append-to-body="true" :modal-append-to-body="true" :close-on-click-modal="false">
             <template #dialog-body>
                 <div class="line-and-bar-chart-full-screen">
@@ -84,6 +84,7 @@ const props = withDefaults(defineProps<{
     yAxiosOption: YAxisOption
     lineSeries: LineSeriesData[]
     barSeries: BarSeriesData[]
+    title?: string
     gridConfig?: GridConfig
     fullScreenGridConfig?: GridConfig
     showToolbox?: boolean

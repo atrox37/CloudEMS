@@ -12,7 +12,7 @@
  */
 
 import { ref, reactive, computed, readonly, toRaw } from 'vue'
-import { defaultRequest, type ApiResponse, alarmRequest } from '@/utils/request'
+import Request, { type ApiResponse } from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 分页参数接口
@@ -56,7 +56,7 @@ export interface TableConfig {
   deleteConfirmMessage?: string // 删除确认消息
   batchDeleteConfirmMessage?: string // 批量删除确认消息
 
-  // 新增：服务类型配置，""(默认)为defaultRequest，"alarm"为alarmRequest
+  // 已统一为单一请求通道，保留字段以兼容旧参数（不再生效）
   serverType?: '' | 'alarm'
 }
 
@@ -72,8 +72,7 @@ export interface TableDataResponse<T = any> {
  * @returns 表格管理的响应式数据和方法
  */
 export function useTableData<T = any>(config: TableConfig) {
-  // 根据config.serverType选择请求服务
-  const server = config.serverType === 'alarm' ? alarmRequest : defaultRequest
+  // 使用统一静态方法
 
   // 响应式数据
   const loading = ref(false) // 加载状态
@@ -122,7 +121,7 @@ export function useTableData<T = any>(config: TableConfig) {
         }
       }
 
-      const response: ApiResponse<TableDataResponse<T>> = await server.post(
+      const response: ApiResponse<TableDataResponse<T>> = await Request.post(
         config.listUrl,
         filteredParams,
       )
@@ -244,7 +243,7 @@ export function useTableData<T = any>(config: TableConfig) {
 
       loading.value = true
       const deleteUrl = config.deleteUrl.replace('{id}', String(id))
-      const response = await server.delete(deleteUrl)
+      const response = await Request.delete(deleteUrl)
 
       if (response.code===200) {
         ElMessage.success('Deleted successfully')
@@ -292,7 +291,7 @@ export function useTableData<T = any>(config: TableConfig) {
       )
 
       loading.value = true
-      const response = await server.post(config.batchDeleteUrl, {
+      const response = await Request.post(config.batchDeleteUrl, {
         ids: ids,
       })
 
@@ -352,7 +351,7 @@ export function useTableData<T = any>(config: TableConfig) {
         ...nowFilters,
         ...params,
       }
-      await server.download(config.exportUrl, exportParams, filename || `export_${Date.now()}.xlsx`)
+      await Request.download(config.exportUrl, exportParams, filename || `export_${Date.now()}.xlsx`)
       return true
     } catch (error) {
       // console.error('导出失败:', error)

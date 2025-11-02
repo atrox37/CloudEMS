@@ -13,7 +13,7 @@
         </el-icon>
       </div>
     </div>
-    <FullSceenDialog ref="fullScreenDialogRef" title="Line Chart Full Screen" fullscreen :append-to-body="true"
+    <FullSceenDialog ref="fullScreenDialogRef" :title="props.title || 'Line Chart Full Screen'" fullscreen :append-to-body="true"
       :modal-append-to-body="true" :close-on-click-modal="false">
       <template #dialog-body>
         <div class="line-chart-full-screen">
@@ -92,6 +92,7 @@ const props = withDefaults(defineProps<{
   showToolbox?: boolean
   showFullScreen?: boolean
   showDownload?: boolean
+  title?: string
 }>(), {
   // 默认值
   gridConfig: () => ({

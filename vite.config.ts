@@ -14,6 +14,10 @@ import pxtorem from 'postcss-pxtorem'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 解决 SockJS-client 在浏览器中 global 未定义的问题
+  define: {
+    global: 'globalThis',
+  },
   plugins: [
     vue(),
     vueDevTools(), // 注释掉这行可以禁用Vue DevTools
@@ -61,9 +65,11 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/user-app': {
-        target: 'http://192.168.40.51:9000',
+        target: 'http://3.149.100.30:9010/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/user-app/, ''),
+        ws: true, // 启用 WebSocket 代理支持
+        secure: false, // 如果后端是 https，设置为 true
       },
     },
   },

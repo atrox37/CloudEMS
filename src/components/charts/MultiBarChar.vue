@@ -13,7 +13,7 @@
                 </el-icon>
             </div>
         </div>
-        <FullSceenDialog ref="fullScreenDialogRef" title="Energy Chart Full Screen" fullscreen :append-to-body="true"
+        <FullSceenDialog ref="fullScreenDialogRef" :title="props.title || 'Energy Chart Full Screen'" fullscreen :append-to-body="true"
             :modal-append-to-body="true" :close-on-click-modal="false">
             <template #dialog-body>
                 <div class="stacked-bar-chart-full-screen">
@@ -70,6 +70,7 @@ const props = withDefaults(defineProps<{
     xAxiosOption: XAxisOption
     yAxiosOption: YAxisOption
     series: SeriesData[]
+    title?: string
     // Grid配置参数
     gridConfig?: GridConfig
     // 全屏模式Grid配置参数

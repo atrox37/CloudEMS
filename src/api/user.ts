@@ -1,7 +1,6 @@
-import { defaultRequest } from '@/utils/request'
+import Request, { type ApiResponse } from '@/utils/request'
 import type { LoginParams, UserInfo, RoleList, UserNotification } from '@/types/user'
 import type { UserFormModel } from '@/views/Setting/UserManagement/UserOperationForm.vue'
-import type { ApiResponse } from '@/utils/request'
 // 用户相关API接口
 
 /**
@@ -9,7 +8,7 @@ import type { ApiResponse } from '@/utils/request'
  * @returns Promise<Blob> 验证码图片的二进制数据
  */
 export const getVerifyCode = (): Promise<Blob> => {
-  return defaultRequest.getUrl('/sys-app/common/captcha')
+  return Request.getUrl('/sys-app/common/captcha')
 }
 
 /**
@@ -18,14 +17,14 @@ export const getVerifyCode = (): Promise<Blob> => {
  * @returns 登录响应
  */
 export const userLogin = (params: LoginParams): Promise<ApiResponse<string>> => {
-  return defaultRequest.post('/user-app/login', params)
+  return Request.post('/user-app/login', params)
 }
 /**
  * 用户登出
  * @returns 登出响应
  */
 export const userLogout = (): Promise<ApiResponse<null>> => {
-  return defaultRequest.post('/user-app/auth/logout')
+  return Request.post('/user-app/auth/logout')
 }
 
 /**
@@ -33,17 +32,17 @@ export const userLogout = (): Promise<ApiResponse<null>> => {
  * @returns 用户信息
  */
 export const userGetUserInfo = (): Promise<ApiResponse<UserInfo>> => {
-  return defaultRequest.get('sys-app/sys_user/_current')
+  return Request.get('sys-app/sys_user/_current')
 }
 
 export const getRoleList = (params: { current: number }): Promise<ApiResponse<RoleList>> => {
-  return defaultRequest.post('sys-app/role/_page', params)
+  return Request.post('sys-app/role/_page', params)
 }
 
 export const operationUser = (
   params: UserFormModel | { id: number; state: number },
 ): Promise<ApiResponse<null>> => {
-  return defaultRequest.post('/sys-app/sys_user/_save_or_update', params)
+  return Request.post('/sys-app/sys_user/_save_or_update', params)
 }
 
 export const updateUserNotification = (params: {
@@ -52,7 +51,7 @@ export const updateUserNotification = (params: {
   phone: string
   metadata: UserNotification
 }): Promise<ApiResponse<null>> => {
-  return defaultRequest.post('/sys-app/sys_user/_save_or_update', params)
+  return Request.post('/sys-app/sys_user/_save_or_update', params)
 }
 // /**
 //  * 刷新Token

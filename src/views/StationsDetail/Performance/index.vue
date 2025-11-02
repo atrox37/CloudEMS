@@ -3,7 +3,7 @@
     <div class="performance-container__enery">
       <ModuleCard title="Weekly Energy Sources" :loading="!stationLoading && chartLoading">
         <!-- <LineChart :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" /> -->
-        <MultiBarChar :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
+        <MultiBarChar title="Weekly Energy Sources" :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="series" />
       </ModuleCard>
     </div>
     <div class="performance-container__system">

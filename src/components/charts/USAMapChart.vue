@@ -25,15 +25,15 @@ const mapPointImage = new URL('@/assets/icons/map-point.svg', import.meta.url).h
 export interface PowerStation {
   id: string
   name: string
-  type: 'solar' | 'wind' | 'nuclear' | 'hydro' | 'thermal'
-  capacity: number
+  // type: 'solar' | 'wind' | 'nuclear' | 'hydro' | 'thermal'
+  // capacity: number
   status: 'online' | 'offline' | 'maintenance'
   coordinates: [number, number]
   state: string
   powerValue: number
   powerUnit: string
-  sqcValue: number
-  sqcUnit: string
+  socValue: number
+  socUnit: string
   Alarm: string | number
 }
 
@@ -56,7 +56,7 @@ interface Props {
 
 // 接收父组件传递的props
 const props = withDefaults(defineProps<Props>(), {
-  powerStations: () => []
+  powerStations: () => [],
 })
 
 // 组件状态
@@ -69,6 +69,72 @@ const isTransitioning = ref<boolean>(false)
 const statesData = ref<StateMapData | null>(null)
 
 // 使用父组件传递的发电站数据
+
+// 定义Alaska和Hawaii的真实边界范围（完全基于USAOutlineMap.json中的实际坐标数据）
+// Alaska: 从文件中提取的精确边界值
+const ALASKA_BOUNDS = {
+  minLng: -187.357983,  // 最西端（阿留申群岛）
+  maxLng: -129.986323,  // 最东端（东南部）
+  minLat: 51.678463,    // 最南端
+  maxLat: 71.351633,    // 最北端
+}
+
+// Hawaii: 从文件中提取的精确边界值
+const HAWAII_BOUNDS = {
+  minLng: -159.764448,  // 最西端岛屿
+  maxLng: -154.807817,  // 最东端（大岛）
+  minLat: 18.948267,    // 最南端
+  maxLat: 22.228955,    // 最北端
+}
+
+// 判断坐标是否在指定区域内
+const isInRegion = (
+  coord: [number, number],
+  bounds: { minLng: number; maxLng: number; minLat: number; maxLat: number },
+): boolean => {
+  const [lng, lat] = coord
+  return lng >= bounds.minLng && lng <= bounds.maxLng && lat >= bounds.minLat && lat <= bounds.maxLat
+}
+
+// 转换Alaska和Hawaii的坐标以适配ECharts的布局变换
+const transformCoordinatesForLayout = (
+  coordinates: [number, number],
+): [number, number] => {
+  const [lng, lat] = coordinates
+
+  // 判断是否在Alaska范围内
+  if (isInRegion(coordinates, ALASKA_BOUNDS)) {
+    // Alaska布局参数: { left: -130, top: 20, width: 25 }
+    // 原始Alaska经度范围约50度,被压缩到25度宽
+    const scale = 25 / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng)
+    // 计算相对于原始边界的位置比例
+    const relativeX = (lng - ALASKA_BOUNDS.minLng) / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng)
+    const relativeY = (lat - ALASKA_BOUNDS.minLat) / (ALASKA_BOUNDS.maxLat - ALASKA_BOUNDS.minLat)
+    
+    // 应用布局变换: left: -130表示新的左边界, width: 25表示新的宽度
+    const newLng = -130 + relativeX * 25
+    // top: 20表示向下移动, 需要保持纵横比
+    const newLat = 20 + relativeY * 25 * ((ALASKA_BOUNDS.maxLat - ALASKA_BOUNDS.minLat) / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng))
+    
+    return [newLng, newLat]
+  }
+
+  // 判断是否在Hawaii范围内
+  if (isInRegion(coordinates, HAWAII_BOUNDS)) {
+    // Hawaii布局参数: { left: -95, top: 20, width: 5 }
+    const scale = 5 / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng)
+    const relativeX = (lng - HAWAII_BOUNDS.minLng) / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng)
+    const relativeY = (lat - HAWAII_BOUNDS.minLat) / (HAWAII_BOUNDS.maxLat - HAWAII_BOUNDS.minLat)
+    
+    const newLng = -95 + relativeX * 5
+    const newLat = 20 + relativeY * 5 * ((HAWAII_BOUNDS.maxLat - HAWAII_BOUNDS.minLat) / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng))
+    
+    return [newLng, newLat]
+  }
+
+  // 其他区域保持原始坐标
+  return coordinates
+}
 
 // 获取指定州的发电站
 const getStateStations = (stateName: string): PowerStation[] => {
@@ -197,7 +263,7 @@ const initUSAMap = async () => {
           geoIndex: 1,
           data: props.powerStations.map((station) => ({
             name: station.name,
-            value: [...station.coordinates, station.capacity],
+            value: transformCoordinatesForLayout(station.coordinates),
             station: station,
           })),
           symbol: `image://${mapPointImage}`,
@@ -221,7 +287,7 @@ const initUSAMap = async () => {
                 <div style="width:2.48rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.2);border: 0.01rem solid #7a8db2;backdrop-filter: blur(0.1rem);border-radius: ${pxToResponsive(10)}px;">
                   <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px ">${station.name}</div>
                   <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.powerValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
-                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.sqcValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SOC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.socValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.socUnit}</span></p>
                   <p style="margin: ${pxToResponsive(12)}px 0 0 0; line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.Alarm}</span></p>
                 </div>
               `
@@ -232,7 +298,7 @@ const initUSAMap = async () => {
     }
 
     chart.value?.setOption(option as any)
-
+    
     chart.value?.off('click')
     chart.value?.on('click', (params: EChartsClickParams) => {
       if (params.componentType === 'geo' && params.name) {
@@ -320,7 +386,6 @@ const drillDownToState = async (stateName: string) => {
             },
             emphasis: {
               disabled: true,
-
             },
             tooltip: {
               show: false, // 关键：地图区域不显示tooltip，避免覆盖点位
@@ -335,7 +400,7 @@ const drillDownToState = async (stateName: string) => {
             geoIndex: 1,
             data: stateStations.map((station) => ({
               name: station.name,
-              value: [...station.coordinates, station.capacity],
+              value: [...station.coordinates],
               station: station,
             })),
             label: { show: false },
@@ -364,7 +429,7 @@ const drillDownToState = async (stateName: string) => {
                 <div style="width:2.48rem;padding: ${pxToResponsive(20)}px;background:rgba(84, 98, 140, 0.2);border: 0.01rem solid #7a8db2;backdrop-filter: blur(0.1rem);border-radius: ${pxToResponsive(10)}px;">
                   <div style="word-break: break-word;overflow-wrap: break-word;white-space: normal;margin: 0 0 ${pxToResponsive(8)}px 0; color: #fff; font-weight:700; line-height:1.2;font-size: ${pxToResponsive(24)}px ">${station.name}</div>
                   <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">PV Power: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.powerValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.powerUnit}</span></p>
-                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SQC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.sqcValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.sqcUnit}</span></p>
+                  <p style="margin: ${pxToResponsive(12)}px 0; color: rgba(245, 255, 255, 1); line-height:1.2;font-size: ${pxToResponsive(18)}px;">ESS SOC: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.socValue}</span>&nbsp;<span style="font-size:${pxToResponsive(12)}px;color:rgba(245, 247, 255, 1);">${station.socUnit}</span></p>
                   <p style="margin: ${pxToResponsive(12)}px 0 0 0; line-height:1.2;color: rgba(245, 255, 255, 1); font-size: ${pxToResponsive(18)}px;">Alarms: &nbsp;<span style="font-weight: 700;font-size: ${pxToResponsive(24)}px;color: #fff;">${station.Alarm}</span></p>
                 </div>
               `
@@ -409,8 +474,10 @@ const getStateBoundsFromGeoJSON = (
   if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
     return { minLng: -98, maxLng: -98, minLat: 39, maxLat: 39 }
   }
-  let minLng = Infinity, maxLng = -Infinity
-  let minLat = Infinity, maxLat = -Infinity
+  let minLng = Infinity,
+    maxLng = -Infinity
+  let minLat = Infinity,
+    maxLat = -Infinity
   geoJsonData.features.forEach((feature: any) => {
     if (feature.geometry && feature.geometry.coordinates) {
       if (feature.geometry.type === 'Polygon') {
@@ -468,7 +535,6 @@ const calculateOptimalZoom = (bounds: {
   if (maxRange > 5) return 1.1
   return 1.2
 }
-
 
 // 初始化图表
 const initChart = () => {
