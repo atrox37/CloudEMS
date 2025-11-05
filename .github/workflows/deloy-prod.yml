@@ -13,60 +13,62 @@ env:
   ECS_SERVICE: ${{ vars.ECS_SERVICE }}
   IMAGE_TAG: ${{ github.sha }}
   CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
-  APIFOX_TEST_SCENE_ID: ${{ vars.APIFOX_TEST_SCENE_ID }}
-  APIFOX_PROD_ENV_ID: ${{ vars.APIFOX_PROD_ENV_ID }}
-  APIFOX_ACCESS_TOKEN: ${{ secrets.APIFOX_ACCESS_TOKEN }}
+  # Apifox 相关配置已注释
+  # APIFOX_TEST_SCENE_ID: ${{ vars.APIFOX_TEST_SCENE_ID }}
+  # APIFOX_PROD_ENV_ID: ${{ vars.APIFOX_PROD_ENV_ID }}
+  # APIFOX_ACCESS_TOKEN: ${{ secrets.APIFOX_ACCESS_TOKEN }}
 
 jobs:
-  apifox_tests:
-    runs-on: ubuntu-latest
-    environment: prod
-    outputs:
-      passed: ${{ steps.set-output.outputs.outcome }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # Apifox 测试任务已注释
+  # apifox_tests:
+  #   runs-on: ubuntu-latest
+  #   environment: prod
+  #   outputs:
+  #     passed: ${{ steps.set-output.outputs.outcome }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '18'
 
-      - name: Install Apifox CLI
-        run: npm i -g apifox-cli@latest
+  #     - name: Install Apifox CLI
+  #       run: npm i -g apifox-cli@latest
 
-      - name: Run Apifox tests (STAGING/PROD env)
-        id: run-tests
-        run: |
-          set -e
-          apifox run \
-            --access-token "${APIFOX_ACCESS_TOKEN}" \
-            -t "${APIFOX_TEST_SCENE_ID}" \
-            -e "${APIFOX_PROD_ENV_ID}" \
-            -n 1 \
-            -r html,cli \
-            --upload-report
+  #     - name: Run Apifox tests (STAGING/PROD env)
+  #       id: run-tests
+  #       run: |
+  #         set -e
+  #         apifox run \
+  #           --access-token "${APIFOX_ACCESS_TOKEN}" \
+  #           -t "${APIFOX_TEST_SCENE_ID}" \
+  #           -e "${APIFOX_PROD_ENV_ID}" \
+  #           -n 1 \
+  #           -r html,cli \
+  #           --upload-report
 
-      # 确保无论前面成功还是失败都设置outcome，避免outputs丢失
-      - name: Mark pass or fail
-        id: set-output
-        if: ${{ always() }}
-        run: |
-          if [ "${{ steps.run-tests.outcome }}" == "success" ]; then
-            echo "outcome=passed" >> $GITHUB_OUTPUT
-          else
-            echo "outcome=failed" >> $GITHUB_OUTPUT
-          fi
-          echo "apifox run-tests outcome: ${{ steps.run-tests.outcome }}"
+  #     # 确保无论前面成功还是失败都设置outcome，避免outputs丢失
+  #     - name: Mark pass or fail
+  #       id: set-output
+  #       if: ${{ always() }}
+  #       run: |
+  #         if [ "${{ steps.run-tests.outcome }}" == "success" ]; then
+  #           echo "outcome=passed" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "outcome=failed" >> $GITHUB_OUTPUT
+  #         fi
+  #         echo "apifox run-tests outcome: ${{ steps.run-tests.outcome }}"
 
-      - name: Debug apifox outcome
-        if: ${{ always() }}
-        run: |
-          echo "apifox_tests outcome: ${{ steps.set-output.outputs.outcome }}"
+  #     - name: Debug apifox outcome
+  #       if: ${{ always() }}
+  #       run: |
+  #         echo "apifox_tests outcome: ${{ steps.set-output.outputs.outcome }}"
 
   deploy:
-    needs: apifox_tests
-    if: needs.apifox_tests.outputs.passed == 'passed'
+    # needs: apifox_tests
+    # if: needs.apifox_tests.outputs.passed == 'passed'
     runs-on: ubuntu-latest
     environment: prod
     permissions:

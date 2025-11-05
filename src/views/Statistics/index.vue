@@ -161,7 +161,7 @@ import {
   getEnergyConsumptionData,
   getAnalyticsLineData,
 } from '@/api/statistics'
-import type { AnalyticsAllData } from '@/types/statistics'
+import type { AnalyticsAllData, AnalyticsWgTag   } from '@/types/statistics'
 
 import totalStationIcon from '@/assets/icons/dashboard-totalStation.svg'
 import currentOutputIcon from '@/assets/icons/dashboard-output.svg'
@@ -392,7 +392,7 @@ const getAnalyticsLine = async () => {
       tableData.value = res.data.map((item: AnalyticsAllData) => ({
         id: item.deviceInstancePo.id,
         stationName: item.deviceInstancePo.name,
-        address: item.deviceInstancePo.description.address,
+        address: item.wgTag.find((tag: AnalyticsWgTag) => tag.tagKey === 'Location')?.tagValue || '',
         status: item.deviceInstancePo.status,
         'battery(soc)': item.batteryRate,
         Alarm: item.alarmCount,

@@ -14,7 +14,7 @@
     <div class="critical-Alarm">
       <ModuleCard :title="`Critical Alarm (${stationAlarm.level1.length || 0})`">
         <div class="critical-Alarm__content">
-          <div v-for="item in stationAlarm.level1" class="critical-Alarm__item" :key="item.deviceId">
+          <div v-for="item in stationAlarm.level1" class="critical-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" :level="1" />
           </div>
         </div>
@@ -23,7 +23,7 @@
     <div class="warning-Alarm">
       <ModuleCard :title="`Warning Alarm (${stationAlarm.level2.length || 0})`">
         <div class="warning-Alarm__content">
-          <div v-for="item in stationAlarm.level2" class="warning-Alarm__item" :key="item.deviceId">
+          <div v-for="item in stationAlarm.level2" class="warning-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" :level="2" />
           </div>
         </div>
@@ -32,7 +32,7 @@
     <div class="info-Alarm">
       <ModuleCard :title="`Info Alarm (${stationAlarm.level3.length || 0})`">
         <div class="info-Alarm__content">
-          <div v-for="item in stationAlarm.level3" class="info-Alarm__item" :key="item.deviceId">
+          <div v-for="item in stationAlarm.level3" class="info-Alarm__item" :key="item.alarm_id">
             <AlarmCard :AlarmData="item" :level="3" />
           </div>
         </div>
@@ -53,8 +53,7 @@ import { getStationAlarm, getStationAlarmStatistics } from '@/api/station'
 import type { DashboardProps } from '@/components/card/DashboardCard.vue'
 import type { StationAlarm, StationAlarmStatistics } from '@/types/Stations'
 import { useRoute } from 'vue-router'
-import { getAlarmDeviceList } from '@/api/alarm'
-
+import dayjs from 'dayjs'
 defineProps<{
   stationLoading: boolean
 }>()
@@ -102,25 +101,21 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
     dashboardListLoading.value = true
     const res2 = await getStationAlarmStatistics(stationId)
     if (res2.code === 200) {
-      // const alarmDeviceList:number[] = []
-      // res2.data.level1Data.forEach(item => {
-      //   alarmDeviceList.push(item.deviceId)
-      // })
-      // res2.data.level2Data.forEach(item => {
-      //   alarmDeviceList.push(item.deviceId)
-      // })
-      // res2.data.level3Data.forEach(item => {
-      //   alarmDeviceList.push(item.deviceId)
-      // })
-      // const quchongDeviceList = [...new Set(alarmDeviceList)]
-      // const res3 = await getAlarmDeviceList(quchongDeviceList)
-      // 
       dashboardList.value[0].dashboardData.value = res2.data.level1
       dashboardList.value[1].dashboardData.value = res2.data.level2
       dashboardList.value[2].dashboardData.value = res2.data.level3
-      stationAlarm.value.level1 = res2.data.level1Data
-      stationAlarm.value.level2 = res2.data.level2Data
-      stationAlarm.value.level3 = res2.data.level3Data
+      stationAlarm.value.level1 = res2.data.level1Data || []
+      stationAlarm.value.level2 = res2.data.level2Data || []
+      stationAlarm.value.level3 = res2.data.level3Data || []
+      stationAlarm.value.level1.forEach(item => {
+        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
+      })
+      stationAlarm.value.level2.forEach(item => {
+        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
+      })
+      stationAlarm.value.level3.forEach(item => {
+        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
+      })
     }
   } finally {
     dashboardListLoading.value = false
@@ -128,10 +123,15 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
 }
 
 
-onMounted(() => {
-  const stationId = route.query.stationId as string | number
-  fetchStationAlarmStatisticsData(stationId)
-})
+// 改为监听路由变化触发，并在首次进入时立即执行
+watch(
+  () => route.query.stationId,
+  (stationId) => {
+    if (!stationId) return
+    fetchStationAlarmStatisticsData(stationId as string | number)
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped lang="scss">

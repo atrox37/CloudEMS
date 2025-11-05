@@ -3,13 +3,13 @@
         <div class="Alarm-card__header">
             <div class="header-icon" :class="`${levelList[level-1]}`"></div>
             <div class="header-level" :class="`${levelList[level-1]}`">{{ levelList[level-1] }}</div>
-            <div class="header-device">{{ AlarmData.deviceId }}</div>
+            <div class="header-device">{{ AlarmData.device }}</div>
         </div>
         <div class="Alarm-card__content">
             <div class="card-left">
-                <div class="Alarm-message">{{ AlarmData.rawValue }}</div>
+                <div class="Alarm-message">{{ AlarmData.message }}</div>
 
-                <div class="Alarm-time">{{ AlarmData.ts }}</div>
+                <div class="Alarm-time">{{ AlarmData.timestamp }}</div>
 
             </div>
             <!-- <div v-if="AlarmData.level !== 2" class="card-right">

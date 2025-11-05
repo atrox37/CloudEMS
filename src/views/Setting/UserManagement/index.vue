@@ -42,10 +42,10 @@
                 'Inactive' }}</div>
             </template>
           </el-table-column>
-          <el-table-column prop="last_login" label="Last Login" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ row.last_login }}
-            </template>
+          <el-table-column prop="sysUserPo.updateTime" label="Updated At" show-overflow-tooltip>
+            <!-- <template #default="{ row }">
+              {{ row.sysUserPo?.updateTime }}
+            </template> -->
           </el-table-column>
           <el-table-column prop="sysUserPo.createTime" label="Created At" show-overflow-tooltip>
             <!-- <template #default="{ row }">

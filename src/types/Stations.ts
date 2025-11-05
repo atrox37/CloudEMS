@@ -1,16 +1,28 @@
+export interface StationKVTag {
+  id: number
+  tagKey: string
+  tagValue: string
+  deviceId: number
+}
+
 export interface Stations {
   stationId: number
   stationName: string
   stationStatus: string
   pv_power: number
-  rate_power: number
-  rate_capacity: number
+  rate_power: number | null
+  rate_capacity: number | null
   soc: number
   out_power: number
   in_power: number
   today_out_battery: number
   today_in_battery: number
+  alarmCount: number
+  gfTag: StationKVTag[]
+  wgTag: StationKVTag[]
+  cnTag: StationKVTag[]
   time: string
+  loading?: boolean
 }
 export interface StationOverview {
   pvP: number
@@ -58,6 +70,8 @@ export interface StationDesc {
   netEthernet: string //net Ethernet
   netWifi: string //net Wifi
   netCellular: string
+  longitude?: string | number | null
+  latitude?: string | number | null
 }
 export interface StationDetail {
   id: number
@@ -89,15 +103,20 @@ export interface StationAlarm {
   level3: StationAlarmItem[]
 }
 export interface StationAlarmItem {
-  deviceId: number
-  property: string
-  rawValue: string
-  ts: string
+  point_id: number,
+  level: number,
+  source: string,
+  message: string,
+  service_type: string,
+  data_type: string,
+  alarm_id: string,
+  device: string,
+  channel_id: number,
+  value: number,
+  status: number,
+  timestamp: string
 }
-export interface StationListItem {
-  deviceInstancePo: StationDetail
-  [key: string]: any
-}
+// StationInformation 将在下方以更完整的结构重新声明
 
 export interface AnalyticsNoIntervalData {
   [key: string]: number
@@ -126,4 +145,140 @@ export interface MainteranceData {
   tagKey: string
   tagValue: string
   deviceId: number
+}
+
+// 复用维修标签结构作为设备标签结构
+export type DeviceTagPo = MainteranceData
+
+export interface DeviceTagItem {
+  deviceInstancePo: DeviceInstancePo
+  deviceTagPo: DeviceTagPo
+}
+
+// 以下为 StationInformation 新结构所需类型
+export interface DeviceValueType {
+  extra: Record<string, number | string | null>
+  type: string
+  unit: string
+}
+
+export interface DevicePropertyMeta {
+  id: string
+  name: string
+  tagId: string
+  rw: 'none' | 'r' | 'w' | 'rw' | string
+  valueType: DeviceValueType
+}
+
+export interface PropertyTagMeta {
+  id: string
+  name: string
+}
+
+export interface TreeNodeMeta {
+  id: string
+  name: string
+  children: TreeNodeMeta[]
+}
+
+export interface MetadataTagMeta {
+  tagKey: string
+  tagName: string
+  tagValue: string
+  optional: boolean
+}
+
+export interface DeviceMetadata {
+  properties: DevicePropertyMeta[]
+  functions: any[]
+  propertyTags: PropertyTagMeta[]
+  trees: TreeNodeMeta[]
+  rules: any[]
+  tags: MetadataTagMeta[]
+}
+
+export interface DeviceInstancePo {
+  id: number
+  name: string
+  sn: string
+  metadata: DeviceMetadata
+  description: StationDesc
+  status: string
+  statusTime: string
+  creatorId: number
+  productId: number
+  gatewayId: number
+  orgId: number
+  parentId: number | null
+  treeNode: any
+  createTime: string
+  updateTime: string
+}
+
+export interface GatewayPo {
+  id: number
+  name: string
+  state: number
+  networkId: number
+  protocolId: number
+  orgId: number
+  creatorId: number
+  updateTime: string
+}
+
+export interface ProductPo {
+  id: number
+  name: string
+  metadata: DeviceMetadata
+  updateTime: string
+  orgId: number
+  creatorId: number
+  type: string
+  sn: string
+}
+
+export interface SysDimensionPo {
+  id: number
+  name: string
+  parentId: number
+}
+
+export interface SysUserNotifyFlags {
+  sms: boolean
+  email: boolean
+}
+
+export interface SysUserMetadata {
+  sms: boolean | null
+  email: boolean | null
+  systemNotify: SysUserNotifyFlags
+  reminders: SysUserNotifyFlags
+  dayReport: SysUserNotifyFlags
+  weekReport: SysUserNotifyFlags
+}
+
+export interface SysUserPo {
+  id: number
+  username: string
+  state: number
+  roleId: number
+  orgId: number
+  email: string
+  phone: string
+  metadata: SysUserMetadata
+  updateTime: string
+}
+
+export interface StationInformation {
+  wgTags: StationKVTag[]
+  gfTags: StationKVTag[]
+  cnTags: StationKVTag[]
+  deviceInstancePo: DeviceInstancePo
+}
+export interface StationListItem {
+  deviceInstancePo: DeviceInstancePo
+  gatewayPo: GatewayPo
+  productPo: ProductPo
+  sysDimensionPo: SysDimensionPo
+  sysUserPo: SysUserPo
 }

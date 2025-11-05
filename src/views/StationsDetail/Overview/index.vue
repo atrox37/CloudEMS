@@ -99,11 +99,16 @@ const fetchStationOverchartData = async (stationId: string | number) => {
     lineChartLoading.value = false
   }
 }
-onMounted(() => {
-  const stationId = route.query.stationId as string | number
-  fetchStationOverviewData(stationId)
-  fetchStationOverchartData(stationId)
-})
+// 改为监听路由变化触发，并在首次进入时立即执行
+watch(
+  () => route.query.stationId,
+  (stationId) => {
+    if (!stationId) return
+    fetchStationOverviewData(stationId as string | number)
+    fetchStationOverchartData(stationId as string | number)
+  },
+  { immediate: true },
+)
 
 </script>
 

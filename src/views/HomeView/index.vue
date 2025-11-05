@@ -1,14 +1,20 @@
 <template>
   <div class="voltage-class home-view">
     <LoadingBg :loading="globalStore.loading">
-    <div class="home-view-map">
-      <USAMapChart :powerStations="powerStations" />
-    </div>
-    <div class="home-view-dashboard">
-      <div class="home-view-dashboard-item" v-for="item in dashboardData" :key="item.title">
-        <EnergyCard :title="item.title" :value="item.value" :unit="item.unit" :iconUrl="item.iconUrl" bgColor="rgba(84, 98, 140, 0.2)" />
+      <div class="home-view-map">
+        <USAMapChart :powerStations="powerStations" />
       </div>
-    </div>
+      <div class="home-view-dashboard">
+        <div class="home-view-dashboard-item" v-for="item in dashboardData" :key="item.title">
+          <EnergyCard
+            :title="item.title"
+            :value="item.value"
+            :unit="item.unit"
+            :iconUrl="item.iconUrl"
+            bgColor="rgba(84, 98, 140, 0.2)"
+          />
+        </div>
+      </div>
     </LoadingBg>
   </div>
 </template>
@@ -20,60 +26,14 @@ import energyOnlineStations from '@/assets/icons/energy-onlineStation.svg'
 import energyAlarms from '@/assets/icons/energy-alarms.svg'
 import energySavingBilling from '@/assets/icons/energy-savingBilling.svg'
 import LoadingBg from '@/components/common/LoadingBg.vue'
-import {getHomeTotalData} from '@/api/home'
+import { getHomeTotalData } from '@/api/home'
+import { getStations } from '@/api/station'
 import { useGlobalStore } from '@/stores/global'
+import type { Stations } from '@/types/Stations'
+import type { ApiResponse } from '@/utils/request'
 const globalStore = useGlobalStore()
 // 发电站数据
-const powerStations = reactive<PowerStation[]>([
-  {
-    id: '1',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    status: 'online',
-    coordinates: [-119.4179, 36.7783],
-    state: 'California',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    socValue: 24,
-    socUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '2',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    status: 'online',
-    coordinates: [-150.6439, 65.0036],
-    state: 'Alaska',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    socValue: 24,
-    socUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '5',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    status: 'maintenance',
-    coordinates: [-81.6869, 27.6648],
-    state: 'Florida',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    socValue: 24,
-    socUnit: '%',
-    Alarm: 'NO',
-  },
-  {
-    id: '7',
-    name: 'NORTON CREEK SOLAR ENERGY CENTER',
-    status: 'online',
-    coordinates: [-111.0937, 34.0489],
-    state: 'Arizona',
-    powerValue: 120,
-    powerUnit: 'KWh',
-    socValue: 24,
-    socUnit: '%',
-    Alarm: 'NO',
-  },
-])
+const powerStations = reactive<PowerStation[]>([])
 
 const dashboardData = reactive([
   {
@@ -96,17 +56,55 @@ const dashboardData = reactive([
     title: 'Saving Billing',
     value: 0,
     iconUrl: energySavingBilling,
-  }
+  },
 ])
 
 onMounted(async () => {
-  const res = await getHomeTotalData()
-  if (res.code === 200) {
-    dashboardData[0].value = res.data.todayEnergy
-    dashboardData[1].value = res.data.stationOnline
-    dashboardData[2].value = res.data.stationAlarmSum
-    dashboardData[3].value = res.data.todayPrice
+  // 获取首页总数据
+  const fetchHomeTotalData = async () => {
+    const res = await getHomeTotalData()
+    if (res.code === 200) {
+      dashboardData[0].value = res.data.todayEnergy
+      dashboardData[1].value = res.data.stationOnline
+      dashboardData[2].value = res.data.stationAlarmSum
+      dashboardData[3].value = res.data.todayPrice
+    }
   }
+
+  // 获取所有发电站数据
+  const fetchStationsData = async () => {
+    const stationsRes: ApiResponse<Stations[]> = await getStations()
+    if (stationsRes.code === 200) {
+      stationsRes.data.forEach((station) => {
+        const longitude =
+          station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue ||
+          ''
+        const latitude =
+          station.wgTag.find((tag) => tag.tagKey === 'latitude')?.tagValue ||
+          ''
+        const state =
+          station.wgTag.find((tag) => tag.tagKey === 'State')?.tagValue ||
+          ''
+        if (longitude && latitude && state) {
+          powerStations.push({
+            id: station.stationId,
+            name: station.stationName,
+            status: station.stationStatus as 'online' | 'offline',
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            state: state,
+            powerValue: station.pv_power,
+            powerUnit: 'KWh',
+            socValue: station.soc,
+            socUnit: '%',
+            Alarm: station.alarmCount,
+          })
+        }
+      })
+    }
+  }
+
+  fetchHomeTotalData()
+  fetchStationsData()
 })
 </script>
 

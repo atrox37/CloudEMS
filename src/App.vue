@@ -2,14 +2,18 @@
 import en from 'element-plus/es/locale/lang/en'
 import wsManager from '@/utils/websocket'
 import stompManager from '@/utils/stomp'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
 
 const locale = en
 const router = useRouter()
+const route = useRoute()
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
+
+// 判断是否在登录页面
+const isLoginPage = computed(() => route.name === 'login')
 // 处理告警详情跳转
 const handleAlarmDetail = () => {
   ElMessage.closeAll()
@@ -230,6 +234,8 @@ watch(
 <template>
   <el-config-provider :locale="locale">
     <router-view />
+    <!-- AI助手全局组件（登录页面不显示） -->
+    <AIAssistant v-if="!isLoginPage" />
   </el-config-provider>
 </template>
 

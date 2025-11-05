@@ -547,9 +547,18 @@ const getAllAnalyticsData = () => {
   }, 100)
 }
 
-onMounted(() => {
-  getAllAnalyticsData()
-})
+// 路由变化时取消当前页面请求并重新获取数据；首次进入也执行
+watch(
+  () => route.query.stationId,
+  (id) => {
+    if (id) {
+      stationId.value = id as string | number
+    }
+    cancelAllPendingRequests()
+    getAllAnalyticsData()
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped lang="scss">

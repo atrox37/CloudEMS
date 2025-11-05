@@ -23,7 +23,7 @@ const mapPointImage = new URL('@/assets/icons/map-point.svg', import.meta.url).h
 
 // 定义发电站数据接口
 export interface PowerStation {
-  id: string
+  id: number
   name: string
   // type: 'solar' | 'wind' | 'nuclear' | 'hydro' | 'thermal'
   // capacity: number
@@ -179,6 +179,8 @@ const initUSAMap = async () => {
   if (!chartRef.value) return
 
   try {
+    // 避免状态从州视图遗留（如 emphasis.disabled=true）影响返回 USA 的高亮
+    chart.value?.clear()
     const usaOutlineData = await import('@/assets/jsons/USAOutlineMap.json')
     const usaShadowData = await import('@/assets/jsons/USAOutlineMapShadow.json')
 
@@ -234,12 +236,14 @@ const initUSAMap = async () => {
           roam: false,
           zoom: 1.2,
           center: [-98, 35],
+          silent: false,
           itemStyle: {
             areaColor: '#5984CF',
             borderColor: '#70B3FF',
             borderWidth: pxToResponsive(1.2),
           },
           emphasis: {
+            disabled: false,
             label: {
               color: '#fff',
               fontSize: pxToResponsive(12),
@@ -267,7 +271,7 @@ const initUSAMap = async () => {
             station: station,
           })),
           symbol: `image://${mapPointImage}`,
-          symbolSize: pxToResponsive(14),
+          symbolSize: pxToResponsive(20),
           label: { show: false },
           // 关键：为点位单独配置tooltip
           tooltip: {
@@ -564,6 +568,31 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   chart.value?.dispose()
 })
+
+// 监听父组件传入的电站点位数据变化，动态更新图表
+watch(
+  () => props.powerStations,
+  (newStations) => {
+    if (!chart.value) return
+    if (currentView.value === 'usa') {
+      const updatedData = newStations.map((station) => ({
+        name: station.name,
+        value: transformCoordinatesForLayout(station.coordinates),
+        station,
+      }))
+      chart.value.setOption({ series: [{ data: updatedData }] } as any)
+    } else if (currentState.value) {
+      const stateStations = getStateStations(currentState.value)
+      const updatedData = stateStations.map((station) => ({
+        name: station.name,
+        value: [...station.coordinates],
+        station,
+      }))
+      chart.value.setOption({ series: [{ data: updatedData }] } as any)
+    }
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped lang="scss">

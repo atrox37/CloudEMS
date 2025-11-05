@@ -187,7 +187,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           
           userStore.logout()
           errorMessage = 'Login expired, please log in again'
-          ElMessage.error(errorMessage)
+          // ElMessage.error(errorMessage)
           break
         case 403:
           errorMessage = 'No permission to access this resource'
@@ -308,9 +308,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           errorMessage = 'Login expired, please log in again'
           const userStore = useUserStore()
-          
           userStore.logout()
-          ElMessage.error(errorMessage)
+          // ElMessage.error(errorMessage)
           break
         case 403:
           errorMessage = 'Access denied'

@@ -1,12 +1,12 @@
 <template>
   <div class="voltage-class stations-container">
-    <LoadingBg :loading="globalStore.loading">
-    <div class="stations-list">
-      <div class="stations-list__item" v-for="station in stations" :key="station.stationId">
-        <StationCard :station="station" />
+    <LoadingBg :loading="loading">
+      <div class="stations-list">
+        <div class="stations-list__item" v-for="station in stations" :key="station.stationId">
+          <StationCard :station="station" @sync="handleSync" :loading="station.loading || false"/>
+        </div>
       </div>
-    </div>
-  </LoadingBg>
+    </LoadingBg>
   </div>
 </template>
 
@@ -15,108 +15,44 @@ import StationCard from './components/StationCard.vue'
 import { getStations } from '@/api/station'
 import type { Stations } from '@/types/Stations'
 import LoadingBg from '@/components/common/LoadingBg.vue'
-import { useGlobalStore } from '@/stores/global'
-const globalStore = useGlobalStore()
-// interface Station {
-//   id: string
-//   name: string
-//   status: string
-//   currentPower: number
-//   totalCapacity: number
-//   powerPercentage: number
-//   batteryLevel: number
-//   efficiency: number
-//   todayEnergy: number
-//   temperature: number
-//   lastUpdate: string
-// }
-// const stations = ref([
-//   {
-//     id: '1',
-//     name: 'North Valley Solar',
-//     status: 'offline',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   },
-//   {
-//     id: '2',
-//     name: 'Red Maple Solar Site',
-//     status: 'online',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   },
-//   {
-//     id: '3',
-//     name: 'Glacier Plains',
-//     status: 'online',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   },
-//   {
-//     id: '4',
-//     name: 'Glacier Plains',
-//     status: 'online',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   },
-//   {
-//     id: '5',
-//     name: 'Forest Creek Station',
-//     status: 'online',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   },
-//   {
-//     id: '6',
-//     name: 'Meadow Knoll South',
-//     status: 'online',
-//     currentPower: 120,
-//     totalCapacity: 150,
-//     powerPercentage: 80,
-//     batteryLevel: 85,
-//     efficiency: 92,
-//     todayEnergy: 1240,
-//     temperature: 96,
-//     lastUpdate: '2025-08-27 12:00:00',
-//   }
-// ])
+// import { useGlobalStore } from '@/stores/global'
+// const globalStore = useGlobalStore()
+const loading = ref(false)
 const stations = ref<Stations[]>([])
 onMounted(async () => {
+  loading.value = true
+  try{
   const res = await getStations()
   if (res.code === 200) {
-    stations.value = res.data
+    stations.value = res.data.map((station) => ({
+      ...station,
+      loading: false,
+    }))
   }
+} finally {
+  loading.value = false
+}
 })
+const handleSync = async (stationId: number) => {
+  // console.log(stationId)
+  const numIndex = stations.value.findIndex((station) => station.stationId === stationId)
+  if (numIndex === -1) {
+    return
+  }
+  try{
+    stations.value[numIndex].loading = true
+    const res = await getStations(stationId)
+    if (res.code === 200) {
+      stations.value[numIndex] = res.data[0]
+    }
+  } finally {
+    if (numIndex !== -1) {
+      stations.value[numIndex].loading = false
+    }
+  }
+}
+
+
 </script>
 
 <style scoped lang="scss">

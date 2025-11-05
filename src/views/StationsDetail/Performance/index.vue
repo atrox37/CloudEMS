@@ -192,11 +192,16 @@ const fetchPerformanceChartData = async (stationId: string | number) => {
 }
 
 // 在onMounted中调用上面两个方法
-onMounted(() => {
-  const stationId = route.query.stationId as string | number
-    fetchPerformanceViewData(stationId)
-    fetchPerformanceChartData(stationId)
-})
+// 改为监听路由变化触发，并在首次进入时立即执行
+watch(
+  () => route.query.stationId,
+  (stationId) => {
+    if (!stationId) return
+    fetchPerformanceViewData(stationId as string | number)
+    fetchPerformanceChartData(stationId as string | number)
+  },
+  { immediate: true },
+)
 // const series = ref()
 </script>
 

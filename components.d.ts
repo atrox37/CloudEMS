@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AIAssistant: typeof import('./src/components/common/AIAssistant.vue')['default']
     BatteryCard: typeof import('./src/components/card/BatteryCard.vue')['default']
     DashboardCard: typeof import('./src/components/card/DashboardCard.vue')['default']
     DoughnutChart: typeof import('./src/components/charts/DoughnutChart.vue')['default']

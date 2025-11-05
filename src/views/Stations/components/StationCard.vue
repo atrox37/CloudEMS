@@ -16,13 +16,14 @@
       <div class="station-card__power-display">
         <div class="station-card__power-display-item">
           <img :src="pvIcon" alt="pv-icon" />
-          <div class="station-card__current-power">{{ station.pv_power || "-" }} <span>kW</span></div>
+          <div class="station-card__current-power">{{ pvPower }} <span>kW</span></div>
         </div>
 
         <div class="station-card__power-display-item">
           <img :src="essIcon" alt="ess-icon" />
-          <div class="station-card__current-power">{{ station.rate_power || '-'}} <span>kW</span></div>/
-          <div class="station-card__current-power">{{ station.rate_capacity || '-'}} <span>kWh</span></div>
+          <div class="station-card__current-power">{{ cnRatePower }} <span>kW</span></div>
+          /
+          <div class="station-card__current-power">{{ cnRateCapacity }} <span>kWh</span></div>
         </div>
       </div>
     </div>
@@ -60,11 +61,13 @@
     <!-- Footer Section -->
     <div class="station-card__footer">
       <div class="footer-left">
-        <IconButton type="primary" :icon="buttonSyncIcon" text="Data Synced" @click="handleSync" />
+        <!-- <IconButton type="primary" :icon="buttonSyncIcon" text="Data Synced" @click="handleSync" />
+          -->
+        <el-button type="primary" @click="handleSync" :loading="loading">Data Synced</el-button>
         <div class="station-card__last-update">Last Update: {{ formatTime(station.time) }}</div>
       </div>
       <div class="footer-right">
-        <el-button type="primary" @click="handleDetail" >Detail</el-button>    
+        <el-button type="primary" @click="handleDetail">Detail</el-button>
       </div>
     </div>
   </div>
@@ -101,10 +104,38 @@ import type { Stations } from '@/types/Stations'
 
 interface Props {
   station: Stations
+  loading: boolean
 }
 
 const props = defineProps<Props>()
 const router = useRouter()
+const pvPower = computed(() => {
+  if (props.station.gfTag.length > 0) {
+    return props.station.gfTag
+      .filter((tag) => tag.tagKey === 'ratepower')
+      .reduce((acc, tag) => acc + Number(tag.tagValue), 0)
+  } else {
+    return '-'
+  }
+})
+const cnRatePower = computed(() => {
+  if (props.station.cnTag.length > 0) {
+    return props.station.cnTag
+      .filter((tag) => tag.tagKey === 'ratepower')
+      .reduce((acc, tag) => acc + Number(tag.tagValue), 0)
+  } else {
+    return '-'
+  }
+})
+const cnRateCapacity = computed(() => {
+  if (props.station.cnTag.length > 0) {
+    return props.station.cnTag
+      .filter((tag) => tag.tagKey === 'ratecapacity')
+      .reduce((acc, tag) => acc + Number(tag.tagValue), 0)
+  } else {
+    return '-'
+  }
+})
 const cardData = computed(() => {
   return [
     {
@@ -143,7 +174,7 @@ const cardData = computed(() => {
     {
       id: 4,
       CardValue: {
-        title: 'Today\'s In Battery',
+        title: "Today's In Battery",
         value: props.station.today_in_battery,
         unit: 'kWh',
       },
@@ -155,7 +186,8 @@ const cardData = computed(() => {
 })
 
 const handleSync = () => {
-  console.log('handleSync')
+  // console.log('handleSync')
+  emit('sync', props.station.stationId)
 }
 const formatTime = (time: string) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
@@ -163,6 +195,9 @@ const formatTime = (time: string) => {
 const handleDetail = () => {
   router.push({ name: 'stationsDetail', query: { stationId: props.station.stationId } })
 }
+const emit = defineEmits<{
+  (e: 'sync', stationId: number): void
+}>()
 </script>
 
 <style scoped lang="scss">

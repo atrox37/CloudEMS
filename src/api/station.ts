@@ -5,7 +5,7 @@ import type {
   PerformanceView,
   Overviewchart,
   Performancechart,
-  StationDetail,
+  StationInformation,
   StationAlarm,
   StationAlarmStatistics,
   StationListItem,
@@ -19,8 +19,8 @@ import type {
  * 获取所有电站列表
  * @returns Promise<ApiResponse<Stations[]>> 电站信息数组
  */
-export const getStations = (): Promise<ApiResponse<Stations[]>> => {
-  return Request.get('/user-app/station/_page')
+export const getStations = (stationId?:number): Promise<ApiResponse<Stations[]>> => {
+  return Request.post('/user-app/station/_page_station',{stationId})
 }
 
 /**
@@ -74,7 +74,7 @@ export const getPerformanceView = (
  */
 export const getStationDetail = (
   stationId: string | number,
-): Promise<ApiResponse<StationDetail>> => {
+): Promise<ApiResponse<StationInformation>> => {
   return Request.post(`/user-app/station/_information`, { stationId })
 }
 /**

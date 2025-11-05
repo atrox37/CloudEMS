@@ -123,8 +123,8 @@ import type { MainteranceData } from '@/types/Stations'
 import { arrayToObjectByKey } from '@/utils/common'
 import { useRoute } from 'vue-router'
 const route = useRoute()
-import { useStationStore } from '@/stores/station'
-const { stationDetail } = storeToRefs(useStationStore())
+// import { useStationStore } from '@/stores/station'
+// const { stationDetail } = storeToRefs(useStationStore())
 defineProps<{
   stationLoading: boolean
 }>()
@@ -219,10 +219,15 @@ const fetchMainteranceData = async (stationId: number | string) => {
 //   NetworkDashboardList.value[2].data.value = stationDetail.value.description.netCellular
 // })
 
-onMounted(() => {
-  const stationId = route.query.stationId as number | string
-  fetchMainteranceData(stationId)
-})
+// 改为监听路由变化触发，并在首次进入时立即执行
+watch(
+  () => route.query.stationId,
+  (stationId) => {
+    if (!stationId) return
+    fetchMainteranceData(stationId as number | string)
+  },
+  { immediate: true },
+)
 
 // const systemDashboardList = ref([
 //   {
