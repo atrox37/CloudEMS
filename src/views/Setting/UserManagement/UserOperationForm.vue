@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
-import type { UserInfo } from '@/types/user'
+import type { UserInfo, UserNotification } from '@/types/user'
 import { removeEmpty } from '@/utils/common'
 import { getRoleList, operationUser } from '@/api/user'
 import MD5 from 'crypto-js/md5'
@@ -87,6 +87,7 @@ export interface UserFormModel {
   orgId?: number
   email?: string
   phone?: string
+  metadata?: UserNotification
 }
 interface DialogExpose {
   dialogVisible: boolean
@@ -217,6 +218,12 @@ async function onSubmit() {
         const res = await operationUser({
           ...submitData,
           password: MD5(submitData.password as string).toString(),
+          metadata: {
+            systemNotify: { sms: true, email: true },
+            reminders: { sms: true, email: true },
+            dayReport: { sms: true, email: true },
+            weekReport: { sms: true, email: true },
+          },
         })
         if (res.code === 200) {
           ElMessage.success('User added successfully')
