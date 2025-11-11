@@ -15,7 +15,7 @@ router.beforeEach(async (to, from, next) => {
   if (!user.token) {
     
     if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
-    return next({ path: '/login', query: { redirect: to.path ,...to.query } })
+    return next({ path: '/login' })
   }
 
   // 已登录：确保已注入动态路由

@@ -98,12 +98,12 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
           if (userInfo.success) {
             ElMessage.success('Login successful!')
             wsManager.connect()
-            const { redirect, ...query } = router.currentRoute.value.query
-            if (redirect) {
-              router.push({ path: redirect as string, query: query })
-            } else {
-              router.push({ path: '/' })
-            }
+            // const { redirect, ...query } = router.currentRoute.value.query
+            // if (redirect) {
+            //   router.push({ path: redirect as string, query: query })
+            // } else {
+            router.push({ path: '/' })
+            // }
           } else {
             ElMessage.error(userInfo.message)
           }
