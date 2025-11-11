@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
 import { userLogin, userLogout, userGetUserInfo } from '@/api/user'
 import wsManager from '@/utils/websocket'
-import { encryptData, decryptData, generateHash, verifyHash } from '@/utils/crypto'
 import MD5 from 'crypto-js/md5'
 import { useRouter } from 'vue-router'
 import { staticRoutes } from '@/router/static-routes'
@@ -17,41 +16,11 @@ export const useUserStore = defineStore(
       测试: 'Engineer',
     }
     // 状态
-    const encryptedToken = ref<string>('') // 加密后的token
-    const tokenHash = ref<string>('') // token哈希值，用于验证完整性
+    const token = ref<string>('') // 直接存储token
     // const refreshToken = ref<string>('')
-    const userInfo = ref<UserInfo | null>(null) // 用户信息（内存存储，不加密、不持久化）
+    const userInfo = ref<UserInfo | null>(null) // 用户信息（内存存储，不持久化）
     // routesInjected 不参与持久化，仅用于本地内存
     const routesInjected = ref<boolean>(false) // 是否已注入动态路由
-
-    // 计算属性 - 解密后的token
-    const token = computed<string>(() => {
-      try {
-        if (!encryptedToken.value) {
-          return ''
-        }
-
-        // 解密token
-        const decryptedToken = decryptData<string>(encryptedToken.value)
-
-        // 验证数据完整性
-        if (decryptedToken && tokenHash.value) {
-          const isValid = verifyHash(decryptedToken, tokenHash.value)
-          if (!isValid) {
-            console.warn('Token可能已被篡改，清除数据')
-            // clearUserData()
-            return ''
-          }
-        }
-
-        return decryptedToken || ''
-      } catch (error) {
-        console.error('解密Token失败:', error)
-        return ''
-      }
-    })
-
-    // 用户信息：直接使用内存中的 ref
 
     const isLoggedIn = computed(() => !!token.value)
 
@@ -74,10 +43,8 @@ export const useUserStore = defineStore(
         const response = await userLogin(encryptedParams)
 
         if (response.code === 200) {
-          // 加密存储token
-          const tokenData = response.data
-          encryptedToken.value = encryptData(tokenData)
-          tokenHash.value = generateHash(tokenData)
+          // 直接存储token
+          token.value = response.data
 
           // refreshToken.value = ''
           // ElMessage.success(response.msg || 'Login successful')
@@ -140,8 +107,7 @@ export const useUserStore = defineStore(
     const clearUserData = () => {
       // 断开WebSocket连接
       wsManager.disconnect()
-      encryptedToken.value = ''
-      tokenHash.value = ''
+      token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置
       // 清除动态路由
@@ -153,13 +119,11 @@ export const useUserStore = defineStore(
 
     return {
       // 状态
-      encryptedToken,
-      tokenHash,
+      token,
       userInfo,
       routesInjected,
 
       // 计算属性
-      token, // 解密后的token
       isLoggedIn,
 
       role,
@@ -173,12 +137,12 @@ export const useUserStore = defineStore(
     }
   },
   {
-    // 只持久化加密的token、加密的userInfo和哈希值，routesInjected 不持久化
+    // 持久化 token 到 localStorage
     persist: {
       key: 'user',
       storage: localStorage,
-      // 仅持久化 token 相关字段；不持久化用户信息
-      pick: ['encryptedToken', 'tokenHash'],
+      // 仅持久化 token；不持久化用户信息
+      pick: ['token'],
     },
   },
 )

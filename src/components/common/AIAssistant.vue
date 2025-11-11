@@ -78,9 +78,9 @@ const autoResize = (event: Event) => {
   const textarea = event.target as HTMLTextAreaElement
   // 重置高度以获取正确的scrollHeight
   textarea.style.height = 'auto'
-  // 设置新高度，最大不超过150px
-  const newHeight = Math.min(textarea.scrollHeight, 150)
-  textarea.style.height = `${newHeight}px`
+  // 设置新高度，最大不超过1.5rem
+  const newHeight = Math.min(textarea.scrollHeight, 1.5 * 100)
+  textarea.style.height = `${newHeight / 100}rem`
 }
 
 // 滚动到底部
@@ -156,13 +156,13 @@ const scrollToBottom = () => {
   // 图标按钮样式
   .ai-assistant__icon {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 60px;
-    height: 60px;
+    right: 0.2rem;
+    bottom: 0.2rem;
+    width: 0.6rem;
+    height: 0.6rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, #76aeff 0%, #2f83f8 100%);
-    box-shadow: 0 4px 12px rgba(47, 131, 248, 0.4);
+    background: linear-gradient(135deg, #76aeff 0%, #6c97e2 100%);
+    box-shadow: 0 0.04rem 0.12rem rgba(47, 131, 248, 0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -172,7 +172,7 @@ const scrollToBottom = () => {
 
     &:hover {
       transform: scale(1.1);
-      box-shadow: 0 6px 16px rgba(47, 131, 248, 0.5);
+      box-shadow: 0 0.06rem 0.16rem rgba(47, 131, 248, 0.5);
     }
 
     &:active {
@@ -180,38 +180,40 @@ const scrollToBottom = () => {
     }
 
     img {
-      width: 36px;
-      height: 36px;
+      width: 0.55rem;
+      height: 0.55rem;
+      object-fit: contain;
+      object-position: center;
     }
   }
 
   // 对话框样式
   .ai-assistant__dialog {
     position: fixed;
-    right: 20px;
-    bottom: 100px;
+    right: 0.2rem;
+    bottom: 1rem;
     width: 90vw;
-    max-width: 400px;
+    max-width: 4rem;
     height: 70vh;
-    max-height: 600px;
+    max-height: 6rem;
     background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border-radius: 0.16rem;
+    box-shadow: 0 0.08rem 0.32rem rgba(0, 0, 0, 0.12);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     z-index: 9998;
 
     // 响应式适配
-    @media (min-width: 768px) {
-      width: 400px;
-      height: 600px;
+    @media (min-width: 7.68rem) {
+      width: 4rem;
+      height: 6rem;
     }
   }
 
   // 对话框头部
   .ai-assistant__dialog-header {
-    padding: 12px 16px;
+    padding: 0.12rem 0.16rem;
     background: linear-gradient(135deg, #76aeff 0%, #2f83f8 100%);
     color: #ffffff;
     display: flex;
@@ -221,17 +223,17 @@ const scrollToBottom = () => {
   }
 
   .ai-assistant__dialog-title {
-    font-size: 16px;
+    font-size: 0.16rem;
     font-weight: 600;
   }
 
   .ai-assistant__dialog-close {
-    width: 28px;
-    height: 28px;
+    width: 0.28rem;
+    height: 0.28rem;
     border: none;
     background: rgba(255, 255, 255, 0.2);
     color: #ffffff;
-    font-size: 20px;
+    font-size: 0.2rem;
     line-height: 1;
     border-radius: 50%;
     cursor: pointer;
@@ -249,16 +251,16 @@ const scrollToBottom = () => {
   // 消息列表区域
   .ai-assistant__message-list {
     flex: 1;
-    padding: 20px;
+    padding: 0.2rem;
     overflow-y: auto;
     background: #f5f7fa;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0.16rem;
 
     // 自定义滚动条样式
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 0.06rem;
     }
 
     &::-webkit-scrollbar-track {
@@ -267,7 +269,7 @@ const scrollToBottom = () => {
 
     &::-webkit-scrollbar-thumb {
       background: #d0d7de;
-      border-radius: 3px;
+      border-radius: 0.03rem;
 
       &:hover {
         background: #b8c0c8;
@@ -305,7 +307,7 @@ const scrollToBottom = () => {
       .ai-assistant__message-bubble {
         background: #ffffff;
         color: #333333;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.08);
       }
     }
   }
@@ -319,22 +321,22 @@ const scrollToBottom = () => {
 
   // 消息时间戳（在气泡上方）
   .ai-assistant__message-time {
-    font-size: 11px;
-    margin-bottom: 4px;
+    font-size: 0.11rem;
+    margin-bottom: 0.04rem;
     opacity: 0.6;
     color: #909399;
   }
 
   // 消息气泡
   .ai-assistant__message-bubble {
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 0.12rem 0.16rem;
+    border-radius: 0.12rem;
     word-wrap: break-word;
     word-break: break-word;
   }
 
   .ai-assistant__message-content {
-    font-size: 14px;
+    font-size: 0.14rem;
     line-height: 1.6;
     white-space: pre-wrap;
   }
@@ -350,34 +352,34 @@ const scrollToBottom = () => {
     text-align: center;
 
     p {
-      margin: 8px 0;
-      font-size: 14px;
+      margin: 0.08rem 0;
+      font-size: 0.14rem;
     }
   }
 
   // 输入区域
   .ai-assistant__input-area {
-    padding: 16px;
+    padding: 0.16rem;
     background: #ffffff;
-    border-top: 1px solid #e4e7ed;
+    border-top: 0.01rem solid #e4e7ed;
     display: flex;
-    gap: 12px;
+    gap: 0.12rem;
     flex-shrink: 0;
   }
 
   .ai-assistant__input-textarea {
     flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #dcdfe6;
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 0.1rem 0.12rem;
+    border: 0.01rem solid #dcdfe6;
+    border-radius: 0.08rem;
+    font-size: 0.14rem;
     line-height: 1.6;
     resize: none;
     outline: none;
     transition: border-color 0.3s ease;
     font-family: inherit;
-    min-height: 40px;
-    max-height: 150px;
+    min-height: 0.4rem;
+    max-height: 1.5rem;
     overflow-y: hidden;
 
     &:focus {
@@ -390,13 +392,13 @@ const scrollToBottom = () => {
   }
 
   .ai-assistant__send-button {
-    padding: 0 24px;
-    height: 40px;
+    padding: 0 0.24rem;
+    height: 0.4rem;
     background: linear-gradient(135deg, #4691fb 0%, #2f83f8 100%);
     color: #ffffff;
     border: none;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 0.08rem;
+    font-size: 0.14rem;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.3s ease, box-shadow 0.3s ease;
@@ -405,7 +407,7 @@ const scrollToBottom = () => {
 
     &:hover {
       opacity: 0.9;
-      box-shadow: 0 4px 12px rgba(70, 145, 251, 0.4);
+      box-shadow: 0 0.04rem 0.12rem rgba(70, 145, 251, 0.4);
     }
 
     &:active {
@@ -428,7 +430,7 @@ const scrollToBottom = () => {
 .dialog-fade-enter-from,
 .dialog-fade-leave-to {
   opacity: 0;
-  transform: translateY(20px) scale(0.95);
+  transform: translateY(0.2rem) scale(0.95);
 }
 </style>
 

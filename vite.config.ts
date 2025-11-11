@@ -1,5 +1,5 @@
+import 'uncrypto'
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -65,7 +65,7 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/user-app': {
-        target: 'http://3.149.100.30:9010/',
+        target: 'http://44.210.118.83:9010/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/user-app/, ''),
         ws: true, // 启用 WebSocket 代理支持
