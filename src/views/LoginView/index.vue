@@ -52,7 +52,6 @@ import { useUserStore } from '@/stores/user'
 import { getVerifyCode } from '@/api/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
-import wsManager from '@/utils/websocket'
 import { Loading } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -97,7 +96,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
           const userInfo = await userStore.getUserInfo()
           if (userInfo.success) {
             ElMessage.success('Login successful!')
-            wsManager.connect()
             // const { redirect, ...query } = router.currentRoute.value.query
             // if (redirect) {
             //   router.push({ path: redirect as string, query: query })
