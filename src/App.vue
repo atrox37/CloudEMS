@@ -4,6 +4,7 @@ import stompManager from '@/utils/stomp'
 import { useRouter, useRoute } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
+import { getStationsSkipCancel } from '@/api/station'
 
 const locale = en
 const router = useRouter()
@@ -120,9 +121,74 @@ const initStomp = async () => {
   }
 
   try {
+    const alarmCb = (alarm: any) => {
+      console.log(alarm, '//////////////////////////////')
+      const rowData = JSON.parse(alarm.rawValue)
+      if (alarm.status == 1) {
+        // 告警触发状态，显示带跳转按钮的消息
+        const currentId = idCount++
+        const message = ElMessage({
+          type: 'error',
+          showClose: true,
+          dangerouslyUseHTMLString: true,
+          message: `
+              <div style="display: flex; align-items: center; gap: 0.08rem;">
+                <span>${alarm.deviceId}</span>&nbsp;&nbsp;
+                <span>${rowData.msg}</span>
+                <button id="stomp-to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
+              </div>
+            `,
+          duration: 0,
+          onClose: () => {
+            // 清理事件监听器
+            const buttonId = `stomp-to-detail-btn-${currentId}`
+            const eventInfo = document.getElementById(buttonId)
+            if (eventInfo) {
+              eventInfo.removeEventListener('click', handleAlarmDetail)
+              console.log(`[App] 清理STOMP告警按钮事件监听: ${buttonId}`)
+            }
+            alarmMap.delete(alarm.alarm_id)
+          },
+        })
+
+        // 存储告警消息
+        alarmMap.set(alarm.alarm_id, message)
+
+        // 添加按钮点击事件
+        nextTick(() => {
+          const buttonId = `stomp-to-detail-btn-${currentId}`
+          const btn = document.getElementById(buttonId)
+          if (btn) {
+            btn.addEventListener('click', handleAlarmDetail)
+          }
+        })
+      } else {
+        // 告警恢复状态
+        ElMessage.success({
+          message: rowData.msg,
+          duration: 3000,
+        })
+
+        // 关闭对应的告警消息
+        const existingMessage = alarmMap.get(alarm.alarm_id)
+        if (existingMessage) {
+          existingMessage.close()
+          alarmMap.delete(alarm.alarm_id)
+          console.log(`[App] 关闭STOMP告警消息: ${alarm.alarm_id}`)
+        }
+      }
+      console.log('[main] STOMP告警:', alarm)
+      // 消息已通过全局监听器的 onAlarm 处理
+    }
     await stompManager.connect()
     console.log('[main] STOMP连接成功')
-
+    console.log(router, 'router')
+    let stationIdArray = []
+    const res = await getStationsSkipCancel()
+    if (res.code === 200) {
+      console.log(res.data, 'res.data')
+      stationIdArray = res.data.map((item: any) => item.stationId)
+    }
     // 设置全局监听器
     stompManager.setGlobalListeners({
       onConnect: () => {
@@ -136,75 +202,13 @@ const initStomp = async () => {
       },
       onError: (error) => {
         console.error('[main] STOMP错误:', error)
-      }
+      },
     })
 
     // 订阅告警主题
-    stompManager.subscribe(
-      {
-        destination: '/topic/report_property_8', // 根据实际后端配置修改
-      },
-      (alarm) => {
-        
-        console.log(alarm,'//////////////////////////////');
-        const rowData = JSON.parse(alarm.rawValue)
-        if (alarm.status == 1) {
-          // 告警触发状态，显示带跳转按钮的消息
-          const currentId = idCount++
-          const message = ElMessage({
-            type: 'error',
-            showClose: true,
-            dangerouslyUseHTMLString: true,
-            message: `
-              <div style="display: flex; align-items: center; gap: 0.08rem;">
-                <span>${alarm.deviceId}</span>&nbsp;&nbsp;
-                <span>${rowData.msg}</span>
-                <button id="stomp-to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
-              </div>
-            `,
-            duration: 0,
-            onClose: () => {
-              // 清理事件监听器
-              const buttonId = `stomp-to-detail-btn-${currentId}`
-              const eventInfo = document.getElementById(buttonId)
-              if (eventInfo) {
-                eventInfo.removeEventListener('click', handleAlarmDetail)
-                console.log(`[App] 清理STOMP告警按钮事件监听: ${buttonId}`)
-              }
-              alarmMap.delete(alarm.alarm_id)
-            },
-          })
-
-          // 存储告警消息
-          alarmMap.set(alarm.alarm_id, message)
-
-          // 添加按钮点击事件
-          nextTick(() => {
-            const buttonId = `stomp-to-detail-btn-${currentId}`
-            const btn = document.getElementById(buttonId)
-            if (btn) {
-              btn.addEventListener('click', handleAlarmDetail)
-            }
-          })
-        } else {
-          // 告警恢复状态
-          ElMessage.success({
-            message: rowData.msg,
-            duration: 3000,
-          })
-
-          // 关闭对应的告警消息
-          const existingMessage = alarmMap.get(alarm.alarm_id)
-          if (existingMessage) {
-            existingMessage.close()
-            alarmMap.delete(alarm.alarm_id)
-            console.log(`[App] 关闭STOMP告警消息: ${alarm.alarm_id}`)
-          }
-        }
-        console.log('[main] STOMP告警:', alarm)
-        // 消息已通过全局监听器的 onAlarm 处理
-      },
-    )
+    stationIdArray.forEach((stationId: number) => {
+      stompManager.subscribe({ destination: `/topic/report_property_${stationId}` }, alarmCb)
+    })
   } catch (error) {
     console.error('[main] STOMP连接失败:', error)
   }
@@ -226,7 +230,7 @@ watch(
       stompManager.disconnect()
     }
   },
-  { immediate: true } // 立即执行一次
+  { immediate: true }, // 立即执行一次
 )
 </script>
 

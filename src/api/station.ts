@@ -22,7 +22,9 @@ import type {
 export const getStations = (stationId?:number): Promise<ApiResponse<Stations[]>> => {
   return Request.post('/user-app/station/_page_station',{stationId})
 }
-
+export const getStationsSkipCancel = (stationId?:number): Promise<ApiResponse<Stations[]>> => {
+  return Request.post('/user-app/station/_page_station',{stationId}, { skipCancel: true })
+}
 /**
  * 获取指定电站的概览信息
  * @param stationId 电站ID（字符串）

@@ -510,7 +510,7 @@ class StompManager {
 // 默认导出配置（需要根据实际情况修改）
 // 示例配置，实际使用时请根据后端地址修改
 const stompManager = new StompManager({
-  brokerURL: '/user-app/register-app/socket',
+  brokerURL: '/api/register-app/socket',
   reconnectDelay: 5000,
   heartbeatIncoming: 2000,
   heartbeatOutgoing: 2000,

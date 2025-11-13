@@ -30,8 +30,11 @@ export interface ApiResponse<T = any> {
   msg: string // 响应消息
   data: T // 响应数据
 }
-// 统一静态方法配置
-export type RequestConfig = AxiosRequestConfig
+
+// 扩展请求配置,添加自定义属性
+export interface RequestConfig extends AxiosRequestConfig {
+  skipCancel?: boolean // 是否跳过自动取消重复请求
+}
 const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha']
 /**
  * 创建axios实例
@@ -53,22 +56,25 @@ const service = axios.create({
  * 在发送请求之前做一些统一处理
  */
 const requestInterceptor = (config: any) => {
-  // 生成请求的唯一标识
-  const params = { ...(config.params || {}) }
-  const requestKey = `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
-  console.log(requestKey, 'requestKey1')
+  // 如果配置了 skipCancel，跳过自动取消逻辑
+  if (!config.skipCancel) {
+    // 生成请求的唯一标识
+    const params = { ...(config.params || {}) }
+    const requestKey = `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
+    console.log(requestKey, 'requestKey1')
 
-  // 如果存在相同的pending请求，取消它
-  if (pendingRequests.has(requestKey)) {
-    const cancelToken = pendingRequests.get(requestKey)
-    cancelToken.cancel('请求被取消')
-    pendingRequests.delete(requestKey)
+    // 如果存在相同的pending请求，取消它
+    if (pendingRequests.has(requestKey)) {
+      const cancelToken = pendingRequests.get(requestKey)
+      cancelToken.cancel('请求被取消')
+      pendingRequests.delete(requestKey)
+    }
+
+    // 创建新的cancelToken
+    const cancelToken = axios.CancelToken.source()
+    config.cancelToken = cancelToken.token
+    pendingRequests.set(requestKey, cancelToken)
   }
-
-  // 创建新的cancelToken
-  const cancelToken = axios.CancelToken.source()
-  config.cancelToken = cancelToken.token
-  pendingRequests.set(requestKey, cancelToken)
 
   // 从localStorage获取token并添加到请求头
   const userStore = useUserStore()
@@ -146,14 +152,17 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
     // 请求完成后，从pendingRequests中移除
     console.log(response, 'response1')
 
-    const params = { ...(response.config?.params || {}) }
-    if ('_t' in params) {
-      delete params._t
+    // 只有没有配置 skipCancel 的请求才需要从 pendingRequests 中移除
+    if (!response.config?.skipCancel) {
+      const params = { ...(response.config?.params || {}) }
+      if ('_t' in params) {
+        delete params._t
+      }
+      const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(params)}-${response.config?.data}`
+      // console.log(response.config?.data,requestKey,requestKey==='post-sys-app/sys_user/_page-{}-{"current":1,"size":20,"terms":[{"column":"t.state","value":1}]}', 'requestKey2')
+      pendingRequests.delete(requestKey)
+      console.log(pendingRequests, 'pendingRequests')
     }
-    const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(params)}-${response.config?.data}`
-    // console.log(response.config?.data,requestKey,requestKey==='post-sys-app/sys_user/_page-{}-{"current":1,"size":20,"terms":[{"column":"t.state","value":1}]}', 'requestKey2')
-    pendingRequests.delete(requestKey)
-    console.log(pendingRequests, 'pendingRequests')
 
     console.log(
       `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
@@ -215,16 +224,18 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       return Promise.reject(error)
     }
 
-    // 请求完成后，从pendingRequests中移除
-    // 生成requestKey时，去除params中的_t参数
-    const params = { ...(error.config?.params || {}) }
-    if ('_t' in params) {
-      delete params._t
-    }
-    const requestKey = `${error.config?.method}-${error.config?.url}-${JSON.stringify(params)}-${JSON.stringify(error.config?.data)}`
-    console.log(requestKey, 'requestKey3')
-    if (requestKey) {
-      pendingRequests.delete(requestKey)
+    // 请求完成后，从pendingRequests中移除（只处理没有配置 skipCancel 的请求）
+    if (!error.config?.skipCancel) {
+      // 生成requestKey时，去除params中的_t参数
+      const params = { ...(error.config?.params || {}) }
+      if ('_t' in params) {
+        delete params._t
+      }
+      const requestKey = `${error.config?.method}-${error.config?.url}-${JSON.stringify(params)}-${JSON.stringify(error.config?.data)}`
+      console.log(requestKey, 'requestKey3')
+      if (requestKey) {
+        pendingRequests.delete(requestKey)
+      }
     }
 
     console.error(`${logPrefix}[响应错误]`, error)
