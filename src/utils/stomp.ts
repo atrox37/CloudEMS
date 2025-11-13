@@ -207,7 +207,16 @@ class StompManager {
             // 触发断开连接回调
             this.globalListeners.onDisconnect?.()
 
-            // 清空订阅记录（重连后会重新订阅）
+            // 将现有订阅迁移到待订阅队列，重连后自动恢复
+            this.subscriptions.forEach((record) => {
+              console.log(`[STOMP] 保存订阅到待订阅队列: ${record.destination}`)
+              this.pendingSubscriptions.set(record.id, {
+                config: { destination: record.destination },
+                listener: record.listener,
+              })
+            })
+
+            // 清空订阅记录
             this.subscriptions.clear()
           },
 
@@ -216,6 +225,21 @@ class StompManager {
             console.log('[STOMP] WebSocket 关闭:', event.code, event.reason)
             this.status.value = 'disconnected'
             this.connectionStats.disconnectTime = Date.now()
+
+            // 将现有订阅迁移到待订阅队列（如果还没迁移的话）
+            this.subscriptions.forEach((record) => {
+              // 避免重复添加到待订阅队列
+              if (!this.pendingSubscriptions.has(record.id)) {
+                console.log(`[STOMP] WebSocket关闭-保存订阅: ${record.destination}`)
+                this.pendingSubscriptions.set(record.id, {
+                  config: { destination: record.destination },
+                  listener: record.listener,
+                })
+              }
+            })
+
+            // 清空订阅记录
+            this.subscriptions.clear()
 
             // 如果不是主动关闭，触发重连
             if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
