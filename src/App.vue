@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import en from 'element-plus/es/locale/lang/en'
-import wsManager from '@/utils/websocket'
 import stompManager from '@/utils/stomp'
 import { useRouter, useRoute } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
