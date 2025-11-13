@@ -38,7 +38,7 @@ const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha']
  * 设置基础配置项
  */
 const service = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/user-app'}`,
+  baseURL: '/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
@@ -77,7 +77,6 @@ const requestInterceptor = (config: any) => {
     // config.headers.Authorization = `Bearer ${token}`
     config.headers.Authorization = `${token}`
   } else if (!WHITE_LIST.includes(config.url)) {
-    
     userStore.logout()
     // const router = getRouter()
     // router.push({
@@ -184,7 +183,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         case 401:
           // 未授权，清除token并跳转到登录页
           const userStore = useUserStore()
-          
+
           userStore.logout()
           errorMessage = 'Login expired, please log in again'
           // ElMessage.error(errorMessage)
@@ -470,7 +469,12 @@ class Request {
   /**
    * 静态 下载文件
    */
-  static async download(url: string, params?: any, filename?: string, config?: RequestConfig): Promise<void> {
+  static async download(
+    url: string,
+    params?: any,
+    filename?: string,
+    config?: RequestConfig,
+  ): Promise<void> {
     try {
       const axiosIns = Request.getAxiosInstance()
       const response = await axiosIns.get(url, {
@@ -493,8 +497,6 @@ class Request {
       ElMessage.error('File download failed')
     }
   }
-
- 
 }
 
 // 不再导出实例形式
