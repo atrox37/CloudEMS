@@ -64,10 +64,10 @@ export default defineConfig({
     port: 5173, // 指定端口号
     open: true, // 自动打开浏览器
     proxy: {
-      '/user-app': {
+      '/api': {
         target: 'http://44.210.118.83:9010/',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/user-app/, ''),
+        rewrite: (path) => path.replace(/^\/api/, ''),
         ws: true, // 启用 WebSocket 代理支持
         secure: false, // 如果后端是 https，设置为 true
       },
