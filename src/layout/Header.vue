@@ -75,6 +75,7 @@ const handleUserCommand = (command: string) => {
       userStore.logout()
       break
   }
+
 }
 
 const getAvatarName = (name: string | undefined): string | undefined => {
@@ -304,3 +305,4 @@ const handleDropdownChange = (visible: boolean) => {
   }
 }
 </style>
+

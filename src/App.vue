@@ -204,7 +204,6 @@ watch(
     if (isLoggedIn) {
       // 用户登录成功，连接WebSocket和STOMP
       console.log('[main] 用户登录成功，尝试连接WebSocket和STOMP')
-      // initWebSocket()
       initStomp()
     } else {
       // 用户登出，清理所有资源

@@ -65,7 +65,7 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://44.210.118.83:9010/',
+        target: 'http://52.91.141.40:9010/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         ws: true, // 启用 WebSocket 代理支持
@@ -109,7 +109,7 @@ export default defineConfig({
           replace: true, // 是否替换原来的值
           mediaQuery: false, // 是否转换媒体查询中的 px
           minPixelValue: 1, // 小于这个值的 px 不转换
-          exclude: /node_modules|EnergyBg\.vue/i, // 排除 node_modules 文件夹和 EnergyBg.vue 文件
+          exclude: /EnergyBg\.vue/i, // 排除 node_modules 文件夹和 EnergyBg.vue 文件
         }),
       ],
     },

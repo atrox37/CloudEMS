@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
 import { userLogin, userLogout, userGetUserInfo } from '@/api/user'
-import wsManager from '@/utils/websocket'
+import stompManager from '@/utils/stomp'
 import MD5 from 'crypto-js/md5'
 import { useRouter } from 'vue-router'
 import { staticRoutes } from '@/router/static-routes'
@@ -106,7 +106,7 @@ export const useUserStore = defineStore(
     // 清除用户数据（手动清除持久化数据）
     const clearUserData = () => {
       // 断开WebSocket连接
-      wsManager.disconnect()
+      stompManager.disconnect()
       token.value = ''
       userInfo.value = null
       routesInjected.value = false // 清除时也重置
