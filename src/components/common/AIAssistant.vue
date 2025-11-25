@@ -1,30 +1,284 @@
+﻿<template>
+  <div class="ai-assistant">
+    <div
+      class="ai-assistant__icon"
+      :style="iconStyle"
+      @click="onIconClick"
+      @mousedown="startDragIcon"
+      @touchstart.prevent="startDragIcon"
+      title="AI Assistant"
+    >
+      <img src="@/assets/icons/ai_assistant.svg" alt="AI Assistant" />
+    </div>
+
+    <transition name="dialog-fade">
+      <div
+        v-show="isDialogVisible"
+        class="ai-assistant__dialog"
+        :style="dialogPositionStyle"
+      >
+        <div
+          class="ai-assistant__dialog-header"
+          :class="{ 'ai-assistant__dialog-header--resizable': quadrant === 'tl' || quadrant === 'tr' }"
+          @mousedown.stop="onHeaderMouseDown"
+          @touchstart.stop.prevent="onHeaderMouseDown"
+        >
+          <img src="@/assets/icons/ai_logo.svg" class="ai-assistant__dialog-logo" />
+          <img
+            src="@/assets/icons/ai-rectangle.svg"
+            class="ai-assistant__dialog-close"
+            @click="closeDialog"
+          />
+        </div>
+
+        <div ref="messageListRef" class="ai-assistant__message-list">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            class="ai-assistant__message-item"
+            :class="`ai-assistant__message-item--${message.type}`"
+          >
+            <div class="ai-assistant__message-wrapper">
+              <div class="ai-assistant__message-bubble">
+                <div class="ai-assistant__message-content">{{ message.content }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="isAILoading" class="ai-assistant__message-item ai-assistant__message-item--ai">
+            <div class="ai-assistant__message-wrapper">
+              <div class="ai-assistant__message-bubble">
+                <div class="ai-assistant__loading">
+                  <span>Loading</span>
+                  <span class="ai-assistant__loading-dot">.</span>
+                  <span class="ai-assistant__loading-dot">.</span>
+                  <span class="ai-assistant__loading-dot">.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="messages.length === 0 && !isAILoading" class="ai-assistant__empty-state">
+            <p>Hello! I'm your AI Assistant</p>
+            <p>How can I help you today?</p>
+          </div>
+        </div>
+
+        <div class="ai-assistant__input-area">
+          <textarea
+            v-model="messageInput"
+            class="ai-assistant__input-textarea"
+            placeholder="Type a message..."
+            rows="1"
+            :disabled="isAILoading"
+            @keydown="handleKeydown"
+            @input="autoResize"
+          ></textarea>
+          <el-button 
+            class="ai-assistant__send-button" 
+            :loading="isAILoading"
+            :disabled="!messageInput.trim()"
+            @click="sendMessage" 
+            title="Send"
+          >
+            Send
+          </el-button>
+        </div>
+
+        <div
+          v-if="quadrant === 'bl' || quadrant === 'br'"
+          class="ai-assistant__resize-handle ai-assistant__resize-handle--bottom"
+          @mousedown.stop="startResize"
+          @touchstart.stop.prevent="startResize"
+        ></div>
+      </div>
+    </transition>
+  </div>
+</template>
+
 <script setup lang="ts">
 /**
- * AI助手全局组件
- * 功能：
- * 1. 固定在屏幕右下角的助手图标
- * 2. 点击图标显示/隐藏对话框
- * 3. 支持多行文本输入，Shift+Enter换行，Enter发送
- * 4. 消息显示在对话区域右侧（用户消息样式）
+ * AI助手组件
+ * 功能特性：
+ * 1. 可拖动的悬浮图标，支持鼠标和触摸操作
+ * 2. 智能定位对话框，根据图标位置自动调整
+ * 3. 可调整对话框高度（仅增加不减少）
+ * 4. 消息发送和接收，带加载状态
+ * 5. 响应式布局，基于rem单位
  */
+import { ref, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
+import { getCurrentFontSize } from '@/utils/responsive'
+import { getAIAssistantAnswer } from '@/api/common'
 
-// 消息类型定义
 interface Message {
   id: number
   content: string
-  timestamp: string
   type: 'user' | 'ai'
 }
 
-// 响应式数据
-const isDialogVisible = ref(false) // 对话框显示状态
-const messageInput = ref('') // 输入框内容
-const messages = ref<Message[]>([]) // 消息列表
-const messageListRef = ref<HTMLElement | null>(null) // 消息列表DOM引用
+type Quadrant = 'tl' | 'tr' | 'bl' | 'br'
 
-// 切换对话框显示状态
+// 常量定义
+const ICON_REM = 0.6
+const getIconSize = () => getCurrentFontSize() * ICON_REM
+const PADDING = 16
+const GAP = 10
+const MIN_DIALOG_HEIGHT = 260
+
+// 状态管理
+const isDialogVisible = ref(false)
+const isAILoading = ref(false)
+const messageInput = ref('')
+const messages = ref<Message[]>([])
+const messageListRef = ref<HTMLElement | null>(null)
+
+// 图标位置
+const iconX = ref(0)
+const iconY = ref(0)
+
+// 对话框高度
+const dialogHeight = ref(MIN_DIALOG_HEIGHT)
+
+// 拖动图标相关
+const isDraggingIcon = ref(false)
+const dragOffsetX = ref(0)
+const dragOffsetY = ref(0)
+const hasMoved = ref(false)
+
+// 调整高度相关
+const isResizing = ref(false)
+const resizeStartY = ref(0)
+const resizeStartHeight = ref(0)
+const resizeInitialTop = ref(0)
+const resizeInitialBottom = ref(0)
+const dialogTopOverride = ref<number | null>(null)
+type ResizeMode = 'top' | 'bottom'
+const resizeMode = ref<ResizeMode>('top')
+
+// 初始化图标位置（右下角）
+onMounted(() => {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const size = getIconSize()
+  iconX.value = vw - size - PADDING
+  iconY.value = vh - size - PADDING
+})
+
+onBeforeUnmount(() => {
+  removeGlobalDragListeners()
+})
+
+// 图标样式
+const iconStyle = computed(() => ({
+  position: 'fixed' as const,
+  left: iconX.value + 'px',
+  top: iconY.value + 'px',
+  transition: isDraggingIcon.value ? 'none' : undefined,
+  transform: isDraggingIcon.value ? 'none' : undefined
+}))
+
+// 计算图标所在象限
+const quadrant = computed<Quadrant>(() => {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const centerX = vw / 2
+  const centerY = vh / 2
+  const size = getIconSize()
+  const iconCenterX = iconX.value + size / 2
+  const iconCenterY = iconY.value + size / 2
+
+  if (iconCenterX < centerX && iconCenterY < centerY) return 'tl'
+  if (iconCenterX >= centerX && iconCenterY < centerY) return 'tr'
+  if (iconCenterX < centerX && iconCenterY >= centerY) return 'bl'
+  return 'br'
+})
+
+// 计算初始对话框高度
+const calculateInitialDialogHeight = () => {
+  const vh = window.innerHeight
+  const iconTop = iconY.value
+  const size = getIconSize()
+
+  let h = 0
+  switch (quadrant.value) {
+    case 'tl':
+    case 'tr':
+      h = vh - iconTop
+      break
+    case 'bl':
+    case 'br':
+      h = iconTop + size
+      break
+  }
+
+  return Math.max(MIN_DIALOG_HEIGHT, h)
+}
+
+// 对话框位置样式
+const dialogPositionStyle = computed(() => {
+  const vw = window.innerWidth
+  const dialogWidth = Math.min(vw * 0.9, 4 * getCurrentFontSize())
+  const h = dialogHeight.value
+  const iconLeft = iconX.value
+  const iconTop = iconY.value
+  const size = getIconSize()
+  const iconRight = iconLeft + size
+  const iconBottom = iconTop + size
+
+  let top = 0
+  let left = 0
+
+  // 垂直定位
+  if (dialogTopOverride.value !== null) {
+    top = dialogTopOverride.value
+  } else if (quadrant.value === 'tl' || quadrant.value === 'tr') {
+    top = iconTop
+  } else {
+    top = iconBottom - h
+  }
+
+  // 水平定位
+  const spaceRight = vw - PADDING - (iconRight + GAP)
+  const spaceLeft = (iconLeft - GAP) - PADDING
+  const preferRight = quadrant.value === 'tl' || quadrant.value === 'bl'
+  const canPlaceRight = spaceRight >= dialogWidth
+  const canPlaceLeft = spaceLeft >= dialogWidth
+
+  if ((preferRight && canPlaceRight) || (!preferRight && !canPlaceLeft && canPlaceRight)) {
+    left = iconRight + GAP
+  } else if ((!preferRight && canPlaceLeft) || (preferRight && !canPlaceRight && canPlaceLeft)) {
+    left = iconLeft - dialogWidth - GAP
+  } else {
+    left = Math.max(PADDING, Math.min(iconRight + GAP, vw - dialogWidth - PADDING))
+  }
+
+  return {
+    position: 'fixed' as const,
+    left: `${left}px`,
+    top: `${top}px`,
+    height: `${h / getCurrentFontSize()}rem`
+  }
+})
+
+// 图标点击
+const onIconClick = () => {
+  if (hasMoved.value) return
+  toggleDialog()
+}
+
+// 切换对话框显示
 const toggleDialog = () => {
+  if (!isDialogVisible.value) {
+    dialogHeight.value = calculateInitialDialogHeight()
+    dialogTopOverride.value = null
+  }
   isDialogVisible.value = !isDialogVisible.value
+
+  if (isDialogVisible.value) {
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
 }
 
 // 关闭对话框
@@ -33,40 +287,75 @@ const closeDialog = () => {
 }
 
 // 发送消息
-const sendMessage = () => {
+const sendMessage = async () => {
   const content = messageInput.value.trim()
-  if (!content) return
+  if (!content || isAILoading.value) return
 
-  // 创建新消息
   const newMessage: Message = {
     id: Date.now(),
     content,
-    timestamp: new Date().toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-    type: 'user',
+    type: 'user'
   }
 
-  // 添加到消息列表
   messages.value.push(newMessage)
-
-  // 清空输入框
   messageInput.value = ''
 
-  // 重置输入框高度
   nextTick(() => {
-    const textarea = document.querySelector('.ai-assistant__input-textarea') as HTMLTextAreaElement
+    const textarea = document.querySelector(
+      '.ai-assistant__input-textarea'
+    ) as HTMLTextAreaElement | null
     if (textarea) {
       textarea.style.height = 'auto'
     }
     scrollToBottom()
   })
+
+  isAILoading.value = true
+
+  try {
+    const response = await getAIAssistantAnswer(content)
+    if (response.code === 200) {
+      const aiMessage: Message = {
+        id: Date.now() + 1,
+        content: response.data.answer,
+        type: 'ai'
+      }
+      messages.value.push(aiMessage)
+      
+      nextTick(() => {
+        scrollToBottom()
+      })
+    } else {
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        content: 'Request failed. Please try again later.',
+        type: 'ai'
+      }
+      messages.value.push(errorMessage)
+      
+      nextTick(() => {
+        scrollToBottom()
+      })
+    }
+  } catch (error) {
+    console.error('AI助手请求失败:', error)
+    const errorMessage: Message = {
+      id: Date.now() + 1,
+      content: 'Request failed. Please try again later.',
+      type: 'ai'
+    }
+    messages.value.push(errorMessage)
+    
+    nextTick(() => {
+      scrollToBottom()
+    })
+  } finally {
+    isAILoading.value = false
+  }
 }
 
 // 处理键盘事件
 const handleKeydown = (event: KeyboardEvent) => {
-  // Enter发送，Shift+Enter换行
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     sendMessage()
@@ -76,11 +365,9 @@ const handleKeydown = (event: KeyboardEvent) => {
 // 自动调整输入框高度
 const autoResize = (event: Event) => {
   const textarea = event.target as HTMLTextAreaElement
-  // 重置高度以获取正确的scrollHeight
   textarea.style.height = 'auto'
-  // 设置新高度，最大不超过1.5rem
-  const newHeight = Math.min(textarea.scrollHeight, 1.5 * 100)
-  textarea.style.height = `${newHeight / 100}rem`
+  const newHeight = Math.min(textarea.scrollHeight, 150)
+  textarea.style.height = `${newHeight}px`
 }
 
 // 滚动到底部
@@ -89,75 +376,133 @@ const scrollToBottom = () => {
     messageListRef.value.scrollTop = messageListRef.value.scrollHeight
   }
 }
+
+// 获取触摸或鼠标位置
+const getPoint = (e: MouseEvent | TouchEvent) => {
+  if ('touches' in e) {
+    return e.touches[0]
+  }
+  return e
+}
+
+// 开始拖动图标
+const startDragIcon = (e: MouseEvent | TouchEvent) => {
+  const point = getPoint(e)
+  isDraggingIcon.value = true
+  hasMoved.value = false
+  dragOffsetX.value = point.clientX - iconX.value
+  dragOffsetY.value = point.clientY - iconY.value
+  addGlobalDragListeners()
+}
+
+// 全局移动事件
+const onMouseMove = (e: MouseEvent | TouchEvent) => {
+  if (isDraggingIcon.value) {
+    e.preventDefault()
+    const point = getPoint(e)
+
+    hasMoved.value = true
+    if (isDialogVisible.value) {
+      isDialogVisible.value = false
+    }
+
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const size = getIconSize()
+    let x = point.clientX - dragOffsetX.value
+    let y = point.clientY - dragOffsetY.value
+
+    x = Math.min(Math.max(PADDING, x), vw - size - PADDING)
+    y = Math.min(Math.max(PADDING, y), vh - size - PADDING)
+
+    iconX.value = x
+    iconY.value = y
+  }
+
+  if (isResizing.value) {
+    e.preventDefault()
+    const point = getPoint(e)
+    const vh = window.innerHeight
+
+    if (resizeMode.value === 'top') {
+      const bottom = vh
+      let newTop = point.clientY
+      newTop = Math.max(0, Math.min(bottom - MIN_DIALOG_HEIGHT, newTop))
+      newTop = Math.min(newTop, resizeInitialTop.value)
+      dialogTopOverride.value = newTop
+      dialogHeight.value = bottom - newTop
+    } else {
+      const topAnchor = 0
+      let newBottom = point.clientY
+      newBottom = Math.max(topAnchor + MIN_DIALOG_HEIGHT, Math.min(vh, newBottom))
+      newBottom = Math.max(newBottom, resizeInitialBottom.value)
+      dialogTopOverride.value = topAnchor
+      dialogHeight.value = newBottom - topAnchor
+    }
+  }
+}
+
+// 停止拖动
+const stopDragAndResize = () => {
+  isDraggingIcon.value = false
+  isResizing.value = false
+  removeGlobalDragListeners()
+}
+
+// 添加全局监听
+const addGlobalDragListeners = () => {
+  document.addEventListener('mousemove', onMouseMove, { passive: false })
+  document.addEventListener('mouseup', stopDragAndResize)
+  document.addEventListener('touchmove', onMouseMove, { passive: false })
+  document.addEventListener('touchend', stopDragAndResize)
+}
+
+// 移除全局监听
+const removeGlobalDragListeners = () => {
+  document.removeEventListener('mousemove', onMouseMove as any)
+  document.removeEventListener('mouseup', stopDragAndResize as any)
+  document.removeEventListener('touchmove', onMouseMove as any)
+  document.removeEventListener('touchend', stopDragAndResize as any)
+}
+
+// 开始调整高度
+const startResize = (e: MouseEvent | TouchEvent) => {
+  const point = getPoint(e)
+  isResizing.value = true
+  resizeStartY.value = point.clientY
+  resizeStartHeight.value = dialogHeight.value
+  const vh = window.innerHeight
+  if (quadrant.value === 'tl' || quadrant.value === 'tr') {
+    resizeMode.value = 'top'
+    const initialTop = iconY.value
+    const bottom = vh
+    dialogTopOverride.value = Math.max(0, Math.min(bottom - MIN_DIALOG_HEIGHT, initialTop))
+    resizeInitialTop.value = dialogTopOverride.value
+    resizeInitialBottom.value = bottom
+  } else {
+    resizeMode.value = 'bottom'
+    dialogTopOverride.value = 0
+    resizeInitialTop.value = 0
+    resizeInitialBottom.value = dialogHeight.value
+  }
+  addGlobalDragListeners()
+}
+
+// 处理头部鼠标按下（用于顶部调整）
+const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
+  if (!(quadrant.value === 'tl' || quadrant.value === 'tr')) return
+
+  const target = 'touches' in e ? (e.touches[0].target as EventTarget | null) : (e.target as EventTarget | null)
+  if (target && target instanceof HTMLElement) {
+    if (target.closest('.ai-assistant__dialog-close')) return
+  }
+  startResize(e)
+}
 </script>
-
-<template>
-  <div class="ai-assistant">
-    <!-- AI助手图标按钮 -->
-    <div class="ai-assistant__icon" @click="toggleDialog" title="AI Assistant">
-      <img src="@/assets/icons/ai_assistant.svg" alt="AI Assistant" />
-    </div>
-
-    <!-- 对话框 -->
-    <transition name="dialog-fade">
-      <div v-show="isDialogVisible" class="ai-assistant__dialog">
-        <!-- 对话框头部 -->
-        <div class="ai-assistant__dialog-header">
-          <span class="ai-assistant__dialog-title">AI Assistant</span>
-          <button class="ai-assistant__dialog-close" @click="closeDialog" title="Close">
-            ×
-          </button>
-        </div>
-
-        <!-- 消息显示区域 -->
-        <div ref="messageListRef" class="ai-assistant__message-list">
-          <div
-            v-for="message in messages"
-            :key="message.id"
-            class="ai-assistant__message-item"
-            :class="`ai-assistant__message-item--${message.type}`"
-          >
-            <div class="ai-assistant__message-wrapper">
-              <div class="ai-assistant__message-time">{{ message.timestamp }}</div>
-              <div class="ai-assistant__message-bubble">
-                <div class="ai-assistant__message-content">{{ message.content }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 空状态提示 -->
-          <div v-if="messages.length === 0" class="ai-assistant__empty-state">
-            <p>Hello! I'm your AI Assistant</p>
-            <p>How can I help you today?</p>
-          </div>
-        </div>
-
-        <!-- 消息输入区域 -->
-        <div class="ai-assistant__input-area">
-          <textarea
-            v-model="messageInput"
-            class="ai-assistant__input-textarea"
-            placeholder="Type a message..."
-            rows="1"
-            @keydown="handleKeydown"
-            @input="autoResize"
-          ></textarea>
-          <button class="ai-assistant__send-button" @click="sendMessage" title="Send">
-            Send
-          </button>
-        </div>
-      </div>
-    </transition>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 .ai-assistant {
-  // 图标按钮样式
   .ai-assistant__icon {
-    position: fixed;
-    right: 0.2rem;
-    bottom: 0.2rem;
     width: 0.6rem;
     height: 0.6rem;
     border-radius: 50%;
@@ -187,15 +532,9 @@ const scrollToBottom = () => {
     }
   }
 
-  // 对话框样式
   .ai-assistant__dialog {
-    position: fixed;
-    right: 0.2rem;
-    bottom: 1rem;
     width: 90vw;
     max-width: 4rem;
-    height: 70vh;
-    max-height: 6rem;
     background: #ffffff;
     border-radius: 0.16rem;
     box-shadow: 0 0.08rem 0.32rem rgba(0, 0, 0, 0.12);
@@ -203,18 +542,17 @@ const scrollToBottom = () => {
     flex-direction: column;
     overflow: hidden;
     z-index: 9998;
+    box-sizing: border-box;
 
-    // 响应式适配
     @media (min-width: 7.68rem) {
       width: 4rem;
-      height: 6rem;
     }
   }
 
-  // 对话框头部
   .ai-assistant__dialog-header {
     padding: 0.12rem 0.16rem;
-    background: linear-gradient(135deg, #76aeff 0%, #2f83f8 100%);
+    background: linear-gradient(90deg, #041428 0%, #02294e 42%, #013768 78%, #003c71 100%);
+    height: 0.4rem;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -222,33 +560,29 @@ const scrollToBottom = () => {
     flex-shrink: 0;
   }
 
-  .ai-assistant__dialog-title {
-    font-size: 0.16rem;
-    font-weight: 600;
+  .ai-assistant__dialog-header--resizable {
+    cursor: ns-resize;
+  }
+
+  .ai-assistant__dialog-logo {
+    height: 0.12rem;
+    object-fit: contain;
+    object-position: center;
   }
 
   .ai-assistant__dialog-close {
-    width: 0.28rem;
-    height: 0.28rem;
-    border: none;
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    font-size: 0.2rem;
-    line-height: 1;
-    border-radius: 50%;
+    width: 0.2rem;
+    height: 0.2rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: contain;
+    object-position: center;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.3);
       transform: rotate(90deg);
     }
   }
 
-  // 消息列表区域
   .ai-assistant__message-list {
     flex: 1;
     padding: 0.2rem;
@@ -258,15 +592,12 @@ const scrollToBottom = () => {
     flex-direction: column;
     gap: 0.16rem;
 
-    // 自定义滚动条样式
     &::-webkit-scrollbar {
       width: 0.06rem;
     }
-
     &::-webkit-scrollbar-track {
       background: transparent;
     }
-
     &::-webkit-scrollbar-thumb {
       background: #d0d7de;
       border-radius: 0.03rem;
@@ -277,12 +608,10 @@ const scrollToBottom = () => {
     }
   }
 
-  // 消息项
   .ai-assistant__message-item {
     display: flex;
     width: 100%;
 
-    // 用户消息靠右
     &.ai-assistant__message-item--user {
       justify-content: flex-end;
 
@@ -291,12 +620,14 @@ const scrollToBottom = () => {
       }
 
       .ai-assistant__message-bubble {
-        background: linear-gradient(135deg, #4691fb 0%, #2f83f8 100%);
-        color: #ffffff;
+        border-radius: 0.15rem 0;
+        border: 0.03rem solid transparent;
+        background:
+          linear-gradient(#ffffff, #ffffff) padding-box,
+          linear-gradient(90deg, #ff6900 0%, #ffffff 100%) border-box;
       }
     }
 
-    // AI消息靠左
     &.ai-assistant__message-item--ai {
       justify-content: flex-start;
 
@@ -305,43 +636,73 @@ const scrollToBottom = () => {
       }
 
       .ai-assistant__message-bubble {
-        background: #ffffff;
-        color: #333333;
-        box-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.08);
+        border-radius:  0 0.15rem;
+        border: 0.03rem solid transparent;
+        background:
+          linear-gradient(#ffffff, #ffffff) padding-box,
+          linear-gradient(-90deg, #ff6900 0%, #ffffff 100%) border-box;
       }
     }
   }
 
-  // 消息包装器
   .ai-assistant__message-wrapper {
     display: flex;
     flex-direction: column;
     max-width: 75%;
   }
 
-  // 消息时间戳（在气泡上方）
-  .ai-assistant__message-time {
-    font-size: 0.11rem;
-    margin-bottom: 0.04rem;
-    opacity: 0.6;
-    color: #909399;
-  }
-
-  // 消息气泡
   .ai-assistant__message-bubble {
-    padding: 0.12rem 0.16rem;
+    padding: 0.09rem 0.15rem;
     border-radius: 0.12rem;
     word-wrap: break-word;
     word-break: break-word;
   }
 
   .ai-assistant__message-content {
-    font-size: 0.14rem;
-    line-height: 1.6;
+    font-weight: 700;
+    font-size: 0.12rem;
+    line-height: 1.4;
+    color: rgba(4, 20, 40, 1);
     white-space: pre-wrap;
   }
 
-  // 空状态
+  .ai-assistant__loading {
+    font-weight: 700;
+    font-size: 0.12rem;
+    color: rgba(4, 20, 40, 1);
+    display: flex;
+    align-items: center;
+  }
+
+  .ai-assistant__loading-dot {
+    animation: loading-dot-fade 1.4s infinite;
+    opacity: 0;
+    
+    &:nth-child(2) {
+      animation-delay: 0s;
+    }
+    
+    &:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+    
+    &:nth-child(4) {
+      animation-delay: 0.4s;
+    }
+  }
+
+  @keyframes loading-dot-fade {
+    0%, 20% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
   .ai-assistant__empty-state {
     flex: 1;
     display: flex;
@@ -357,7 +718,6 @@ const scrollToBottom = () => {
     }
   }
 
-  // 输入区域
   .ai-assistant__input-area {
     padding: 0.16rem;
     background: #ffffff;
@@ -369,16 +729,17 @@ const scrollToBottom = () => {
 
   .ai-assistant__input-textarea {
     flex: 1;
-    padding: 0.1rem 0.12rem;
-    border: 0.01rem solid #dcdfe6;
-    border-radius: 0.08rem;
-    font-size: 0.14rem;
-    line-height: 1.6;
+    padding: 0.088rem 0.12rem;
+    border: 0.01rem solid rgba(0, 60, 113, 1);
+    border-radius: 0.16rem;
+    font-size: 0.12rem;
+    line-height: 1.2;
     resize: none;
     outline: none;
     transition: border-color 0.3s ease;
     font-family: inherit;
-    min-height: 0.4rem;
+    height: 0.32rem;
+    min-height: 0.32rem;
     max-height: 1.5rem;
     overflow-y: hidden;
 
@@ -389,39 +750,77 @@ const scrollToBottom = () => {
     &::placeholder {
       color: #c0c4cc;
     }
+
+    &:disabled {
+      background: #f5f7fa;
+      cursor: not-allowed;
+    }
   }
 
   .ai-assistant__send-button {
-    padding: 0 0.24rem;
-    height: 0.4rem;
-    background: linear-gradient(135deg, #4691fb 0%, #2f83f8 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 0.08rem;
-    font-size: 0.14rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.3s ease, box-shadow 0.3s ease;
-    white-space: nowrap;
+    height: 0.32rem !important;
+    width: 0.82rem !important;
+    padding: 0 !important;
+    color: #ffffff !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: 0.115rem !important;
+    font-size: 0.14rem !important;
+    cursor: pointer !important;
     align-self: flex-end;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: rgba(0, 60, 113, 1) !important;
+    transition: all 0.3s ease !important;
 
-    &:hover {
-      opacity: 0.9;
-      box-shadow: 0 0.04rem 0.12rem rgba(70, 145, 251, 0.4);
+    &:hover:not(:disabled) {
+      opacity: 0.9 !important;
+      box-shadow: 0 0.04rem 0.12rem rgba(70, 145, 251, 0.4) !important;
+      background-color: rgba(0, 60, 113, 1) !important;
     }
 
-    &:active {
-      opacity: 0.8;
+    &:active:not(:disabled) {
+      opacity: 0.8 !important;
     }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    &:disabled,
+    &.is-disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+      background-color: rgba(0, 60, 113, 1) !important;
+    }
+
+    &.is-loading {
+      opacity: 1 !important;
+    }
+
+    :deep(.el-icon) {
+      color: #ffffff !important;
+    }
+  }
+
+  .ai-assistant__resize-handle {
+    height: 0.12rem;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    background: transparent;
+
+    &::before {
+      display: none;
+    }
+
+    &--top {
+      order: -1;
     }
   }
 }
 
-// 对话框过渡动画
 .dialog-fade-enter-active,
 .dialog-fade-leave-active {
   transition: all 0.3s ease;
@@ -433,4 +832,3 @@ const scrollToBottom = () => {
   transform: translateY(0.2rem) scale(0.95);
 }
 </style>
-

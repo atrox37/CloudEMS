@@ -121,13 +121,20 @@ const validateConfirmPassword = (rule: any, value: string, callback: any) => {
 }
 
 // 密码校验：6-12位，必须包含字母和数字
+// 密码校验：6-12位，必须包含字母和数字；如果有符号，只能是 @ 或 _
 const validatePassword = (rule: any, value: string, callback: any) => {
   if (mode.value === 'create' && !value) {
     callback(new Error('Please input password'))
   } else if (value && (value.length < 6 || value.length > 12)) {
     callback(new Error('Password length must be 6-12 characters'))
-  } else if (value && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$/.test(value)) {
+  }
+  // 必须包含字母和数字（不判断符号）
+  else if (value && !/^(?=.*[A-Za-z])(?=.*\d).{6,12}$/.test(value)) {
     callback(new Error('Password must contain both letters and numbers'))
+  }
+  // 分开判断符号：如果有符号，只允许 @ 或 _
+  else if (value && /[^A-Za-z0-9@_]/.test(value)) {
+    callback(new Error('Only @ or _ symbols are allowed'))
   } else {
     callback()
   }
@@ -146,6 +153,7 @@ const rules = computed(() => {
     username: [
       { required: true, message: 'Please input username', trigger: 'blur' },
       { min: 2, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
+      { pattern: /^\S+$/, message: 'Username cannot contain spaces', trigger: 'blur' }
     ],
     roleId: [{ required: true, message: 'Please select role', trigger: 'change' }],
     state: [{ required: true, message: 'Please select status', trigger: 'change' }],

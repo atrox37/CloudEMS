@@ -19,6 +19,11 @@ export const getVerifyCode = (): Promise<Blob> => {
 export const userLogin = (params: LoginParams): Promise<ApiResponse<string>> => {
   return Request.post('/user-app/login', params)
 }
+export const refreshToken = (): Promise<
+  ApiResponse<{ role: string; token: string; username: string }>
+> => {
+  return Request.get('/sys-app/common/refresh')
+}
 /**
  * 用户登出
  * @returns 登出响应

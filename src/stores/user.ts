@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
-import { userLogin, userLogout, userGetUserInfo } from '@/api/user'
+import { userLogin, userLogout, userGetUserInfo, refreshToken } from '@/api/user'
 import stompManager from '@/utils/stomp'
 import MD5 from 'crypto-js/md5'
 import { useRouter } from 'vue-router'
@@ -18,7 +18,35 @@ export const useUserStore = defineStore(
     // 状态
     const token = ref<string>('') // 直接存储token
     // const refreshToken = ref<string>('')
-    const userInfo = ref<UserInfo | null>(null) // 用户信息（内存存储，不持久化）
+    const userInfo = ref<UserInfo>({
+      sysUserPo: {
+        id: 0,
+        username: '',
+        state: 0,
+        roleId: 0,
+        orgId: 0,
+        email: '',
+        phone: '',
+        metadata: {
+          systemNotify: { sms: true, email: true },
+          reminders: { sms: true, email: true },
+          dayReport: { sms: true, email: true },
+          weekReport: { sms: true, email: true },
+        },
+        updateTime: '',
+      },
+      dimensionPo: {
+        id: 0,
+        name: '',
+        parentId: 0,
+      },
+      sysRolePo: {
+        id: 0,
+        roleName: '',
+        orgId: 0,
+        updateTime: '',
+      },
+    }) // 用户信息（内存存储，不持久化）
     // routesInjected 不参与持久化，仅用于本地内存
     const routesInjected = ref<boolean>(false) // 是否已注入动态路由
 
@@ -88,16 +116,15 @@ export const useUserStore = defineStore(
     const refreshUserToken = async () => {
       try {
         // 这里应该调用刷新Token的API
-        // const response = await userRefreshToken(refreshToken.value)
-        // if (response.code === 200) {
-        //   token.value = response.data
-        //   refreshToken.value = response.data.refresh_token
-        //   return { success: true, message: 'Token refreshed successfully' }
-        // } else {
-        //   return { success: false, message: response.msg || 'Token refresh failed' }
-        // }
-        // // 暂时返回成功，实际项目中需要实现真实的刷新逻辑
-        // return { success: true, message: 'Token refreshed successfully' }
+        const response = await refreshToken()
+        if (response.code === 200) {
+          token.value = response.data.token
+          userInfo.value.sysUserPo.username = response.data.username
+          userInfo.value.sysRolePo.roleName = response.data.role
+          return { success: true, message: 'Token refreshed successfully' }
+        } else {
+          return { success: false, message: response.msg || 'Token refresh failed' }
+        }
       } catch (error: any) {
         return { success: false, message: error.msg || 'Token refresh failed' }
       }
@@ -108,12 +135,40 @@ export const useUserStore = defineStore(
       // 断开WebSocket连接
       stompManager.disconnect()
       token.value = ''
-      userInfo.value = null
+      userInfo.value = {
+        sysUserPo: {
+          id: 0,
+          username: '',
+          state: 0,
+          roleId: 0,
+          orgId: 0,
+          email: '',
+          phone: '',
+          metadata: {
+            systemNotify: { sms: true, email: true },
+            reminders: { sms: true, email: true },
+            dayReport: { sms: true, email: true },
+            weekReport: { sms: true, email: true },
+          },
+          updateTime: '',
+        },
+        dimensionPo: {
+          id: 0,
+          name: '',
+          parentId: 0,
+        },
+        sysRolePo: {
+          id: 0,
+          roleName: '',
+          orgId: 0,
+          updateTime: '',
+        },
+      }
       routesInjected.value = false // 清除时也重置
       // 清除动态路由
       router.removeRoute('main')
       router.addRoute('main', staticRoutes[1])
-      
+
       // refreshToken.value = ''
     }
 

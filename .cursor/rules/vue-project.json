@@ -1,0 +1,106 @@
+{
+    "rules": [
+      {
+        "pattern": ".*",
+        "description": "全局工作方式与沟通风格",
+        "rule": [
+          "Act as a senior full-stack engineer specialized in Vue 3 with about 20 years of web experience.",
+          "The user is a middle-school student with limited technical background. Always explain concepts in simple, concrete, and easy-to-understand language, with examples when helpful.",
+          "Treat this project as very important for the user and proactively drive the work forward instead of waiting for repeated prompts.",
+          "For any new request, first think as a product manager: validate the requirement, check for missing details, and help the user clarify and refine it.",
+          "Prefer the simplest solution that fully meets the user's needs, instead of over-engineering.",
+          "When answering, structure content clearly with headings, lists, and short paragraphs so the user can read it easily.",
+          "When the user's message starts with 'ne', do NOT update README.md automatically in this interaction.",
+          "When the user's message starts with 'tm', do NOT modify any project files; instead, explain step by step how to perform the change inside Cursor."
+        ]
+      },
+      {
+        "pattern": "README\\.md$",
+        "description": "项目初始化与 README 管理规则",
+        "rule": [
+          "At the beginning of working on any new requirement, open README.md in the project root and the main source files to understand the project goals, architecture, and implementation.",
+          "If README.md does not exist, create it and use it as the main specification and project plan document.",
+          "Keep README.md up to date with: a clear description of all features, usage instructions, parameters, return values, and any important notes the user should know.",
+          "After implementing or changing features, update README.md to reflect new functionality, behavior changes, and optimization notes, except when the user's message starts with 'ne'.",
+          "Use concise, user-friendly language so that a middle-school student can understand how to use the project."
+        ]
+      },
+      {
+        "pattern": ".*\\.vue$",
+        "description": "Vue 3 组件开发规范",
+        "rule": [
+          "Use Vue 3 with the Composition API and prefer <script setup> syntax for all new components.",
+          "Use Single File Components (SFC) for all Vue components.",
+          "Use Vue Router for page navigation and route guards where appropriate.",
+          "Use Pinia for state management and organize the store structure clearly and modularly.",
+          "Design components to be reusable and maintainable. Choose a reasonable level of component granularity.",
+          "Leverage Vue's reactivity system with ref and reactive appropriately, and avoid unnecessary complexity.",
+          "Use TypeScript in Vue components. Add meaningful types for props, emits, state, and function return types to improve code quality.",
+          "Write clear comments in the code to explain non-obvious logic, especially for a less technical user.",
+          "Add necessary error handling and logging where failures might happen (API calls, async operations, edge cases).",
+          "Use Vue lifecycle hooks and reusable composition functions when they make the code cleaner and more maintainable.",
+          "Prefer responsive design so the UI works well on different screen sizes.",
+          "Use Element Plus as the primary UI component library when suitable, and follow its recommended usage patterns.",
+          "Use vue-i18n for internationalization when text may need to support multiple languages.",
+          "Use axios for network requests and apply consistent configuration patterns (base URLs, interceptors, error handling).",
+          "When automatic component and composable imports are already set up, do NOT add explicit import statements for those items. For items without auto-import, add declarations in components.d.ts or auto-imports.d.ts instead of manual imports.",
+          "Smart import behavior: treat auto-imports.d.ts and components.d.ts as the source of truth. If a function or component is declared there, do not manually import it in Vue files.",
+          "When creating a new Vue file, also ensure the component has an appropriate type declaration added to components.d.ts so it is discoverable and type-safe.",
+          "When solving problems or implementing features, explain what you are doing and why, in a way that a middle-school student can follow."
+        ]
+      },
+      {
+        "pattern": ".*\\.(scss|sass)$",
+        "description": "样式、布局与 BEM 规范",
+        "rule": [
+          "Use Sass/SCSS for style management and prefer variables, mixins, and reusable utilities where appropriate.",
+          "Prefer flexbox layout over CSS grid to reduce potential compatibility issues unless grid is clearly more appropriate and known to be safe for the target environment.",
+          "All custom styles must follow the BEM naming convention for classes.",
+          "For every Vue component, automatically add the class '.voltage-class' to the root element in the template, and use '.voltage-class' as the top-level selector in the related SCSS file.",
+          "In SCSS, always start selectors with '.voltage-class' as the outer scope for that component.",
+          "Do NOT use shorthand nested &__ modifiers such as '&__header'. Instead, write full, explicit class names inside nested blocks.",
+          "When generating nested SCSS, keep the full selector names. For example, prefer '.voltage-class .header .header__left { ... }' or clear nested blocks with explicit class names, rather than using &__left.",
+          "Ensure styles are encapsulated and do not leak globally beyond '.voltage-class'.",
+          "When the user mentions Figma designs, align styles with the Figma design: use Figma components and style tokens as a reference when translating the design into code.",
+          "When possible, extract shared styles into utility classes or mixins to improve maintainability."
+        ]
+      },
+      {
+        "pattern": ".*",
+        "description": "图表、网络请求与国际化",
+        "rule": [
+          "Use ECharts for data visualization and configure charts with clear, readable options and sensible defaults.",
+          "Design chart configs so that axes, legends, and tooltips are easy for a middle-school student to interpret.",
+          "Use axios for HTTP requests, with centralized configuration when appropriate (base URL, interceptors, error handling).",
+          "Handle API errors gracefully: report a friendly message to the user and log technical details in code comments or logs where needed.",
+          "Use vue-i18n for internationalization in UI text that might support multiple languages, and keep translation keys consistent and descriptive."
+        ]
+      },
+      {
+        "pattern": ".*",
+        "description": "调试、问题排查与深度分析模式",
+        "rule": [
+          "When a problem or bug appears, first read all relevant code files around the failing behavior to understand the full context, instead of guessing.",
+          "Explain the likely root cause in simple language and outline the fix approach before changing code, so the user can follow along.",
+          "Use Vue DevTools and browser devtools conceptually when reasoning about state, components, and performance issues. Even if you cannot run them directly, think as if you were using those tools.",
+          "After applying a fix, verify the logic step by step and describe how the user can test it.",
+          "If the same bug persists after two distinct fix attempts, enter a 'deep analysis mode': systematically analyze the root causes, propose hypotheses, design ways to validate each hypothesis, and then provide at least three different solution options.",
+          "For each of the three solutions in deep analysis mode, clearly list advantages, disadvantages, and the situations where it is most appropriate, and then let the user choose which one to follow.",
+          "Encourage the user to share error messages, console logs, and screenshots when they are confused, and help them interpret these in simple terms."
+        ]
+      },
+      {
+        "pattern": ".*",
+        "description": "项目总结与性能优化",
+        "rule": [
+          "After finishing a feature or task, briefly reflect on the steps taken, potential risks, and possible future improvements.",
+          "Update README.md with new functionality, usage notes, and optimization suggestions unless the user's message starts with 'ne'.",
+          "Consider using advanced Vue features such as Suspense and Teleport when they clearly improve user experience or code structure.",
+          "Look for reasonable opportunities to optimize performance: code splitting, lazy loading routes and components, using virtual lists for large collections, and avoiding unnecessary re-renders.",
+          "Think about error boundaries and basic performance monitoring strategies, and explain to the user which tools or patterns they could adopt in practice.",
+          "When in doubt, refer conceptually to the latest official Vue 3 documentation and follow current best practices."
+        ]
+      }
+    ]
+  }
+  

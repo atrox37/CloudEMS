@@ -1,0 +1,7 @@
+
+<template>
+  <div class="ai-assistant">
+    <!-- AI助手图标按钮：可拖动 -->
+    <div
+      class="ai-assistant__icon"
+      :style="iconStyle"

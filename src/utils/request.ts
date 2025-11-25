@@ -121,26 +121,26 @@ const requestErrorInterceptor = (error: any) => {
 
 service.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 
-// // 用于防止重复刷新token的标志
-// let isRefreshing = false
-// // 存储等待token刷新的请求队列
-// let failedQueue: Array<{
-//   resolve: (value: any) => void
-//   reject: (error: any) => void
-// }> = []
+// 用于防止重复刷新token的标志
+let isRefreshing = false
+// 存储等待token刷新的请求队列
+let failedQueue: Array<{
+  resolve: (value: any) => void
+  reject: (error: any) => void
+}> = []
 
-// // 处理队列中的请求
-// const processQueue = (error: any, token: string | null = null) => {
-//   failedQueue.forEach(({ resolve, reject }) => {
-//     if (error) {
-//       reject(error)
-//     } else {
-//       resolve(token)
-//     }
-//   })
+// 处理队列中的请求
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve(token)
+    }
+  })
 
-//   failedQueue = []
-// }
+  failedQueue = []
+}
 
 /**
  * 响应拦截器工厂函数
@@ -240,69 +240,59 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 
     console.error(`${logPrefix}[响应错误]`, error)
 
-    // const originalRequest = error.config
+    const originalRequest = error.config
 
     // 处理401错误 - 自动刷新token
-    // if (error.response?.status === 401 && !originalRequest._retry) {
-    //   if (isRefreshing) {
-    //     // 如果正在刷新token，将请求加入队列
-    //     return new Promise((resolve, reject) => {
-    //       failedQueue.push({ resolve, reject })
-    //     })
-    //       .then((token) => {
-    //         originalRequest.headers['Authorization'] = `Bearer ${token}`
-    //         return serviceInstance(originalRequest)
-    //       })
-    //       .catch((err) => {
-    //         return Promise.reject(err)
-    //       })
-    //   }
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // 如果正在刷新token，将请求加入队列
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`
+            return serviceInstance(originalRequest)
+          })
+          .catch((err) => {
+            return Promise.reject(err)
+          })
+      }
 
-    //   originalRequest._retry = true
-    //   isRefreshing = true
-    //   try {
-    //     const userStore = useUserStore()
-    //     const refreshToken = userStore.refreshToken
+      originalRequest._retry = true
+      isRefreshing = true
+      try {
+        const userStore = useUserStore()
 
-    //     if (!refreshToken) {
-    //       throw new Error('No refresh token available')
-    //     }
 
-    //     // 调用刷新token的API
-    //     const response = await service.post('auth/refresh', {
-    //       refresh_token: refreshToken,
-    //     })
-    //     // 注意：刷新token接口也可能返回401或失败
-    //     if (response.data && response.data.success) {
-    //       // 更新store中的token
-    //       userStore.token = response.data.data.access_token
-    //       userStore.refreshToken = response.data.data.refresh_token
+        // 调用刷新token的API
+        const response = await userStore.refreshUserToken()
+        // 注意：刷新token接口也可能返回401或失败
+        if (response.success) {
+          // 更新当前请求的Authorization头
+          originalRequest.headers['Authorization'] = `Bearer ${userStore.token}`
 
-    //       // 更新当前请求的Authorization头
-    //       originalRequest.headers['Authorization'] = `Bearer ${response.data.data.access_token}`
+          // 处理队列中的请求
+          processQueue(null, userStore.token)
 
-    //       // 处理队列中的请求
-    //       processQueue(null, response.data.data.access_token)
+          // 重试原请求
+          return serviceInstance(originalRequest)
+        } else {
+          // 刷新token接口返回失败
+          throw new Error(response.message || 'Token refresh failed')
+        }
+      } catch (refreshError: any) {
+        // 清除用户数据并跳转到登录页
+        const userStore = useUserStore()
+        userStore.clearUserData()
 
-    //       // 重试原请求
-    //       return serviceInstance(originalRequest)
-    //     } else {
-    //       // 刷新token接口返回失败
-    //       throw new Error(response.data?.msg || 'Token refresh failed')
-    //     }
-    //   } catch (refreshError: any) {
-    //     // 清除用户数据并跳转到登录页
-    //     const userStore = useUserStore()
-    //     userStore.clearUserData()
-
-    //     // 处理队列中的请求
-    //     processQueue(refreshError, null)
-    //     window.location.href = '/login'
-    //     return Promise.reject(refreshError)
-    //   } finally {
-    //     isRefreshing = false
-    //   }
-    // }
+        // 处理队列中的请求
+        processQueue(refreshError, null)
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+    }
 
     // 处理其他错误
     let errorMessage = 'Network request failed'

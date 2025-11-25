@@ -33,7 +33,7 @@ export async function ensureRoutesInjected() {
   const user = useUserStore()
   if (user.routesInjected) return
 
-  const res = await user.getUserInfo()
+  const res = await user.refreshUserToken()
   if (!res.success) {
     user.logout()
     return
