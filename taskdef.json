@@ -38,7 +38,7 @@
     "volumes": [],
     "placementConstraints": [],
     "requiresCompatibilities": ["EC2"],
-    "cpu": "512",
+    "cpu": "256",
     "memory": "256",
     "runtimePlatform": {
         "cpuArchitecture": "X86_64",

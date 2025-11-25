@@ -235,7 +235,7 @@ onUnmounted(() => {
   <el-config-provider :locale="locale">
     <router-view />
     <!-- AI助手全局组件（登录页面不显示） -->
-    <AIAssistant v-if="isLoginPage" />
+    <AIAssistant v-if="!isLoginPage" />
   </el-config-provider>
 </template>
 
