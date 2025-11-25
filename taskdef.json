@@ -5,7 +5,7 @@
     "containerDefinitions": [
         {
             "name": "cloud",
-            "image": "985539760410.dkr.ecr.us-east-1.amazonaws.com/monarch-cloud-ems:latest",
+            "image": "985539760410.dkr.ecr.us-east-1.amazonaws.com/edge-ems:77127b7c8a4d8e4a61d2955260295cb97adcd7ac",
             "cpu": 0,
             "portMappings": [
                 {

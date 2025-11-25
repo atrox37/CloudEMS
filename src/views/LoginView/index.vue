@@ -93,18 +93,13 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         loginLoading.value = true
         const res = await userStore.login(form)
         if (res.success) {
-          const userInfo = await userStore.getUserInfo()
-          if (userInfo.success) {
-            ElMessage.success('Login successful!')
-            // const { redirect, ...query } = router.currentRoute.value.query
-            // if (redirect) {
-            //   router.push({ path: redirect as string, query: query })
-            // } else {
-            router.push({ path: '/' })
-            // }
-          } else {
-            ElMessage.error(userInfo.message)
-          }
+          // const userInfo = await userStore.getUserInfo()
+          // const { redirect, ...query } = router.currentRoute.value.query
+          // if (redirect) {
+          //   router.push({ path: redirect as string, query: query })
+          // } else {
+          router.push({ path: '/' })
+          // }
         } else {
           ElMessage.error(res.message)
           getCaptchImg()
