@@ -3,7 +3,6 @@
     <div
       class="ai-assistant__icon"
       :style="iconStyle"
-      @click="onIconClick"
       @mousedown="startDragIcon"
       @touchstart.prevent="startDragIcon"
       title="AI Assistant"
@@ -76,12 +75,17 @@
           ></textarea>
           <el-button 
             class="ai-assistant__send-button" 
-            :loading="isAILoading"
-            :disabled="!messageInput.trim()"
-            @click="sendMessage" 
-            title="Send"
+            :disabled="!isAILoading && !messageInput.trim()"
+            @click="isAILoading ? cancelRequest() : sendMessage()" 
+            :title="isAILoading ? 'Cancel' : 'Send'"
           >
-            Send
+            <template v-if="!isAILoading">Send</template>
+            <template v-else>
+              <svg class="ai-assistant__pause-icon" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                <rect x="14" y="4" width="4" height="16" rx="1"/>
+              </svg>
+            </template>
           </el-button>
         </div>
 
@@ -131,6 +135,7 @@ const isAILoading = ref(false)
 const messageInput = ref('')
 const messages = ref<Message[]>([])
 const messageListRef = ref<HTMLElement | null>(null)
+const abortController = ref<AbortController | null>(null)
 
 // 图标位置
 const iconX = ref(0)
@@ -260,12 +265,6 @@ const dialogPositionStyle = computed(() => {
   }
 })
 
-// 图标点击
-const onIconClick = () => {
-  if (hasMoved.value) return
-  toggleDialog()
-}
-
 // 切换对话框显示
 const toggleDialog = () => {
   if (!isDialogVisible.value) {
@@ -311,9 +310,16 @@ const sendMessage = async () => {
   })
 
   isAILoading.value = true
+  abortController.value = new AbortController()
 
   try {
-    const response = await getAIAssistantAnswer(content)
+    const response = await getAIAssistantAnswer(content, abortController.value.signal)
+    
+    // 检查请求是否已被取消
+    if (abortController.value?.signal.aborted) {
+      return
+    }
+    
     if (response.code === 200) {
       const aiMessage: Message = {
         id: Date.now() + 1,
@@ -326,6 +332,11 @@ const sendMessage = async () => {
         scrollToBottom()
       })
     } else {
+      // 再次检查是否被取消，避免在响应期间取消导致错误提示
+      if (abortController.value?.signal.aborted) {
+        return
+      }
+      
       const errorMessage: Message = {
         id: Date.now() + 1,
         content: 'Request failed. Please try again later.',
@@ -337,7 +348,13 @@ const sendMessage = async () => {
         scrollToBottom()
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    // 如果是主动取消的请求，不显示任何错误提示
+    if (abortController.value?.signal.aborted || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+      console.log('请求已主动取消')
+      return
+    }
+    
     console.error('AI助手请求失败:', error)
     const errorMessage: Message = {
       id: Date.now() + 1,
@@ -351,6 +368,28 @@ const sendMessage = async () => {
     })
   } finally {
     isAILoading.value = false
+    abortController.value = null
+  }
+}
+
+// 取消请求
+const cancelRequest = () => {
+  if (abortController.value) {
+    abortController.value.abort()
+    abortController.value = null
+    isAILoading.value = false
+    
+    // 添加暂停提示消息
+    const cancelMessage: Message = {
+      id: Date.now() + 1,
+      content: 'Request canceled by user.',
+      type: 'ai'
+    }
+    messages.value.push(cancelMessage)
+    
+    nextTick(() => {
+      scrollToBottom()
+    })
   }
 }
 
@@ -387,6 +426,7 @@ const getPoint = (e: MouseEvent | TouchEvent) => {
 
 // 开始拖动图标
 const startDragIcon = (e: MouseEvent | TouchEvent) => {
+  e.preventDefault()
   const point = getPoint(e)
   isDraggingIcon.value = true
   hasMoved.value = false
@@ -444,9 +484,17 @@ const onMouseMove = (e: MouseEvent | TouchEvent) => {
 
 // 停止拖动
 const stopDragAndResize = () => {
+  const wasDraggingIcon = isDraggingIcon.value
+  const hadMoved = hasMoved.value
+  
   isDraggingIcon.value = false
   isResizing.value = false
   removeGlobalDragListeners()
+  
+  // 如果是拖动图标结束，且没有移动，则触发点击（打开/关闭对话框）
+  if (wasDraggingIcon && !hadMoved) {
+    toggleDialog()
+  }
 }
 
 // 添加全局监听
@@ -799,6 +847,12 @@ const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
     :deep(.el-icon) {
       color: #ffffff !important;
     }
+  }
+
+  .ai-assistant__pause-icon {
+    width: 0.16rem;
+    height: 0.16rem;
+    color: #ffffff;
   }
 
   .ai-assistant__resize-handle {
