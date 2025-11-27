@@ -79,19 +79,16 @@ const handleUserCommand = (command: string) => {
 }
 
 const getAvatarName = (name: string | undefined): string | undefined => {
+  // 纯函数：避免在渲染期间产生副作用（如触发登出）
   if (!name) {
-    
-    userStore.logout()
-    // router.push('/login')
-  } else {
-    const nameStr = name.split(' ')
-    if (nameStr.length === 1) {
-      return name.charAt(0).toUpperCase()
-    } else {
-      return nameStr[0].charAt(0).toUpperCase() + nameStr[1].charAt(0).toUpperCase()
-    }
+    return 'U'
   }
-
+  const nameStr = name.split(' ')
+  if (nameStr.length === 1) {
+    return name.charAt(0).toUpperCase()
+  } else {
+    return nameStr[0].charAt(0).toUpperCase() + nameStr[1].charAt(0).toUpperCase()
+  }
 }
 
 const handleDropdownChange = (visible: boolean) => {
@@ -305,4 +302,3 @@ const handleDropdownChange = (visible: boolean) => {
   }
 }
 </style>
-

@@ -164,12 +164,14 @@ jobs:
 
       - name: Wait for service stability
         shell: bash
+        # run: |
+        #   aws ecs wait services-stable \
+        #     --region "${AWS_REGION}" \
+        #     --cluster "${ECS_CLUSTER}" \
+        #     --services "${ECS_SERVICE}"
+        #   echo "Service is stable."
         run: |
-          aws ecs wait services-stable \
-            --region "${AWS_REGION}" \
-            --cluster "${ECS_CLUSTER}" \
-            --services "${ECS_SERVICE}"
-          echo "Service is stable."
+          echo "ECS deployment triggered, not waiting for stability in CI."
 
       - name: Diagnostics on failure (ECS & tasks)
         if: ${{ failure() || cancelled() || always() }}

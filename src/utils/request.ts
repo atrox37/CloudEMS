@@ -35,7 +35,7 @@ export interface ApiResponse<T = any> {
 export interface RequestConfig extends AxiosRequestConfig {
   skipCancel?: boolean // 是否跳过自动取消重复请求
 }
-const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha']
+const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha', '/sys-app/common/refresh']
 /**
  * 创建axios实例
  * 设置基础配置项
@@ -281,13 +281,15 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           throw new Error(response.message || 'Token refresh failed')
         }
       } catch (refreshError: any) {
-        // 清除用户数据并跳转到登录页
+        // 刷新token失败，执行登出操作
         const userStore = useUserStore()
-        userStore.clearUserData()
-
+        
         // 处理队列中的请求
         processQueue(refreshError, null)
-        window.location.href = '/login'
+        
+        // 调用logout执行完整的登出流程（清除数据、断开连接、跳转登录页）
+        userStore.logout()
+        
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

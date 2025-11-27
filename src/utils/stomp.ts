@@ -131,6 +131,7 @@ class StompManager {
    */
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      
       // 检查用户登录状态和token
       const userStore = useUserStore()
       if (!userStore.isLoggedIn || !userStore.token) {
@@ -373,7 +374,7 @@ class StompManager {
         throw error
       }
     } else {
-      // 如果未连接，添加到待订阅队列
+      // 如果未连接且非手动断开，添加到待订阅队列
       console.log(`[STOMP] 添加到待订阅队列: ${config.destination}`)
       this.pendingSubscriptions.set(subscriptionId, { config, listener })
     }
@@ -474,35 +475,50 @@ class StompManager {
   /**
    * 主动断开 STOMP 连接
    */
-  public disconnect(): void {
+  public async disconnect(): Promise<void> {
     console.log('[STOMP] 主动断开连接')
+    
 
-    // 清除重连定时器
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer)
-      this.reconnectTimer = null
-    }
-
-    // 取消所有订阅
-    this.subscriptions.forEach((record) => {
-      try {
-        record.subscription.unsubscribe()
-      } catch (error) {
-        console.error(`[STOMP] 取消订阅失败: ${record.destination}`, error)
+    
+    try {
+      // 清除重连定时器
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer)
+        this.reconnectTimer = null
       }
-    })
 
-    // 断开连接
-    if (this.client) {
-      this.client.deactivate()
-      this.client = null
+      // 取消所有订阅（逐个防守式取消）
+      this.subscriptions.forEach((record) => {
+        try {
+          record.subscription?.unsubscribe?.()
+        } catch (error) {
+          console.error(`[STOMP] 取消订阅失败: ${record.destination}`, error)
+        }
+      })
+
+      // 断开连接（等待底层完成关闭，防止同步异常冒泡）
+      if (this.client) {
+        try {
+          await this.client.deactivate()
+        } catch (error) {
+          console.error('[STOMP] 客户端关闭失败', error)
+        } finally {
+          this.client = null
+        }
+      }
+    } catch (e) {
+      console.error('[STOMP] 断开流程发生异常', e)
+    } finally {
+      // 清理状态（幂等）
+      this.subscriptions.clear()
+      // 清空待订阅队列（主动断开时不保留）
+      this.pendingSubscriptions.clear()
+      this.pendingSubscriptions.clear()
+      this.status.value = 'disconnected'
+      this.reconnectAttempts = 0
+      this.connectionStats.disconnectTime = Date.now()
+      this.globalListeners.onDisconnect?.()
     }
-
-    // 清理状态
-    this.subscriptions.clear()
-    this.pendingSubscriptions.clear()
-    this.status.value = 'disconnected'
-    this.reconnectAttempts = 0
   }
 
   /**

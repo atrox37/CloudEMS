@@ -11,7 +11,7 @@ const router = useRouter()
 const route = useRoute()
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
-
+const alarmObj = ref<Record<string, number>>({})
 // 判断是否在登录页面
 const isLoginPage = computed(() => route.name === 'login')
 
@@ -30,60 +30,86 @@ const alarmMap = new Map()
 // 告警回调函数（定义在外层，可复用）
 const alarmCb = (alarm: any) => {
   console.log(alarm, '//////////////////////////////')
-  const rowData = JSON.parse(alarm.rawValue)
-  if (alarm.status == 1) {
-    // 告警触发状态，显示带跳转按钮的消息
-    const currentId = idCount++
-    const message = ElMessage({
-      type: 'error',
-      showClose: true,
-      dangerouslyUseHTMLString: true,
-      message: `
-          <div style="display: flex; align-items: center; gap: 0.08rem;">
-            <span>${alarm.deviceId}</span>&nbsp;&nbsp;
-            <span>${rowData.msg}</span>
-            <button id="stomp-to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
-          </div>
-        `,
-      duration: 0,
-      onClose: () => {
-        // 清理事件监听器
-        const buttonId = `stomp-to-detail-btn-${currentId}`
-        const eventInfo = document.getElementById(buttonId)
-        if (eventInfo) {
-          eventInfo.removeEventListener('click', handleAlarmDetail)
-          console.log(`[App] 清理STOMP告警按钮事件监听: ${buttonId}`)
-        }
-        alarmMap.delete(alarm.alarm_id)
-      },
-    })
+  const alarmData = parseFloat(alarm.rawValue)
 
-    // 存储告警消息
-    alarmMap.set(alarm.alarm_id, message)
+  alarm.forEach((item: any) => {
+    const alarmNumflag =
+      item.property == 'alarm_num'
+    const alarmMsgflag = item.property == 'alarm_level_msg_3' || item.property == 'alarm_level_msg_2' || item.property == 'alarm_level_msg_1'
+    // if (
+    //   alarmMsgflag &&
+    //   item.rawValue !== null &&
+    //   item.rawValue !== '' &&
+    //   item.rawValue !== undefined
+    // ) {
+    //   const rowData = JSON.parse(item.rawValue)
+    //   if (rowData.status == 1) {
+    //     // 告警触发状态，显示带跳转按钮的消息
+    //     const currentId = idCount++
+    //     const message = ElMessage({
+    //       type: 'error',
+    //       showClose: true,
+    //       dangerouslyUseHTMLString: true,
+    //       message: `
+    //       <div style="display: flex; align-items: center; gap: 0.08rem;">
+    //         <span>${item.deviceId}</span>&nbsp;&nbsp;
+    //         <span>${rowData.msg}</span>
+    //         <button id="stomp-to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
+    //       </div>
+    //     `,
+    //       duration: 0,
+    //       onClose: () => {
+    //         // 清理事件监听器
+    //         const buttonId = `stomp-to-detail-btn-${currentId}`
+    //         const eventInfo = document.getElementById(buttonId)
+    //         if (eventInfo) {
+    //           eventInfo.removeEventListener('click', handleAlarmDetail)
+    //           console.log(`[App] 清理STOMP告警按钮事件监听: ${buttonId}`)
+    //         }
+    //         alarmMap.delete(alarm.alarm_id)
+    //       },
+    //     })
 
-    // 添加按钮点击事件
-    nextTick(() => {
-      const buttonId = `stomp-to-detail-btn-${currentId}`
-      const btn = document.getElementById(buttonId)
-      if (btn) {
-        btn.addEventListener('click', handleAlarmDetail)
-      }
-    })
-  } else {
-    // 告警恢复状态
-    ElMessage.success({
-      message: rowData.msg,
-      duration: 3000,
-    })
+    //     // 存储告警消息
+    //     alarmMap.set(alarm.alarm_id, message)
 
-    // 关闭对应的告警消息
-    const existingMessage = alarmMap.get(alarm.alarm_id)
-    if (existingMessage) {
-      existingMessage.close()
-      alarmMap.delete(alarm.alarm_id)
-      console.log(`[App] 关闭STOMP告警消息: ${alarm.alarm_id}`)
+    //     // 添加按钮点击事件
+    //     nextTick(() => {
+    //       const buttonId = `stomp-to-detail-btn-${currentId}`
+    //       const btn = document.getElementById(buttonId)
+    //       if (btn) {
+    //         btn.addEventListener('click', handleAlarmDetail)
+    //       }
+    //     })
+    //   }
+    //   else {
+    //     // 告警恢复状态
+    //     ElMessage.success({
+    //       message: rowData.msg,
+    //       duration: 3000,
+    //     })
+
+    //     // 关闭对应的告警消息
+    //     const existingMessage = alarmMap.get(alarm.alarm_id)
+    //     if (existingMessage) {
+    //       existingMessage.close()
+    //       alarmMap.delete(alarm.alarm_id)
+    //       console.log(`[App] 关闭STOMP告警消息: ${alarm.alarm_id}`)
+    //     }
+    //   }
+    // } else {
+    //   alarmObj.value[alarm.deviceId] = alarmData
+    //   globalStore.alarmNum = Object.values(alarmObj.value).reduce((acc, curr) => acc + curr, 0)
+    // }
+    if (alarmNumflag) {
+    } else if (alarmNumflag) {
+      alarmObj.value[item.deviceId] = item.numberValue
+      console.log(alarmObj.value, '//////////////////////////////')
+
+      globalStore.alarmNum = Object.values(alarmObj.value).reduce((acc, curr) => acc + curr, 0)
     }
-  }
+  })
+
   console.log('[main] STOMP告警:', alarm)
 }
 
@@ -111,6 +137,13 @@ const fetchStationsAndSubscribe = async () => {
     if (res.code === 200 && res.data && res.data.length > 0) {
       console.log('[main] 获取站点列表成功，数量:', res.data.length)
       const stationIdArray = res.data.map((item: any) => item.stationId)
+      alarmObj.value = {}
+      let alarmNum = 0
+      res.data.forEach((item: any) => {
+        alarmObj.value[item.stationId] = item.alarmCount
+        alarmNum += item.alarmCount
+      })
+      globalStore.alarmNum = alarmNum
 
       // 订阅所有站点的告警主题
       // 如果 STOMP 已连接，立即订阅
@@ -200,13 +233,14 @@ const initStomp = async () => {
 // 监听用户登录状态变化
 watch(
   () => userStore.isLoggedIn,
-  (isLoggedIn) => {
+  async (isLoggedIn, oldIsLoggedIn) => {
+    // 避免初始化时 undefined -> false 触发断开逻辑
     if (isLoggedIn) {
       // 用户登录成功，连接WebSocket和STOMP
       console.log('[main] 用户登录成功，尝试连接WebSocket和STOMP')
       initStomp()
-    } else {
-      // 用户登出，清理所有资源
+    } else if (oldIsLoggedIn === true) {
+      // 仅当从已登录变为未登录时才执行清理（避免初始化时误触发）
       console.log('[main] 用户登出，断开WebSocket和STOMP连接')
 
       // 清除轮询定时器
@@ -215,13 +249,16 @@ watch(
       // 重置订阅标志
       hasSubscribedStations = false
 
-      // 断开 STOMP 连接
-      stompManager.disconnect()
-
-      // wsManager.disconnect()
+      // 断开 STOMP 连接（异步，加 try/catch 防止异常冒泡）
+      try {
+        await stompManager.disconnect()
+      } catch (e) {
+        console.error('[main] 断开STOMP连接失败（已忽略）：', e)
+      }
     }
-  },
-  { immediate: true }, // 立即执行一次
+  },{
+    immediate: true,
+  }
 )
 
 // 组件卸载时清理资源

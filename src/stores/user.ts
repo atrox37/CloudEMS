@@ -131,9 +131,7 @@ export const useUserStore = defineStore(
     }
 
     // 清除用户数据（手动清除持久化数据）
-    const clearUserData = () => {
-      // 断开WebSocket连接
-      stompManager.disconnect()
+    const clearUserData = async () => {
       token.value = ''
       userInfo.value = {
         sysUserPo: {
@@ -166,8 +164,17 @@ export const useUserStore = defineStore(
       }
       routesInjected.value = false // 清除时也重置
       // 清除动态路由
-      router.removeRoute('main')
-      router.addRoute('main', staticRoutes[1])
+      try {
+        if (router.hasRoute('main')) {
+          router.removeRoute('main')
+        }
+        // 重新添加顶级主路由（不是作为子路由添加）
+        if (!router.hasRoute('main')) {
+          router.addRoute(staticRoutes[1])
+        }
+      } catch (e) {
+        console.error('[user] 重置主路由失败：', e)
+      }
 
       // refreshToken.value = ''
     }

@@ -29,14 +29,16 @@ function filterByRoles(routes: RouteItem[], role: string): RouteItem[] {
 /**
  * 动态注入路由：通过 router.addRoute 动态添加
  */
-export async function ensureRoutesInjected() {
+export async function ensureRoutesInjected(refresh = false) {
   const user = useUserStore()
   if (user.routesInjected) return
 
-  const res = await user.refreshUserToken()
-  if (!res.success) {
-    user.logout()
-    return
+  if (refresh) {
+    const res = await user.refreshUserToken()
+    if (!res.success) {
+      user.logout()
+      return
+    }
   }
   if (!user.role) {
     user.logout()

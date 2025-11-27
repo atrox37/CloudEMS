@@ -14,7 +14,7 @@ router.beforeEach(async (to, from, next) => {
   // // 未登录：只允许进入白名单
   if (!user.token) {
     
-    if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
+    if (WHITE_LIST.includes(to.path) ) return next()
     return next({ path: '/login' })
   }
 
@@ -22,7 +22,12 @@ router.beforeEach(async (to, from, next) => {
   try {
     
     if (!user.routesInjected) {
-      await ensureRoutesInjected()
+      if(from.path === '/login'){
+        await ensureRoutesInjected()
+      }else{
+        await ensureRoutesInjected(true)
+      }
+    
       
       return next({ ...to, replace: true }) // 路由重定向
     } else {

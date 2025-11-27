@@ -153,7 +153,6 @@ const rules = computed(() => {
     username: [
       { required: true, message: 'Please input username', trigger: 'blur' },
       { min: 2, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
-      { pattern: /^\S+$/, message: 'Username cannot contain spaces', trigger: 'blur' }
     ],
     roleId: [{ required: true, message: 'Please select role', trigger: 'change' }],
     state: [{ required: true, message: 'Please select status', trigger: 'change' }],

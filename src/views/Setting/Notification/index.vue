@@ -163,8 +163,9 @@ async function onSubmit() {
     submitLoading.value = false
   }
 }
-onMounted(() => {
+onMounted(async () => {
   // 将userStore.userInfo转为非响应式对象
+  await userStore.getUserInfo()
   emailList.value[0].isMail = userStore.userInfo?.sysUserPo?.metadata?.systemNotify?.email || false
   emailList.value[0].isSms = userStore.userInfo?.sysUserPo?.metadata?.systemNotify?.sms || false
   emailList.value[1].isMail = userStore.userInfo?.sysUserPo?.metadata?.reminders?.email || false

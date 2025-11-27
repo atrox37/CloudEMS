@@ -15,7 +15,7 @@
     <div class="user-management__table">
       <LoadingBg :loading="loading">
         <el-table :data="tableData" class="user-management__table-content" align="left" table-layout="fixed">
-          <el-table-column prop="sysUserPo.username" label="User">
+          <el-table-column prop="sysUserPo.username" label="User" min-width="120">
             <template #default="{ row }">
               <div class="user-info">
                 <div class="user-avatar">
@@ -52,7 +52,7 @@
             {{ row.sysRolePo?.updateTime }}
           </template> -->
           </el-table-column>
-          <el-table-column label="Operation" fixed="right">
+          <el-table-column label="Operation" fixed="right" min-width="50">
             <template #default="{ row }">
               <div class="user-management__operation">
                 <div class="user-management__operation-item" @click="handleEdit(row)">
