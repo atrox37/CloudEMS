@@ -192,9 +192,9 @@ const fetchPerformanceChartData = async (stationId: string | number) => {
 }
 
 // 在onMounted中调用上面两个方法
-// 改为监听路由变化触发，并在首次进入时立即执行
+// 监听路由 params 变化触发，并在首次进入时立即执行（使用动态路由参数）
 watch(
-  () => route.query.stationId,
+  () => route.params.stationId,
   (stationId) => {
     if (!stationId) return
     fetchPerformanceViewData(stationId as string | number)

@@ -103,11 +103,11 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             router.push({ path: '/' })
             // }
           } else {
-            ElMessage.error(userInfo.message)
+            if(userInfo.message) ElMessage.error(userInfo.message)
             getCaptchImg()
           }
         } else {
-          ElMessage.error(res.message)
+          if(res.message) ElMessage.error(res.message)
           getCaptchImg()
         }
         // 这里可以添加登录请求逻辑

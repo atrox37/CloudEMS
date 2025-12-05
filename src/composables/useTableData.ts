@@ -268,12 +268,12 @@ export function useTableData<T = any>(config: TableConfig) {
    */
   const batchDeleteRows = async (ids: (string | number)[], confirmMessage?: string) => {
     if (!config.enableBatchDelete || !config.batchDeleteUrl) {
-      ElMessage.warning('批量删除功能未启用')
+      ElMessage.warning('Batch delete function is not enabled')
       return false
     }
 
     if (ids.length === 0) {
-      ElMessage.warning('请选择要删除的记录')
+      ElMessage.warning('Please select the records to delete')
       return false
     }
 
@@ -281,11 +281,11 @@ export function useTableData<T = any>(config: TableConfig) {
       await ElMessageBox.confirm(
         confirmMessage ||
           config.batchDeleteConfirmMessage ||
-          `确定要删除选中的 ${ids.length} 条记录吗？`,
-        '批量删除确认',
+          `Are you sure you want to delete the selected ${ids.length} records?`,
+        'Batch delete confirmation',
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: 'Confirm',
+          cancelButtonText: 'Cancel',
           type: 'warning',
         },
       )
@@ -296,14 +296,14 @@ export function useTableData<T = any>(config: TableConfig) {
       })
 
       if (response.code===200) {
-        ElMessage.success(`成功删除 ${ids.length} 条记录`)
+        ElMessage.success({message:`Successfully deleted ${ids.length} records`,grouping:true})
         await fetchTableData()
         return true
       }
       return false
     } catch (error: any) {
       if (error !== 'cancel') {
-        console.error('批量删除失败:', error)
+        console.error('Batch delete failed:', error)
         // ElMessage.error('批量删除失败，请重试')
       }
       return false
@@ -339,7 +339,7 @@ export function useTableData<T = any>(config: TableConfig) {
    */
   const exportData = async (filename?: string, params?: Record<string, any>) => {
     if (!config.enableExport || !config.exportUrl) {
-      ElMessage.warning('导出功能未启用')
+      ElMessage.warning('export function is not enabled')
       return false
     }
 

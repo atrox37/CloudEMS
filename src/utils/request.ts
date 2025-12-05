@@ -11,14 +11,6 @@ import { useGlobalStore } from '@/stores/global'
 // 存储所有pending的请求
 const pendingRequests = reactive(new Map())
 
-// 延迟获取router实例，避免在模块顶层使用useRouter
-let routerInstance: any = null
-const getRouter = () => {
-  if (!routerInstance) {
-    routerInstance = useRouter()
-  }
-  return routerInstance
-}
 
 watch(pendingRequests, () => {
   const globalStore = useGlobalStore()
@@ -36,6 +28,22 @@ export interface RequestConfig extends AxiosRequestConfig {
   skipCancel?: boolean // 是否跳过自动取消重复请求
 }
 const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha', '/sys-app/common/refresh']
+// 刷新 token 的接口路径
+const REFRESH_TOKEN_URL = '/sys-app/common/refresh'
+
+/**
+ * 判断是否是刷新 token 的请求
+ */
+const isRefreshTokenRequest = (url: string | undefined): boolean => {
+  return url?.includes(REFRESH_TOKEN_URL) || false
+}
+const createRequestKey = (config: AxiosRequestConfig): string => {
+  const params = { ...(config.params || {}) }
+  if ('_t' in params) {
+    delete params._t
+  }
+  return `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
+}
 /**
  * 创建axios实例
  * 设置基础配置项
@@ -58,10 +66,11 @@ const service = axios.create({
 const requestInterceptor = (config: any) => {
   // 如果配置了 skipCancel，跳过自动取消逻辑
   if (!config.skipCancel) {
-    // 生成请求的唯一标识
-    const params = { ...(config.params || {}) }
-    const requestKey = `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
-    console.log(requestKey, 'requestKey1')
+    // 生成请求的唯一标识（在 data 被 Axios 序列化之前生成）
+    const requestKey = createRequestKey(config)
+    // 将 requestKey 存储到 config 上，响应时直接使用，避免因 data 被序列化导致 key 不一致
+    config._requestKey = requestKey
+    console.log(requestKey, 'requestKey - created')
 
     // 如果存在相同的pending请求，取消它
     if (pendingRequests.has(requestKey)) {
@@ -79,7 +88,7 @@ const requestInterceptor = (config: any) => {
   // 从localStorage获取token并添加到请求头
   const userStore = useUserStore()
   const token = userStore.token
-  if (token && config.headers) {
+  if (token && config.headers && !WHITE_LIST.includes(config.url)) {
     // config.headers.Authorization = `Bearer ${token}`
     config.headers.Authorization = `${token}`
   } else if (!WHITE_LIST.includes(config.url)) {
@@ -115,7 +124,7 @@ const requestInterceptor = (config: any) => {
 
 const requestErrorInterceptor = (error: any) => {
   console.error('[请求错误]', error)
-  ElMessage.error('Request configuration error')
+  ElMessage.error({message:'Request configuration error',grouping:true})
   return Promise.reject(error)
 }
 
@@ -147,23 +156,29 @@ const processQueue = (error: any, token: string | null = null) => {
  * 创建统一的响应拦截器，避免代码重复
  */
 const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '') => {
+
+  
+  // 从 pendingRequests 中移除请求的辅助函数
+  const removePendingRequest = (config: any) => {
+    if (!config || config.skipCancel) return
+    
+    // 直接使用请求拦截器中存储的 _requestKey，避免因 Axios 序列化 data 导致 key 不一致
+    const requestKey = config._requestKey
+    if (!requestKey) {
+      console.warn('[请求] 未找到 _requestKey，无法从 pendingRequests 中移除')
+      return
+    }
+    
+    console.log(requestKey, 'requestKey - removing from pending')
+    pendingRequests.delete(requestKey)
+  }
   // 响应成功时的处理
   const responseSuccessHandler = (response: any) => {
     // 请求完成后，从pendingRequests中移除
     console.log(response, 'response1')
 
-    // 只有没有配置 skipCancel 的请求才需要从 pendingRequests 中移除
-    if (!response.config?.skipCancel) {
-      const params = { ...(response.config?.params || {}) }
-      if ('_t' in params) {
-        delete params._t
-      }
-      const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(params)}-${response.config?.data}`
-      // console.log(response.config?.data,requestKey,requestKey==='post-sys-app/sys_user/_page-{}-{"current":1,"size":20,"terms":[{"column":"t.state","value":1}]}', 'requestKey2')
-      pendingRequests.delete(requestKey)
-      console.log(pendingRequests, 'pendingRequests')
-    }
-
+    // 从 pendingRequests 中移除请求
+    removePendingRequest(response.config)
     console.log(
       `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
       response,
@@ -181,21 +196,26 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
     ) {
       // 请求成功
       if (customConfig.showSuccessMessage && data.msg) {
-        ElMessage.success(data.msg)
+        ElMessage.success({message:data.msg,grouping:true})
       }
       return response
     } else {
       // 业务逻辑错误
       let errorMessage = data.msg || 'Request failed'
+      const requestUrl = response.config?.url || ''
+      
       // 根据不同的业务状态码进行处理
       switch (data.code) {
         case 401:
           // 未授权，清除token并跳转到登录页
+          // 如果是刷新 token 请求本身返回 401，重置刷新状态
+          if (isRefreshTokenRequest(requestUrl)) {
+            isRefreshing = false
+            processQueue(new Error('Token refresh failed'), null)
+          }
           const userStore = useUserStore()
-
           userStore.logout()
           errorMessage = 'Login expired, please log in again'
-          // ElMessage.error(errorMessage)
           break
         case 403:
           errorMessage = 'No permission to access this resource'
@@ -209,14 +229,19 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         default:
           break
       }
-      ElMessage.error(response.data.msg || errorMessage)
+      ElMessage.error({message:response.data.msg || errorMessage,grouping:true})
       return Promise.reject(new Error(errorMessage))
     }
   }
 
+
   // 响应失败时的处理
   const responseErrorHandler = async (error: any) => {
     console.log(error, 'error1')
+
+    // 无论什么错误（包括取消请求），都要从 pendingRequests 中移除
+    // 确保 loading 状态能正确关闭
+    removePendingRequest(error.config)
 
     // 如果是取消请求的错误，不显示错误信息
     if (axios.isCancel(error)) {
@@ -224,26 +249,26 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       return Promise.reject(error)
     }
 
-    // 请求完成后，从pendingRequests中移除（只处理没有配置 skipCancel 的请求）
-    if (!error.config?.skipCancel) {
-      // 生成requestKey时，去除params中的_t参数
-      const params = { ...(error.config?.params || {}) }
-      if ('_t' in params) {
-        delete params._t
-      }
-      const requestKey = `${error.config?.method}-${error.config?.url}-${JSON.stringify(params)}-${JSON.stringify(error.config?.data)}`
-      console.log(requestKey, 'requestKey3')
-      if (requestKey) {
-        pendingRequests.delete(requestKey)
-      }
-    }
-
     console.error(`${logPrefix}[响应错误]`, error)
 
     const originalRequest = error.config
+    const requestUrl = originalRequest?.url || ''
 
-    // 处理401错误 - 自动刷新token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 特殊处理：如果刷新 token 的请求本身返回 401，直接登出，不再尝试刷新
+    if (error.response?.status === 401 && isRefreshTokenRequest(requestUrl)) {
+      console.log('[请求] 刷新 token 接口返回 401，直接执行登出')
+      const userStore = useUserStore()
+      // 重置刷新状态
+      isRefreshing = false
+      // 处理队列中的请求（全部拒绝）
+      processQueue(error, null)
+      // 执行登出
+      userStore.logout()
+      return Promise.reject(error)
+    }
+
+    // 处理401错误 - 自动刷新token（排除刷新 token 请求本身）
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshTokenRequest(requestUrl)) {
       if (isRefreshing) {
         // 如果正在刷新token，将请求加入队列
         return new Promise((resolve, reject) => {
@@ -263,10 +288,10 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       try {
         const userStore = useUserStore()
 
-
         // 调用刷新token的API
+        // 注意：refreshUserToken 内部失败时会自动调用 logout()
         const response = await userStore.refreshUserToken()
-        // 注意：刷新token接口也可能返回401或失败
+        
         if (response.success) {
           // 更新当前请求的Authorization头
           originalRequest.headers['Authorization'] = `Bearer ${userStore.token}`
@@ -277,19 +302,18 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           // 重试原请求
           return serviceInstance(originalRequest)
         } else {
-          // 刷新token接口返回失败
-          throw new Error(response.message || 'Token refresh failed')
+          // 刷新token接口返回失败（业务层面失败）
+          // refreshUserToken 内部已经调用了 logout()，这里只需要处理队列和返回
+          console.log('[请求] 刷新 token 业务失败')
+          const error = new Error(response.message || 'Token refresh failed')
+          processQueue(error, null)
+          return Promise.reject(error)
         }
       } catch (refreshError: any) {
-        // 刷新token失败，执行登出操作
-        const userStore = useUserStore()
-        
-        // 处理队列中的请求
+        // 刷新token异常
+        // refreshUserToken 内部已经调用了 logout()，这里只需要处理队列和返回
+        console.log('[请求] 刷新 token 异常')
         processQueue(refreshError, null)
-        
-        // 调用logout执行完整的登出流程（清除数据、断开连接、跳转登录页）
-        userStore.logout()
-        
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
@@ -348,7 +372,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       // 请求配置出错
       errorMessage = error.message || 'Request configuration error'
     }
-    ElMessage.error(error.response?.data?.msg || errorMessage)
+    ElMessage.error({message:error.response?.data?.msg || errorMessage,grouping:true})
     return Promise.reject(error)
   }
 
@@ -494,10 +518,10 @@ class Request {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
-      ElMessage.success('File downloaded successfully')
+      ElMessage.success({message:'File downloaded successfully',grouping:true})
     } catch (error) {
       console.error('File download failed:', error)
-      ElMessage.error('File download failed')
+      ElMessage.error({message:'File download failed',grouping:true})
     }
   }
 }

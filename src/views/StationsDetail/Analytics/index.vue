@@ -155,7 +155,7 @@ const timeBtnList: { label: string; value: '6hours' | '1day' | '1week' | '1month
 const defaultTime: [Date, Date] = [new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]
 // 当前选中的时间按钮
 const selectedTimeBtn = ref<'6hours' | '1day' | '1week' | '1month' | 'custom'>('6hours')
-const stationId = ref<number | string>(route.query.stationId as string | number)
+const stationId = ref<number | string>(route.params.stationId as string | number)
 const chart1Loading = ref(false)
 const chart2Loading = ref(false)
 const chart3Loading = ref(false)
@@ -547,9 +547,9 @@ const getAllAnalyticsData = () => {
   }, 100)
 }
 
-// 路由变化时取消当前页面请求并重新获取数据；首次进入也执行
+// 路由变化时取消当前页面请求并重新获取数据；首次进入也执行（使用动态路由参数）
 watch(
-  () => route.query.stationId,
+  () => route.params.stationId,
   (id) => {
     if (id) {
       stationId.value = id as string | number

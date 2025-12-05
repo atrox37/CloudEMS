@@ -141,11 +141,18 @@
             @click="handleTabClick('Alarm')"
           />
           <IconButton
+            :type="activeTab === 'Forecast' ? 'primary' : 'warning'"
+            :icon="forecastIcon"
+            text="Forecast"
+            @click="handleTabClick('Forecast')"
+          />
+          <IconButton
             :type="activeTab === 'Maintenance' ? 'primary' : 'warning'"
             :icon="maintenanceIcon"
             text="Maintenance"
             @click="handleTabClick('Maintenance')"
           />
+
           <!-- 旧版Tab切换样式，已注释 -->
           <!-- <div class="stations-detail__tabs-item" :class="{ 'active': activeTab === 'Overview' }"
                     @click="handleTabClick('Overview')"><img :src="overviewIcon" /><span>Overview</span></div>
@@ -181,6 +188,7 @@ import performanceIcon from '@/assets/icons/button-performance.svg' // 性能Tab
 import analyticsIcon from '@/assets/icons/button-analytics.svg' // 分析Tab图标
 import maintenanceIcon from '@/assets/icons/button-maintenance.svg' // 维护Tab图标
 import AlarmIcon from '@/assets/icons/button-Alarm.svg' // 告警Tab图标
+import forecastIcon from '@/assets/icons/button-analytics.svg' // 预测Tab图标（复用分析图标）
 import sunIcon from '@/assets/icons/sunny.svg' // 天气图标
 import timeIcon from '@/assets/icons/time.svg' // 时间图标
 import addressIcon from '@/assets/icons/address.svg' // 地址图标
@@ -276,13 +284,19 @@ const stationsList = ref<StationList[]>([])
 // 加载状态
 const stationLoading = ref(true)
 const isDropdownVisible = ref(false)
+// 获取当前站点ID（统一从 params 获取）
+const getStationIdFromRoute = () => {
+  return route.params.stationId as string
+}
+
 // 监听路由变化，切换Tab和电站
 watch(
   () => route,
   async (newRoute) => {
     activeTab.value = newRoute.name as string
+    const stationId = getStationIdFromRoute()
     // 如果没有stationId参数，提示并跳转回电站列表页
-    if (!newRoute.query.stationId && newRoute.query.stationId !== '0') {
+    if (!stationId && stationId !== '0') {
       ElMessage.error('Please select a station first')
       const timer = setTimeout(() => {
         clearTimeout(timer)
@@ -290,7 +304,7 @@ watch(
       }, 1000)
     } else {
       // 有stationId则设置当前电站ID
-      currentStationId.value = parseInt(newRoute.query.stationId as string)
+      currentStationId.value = parseInt(stationId)
     }
   },
   { immediate: true, deep: true },
@@ -301,7 +315,8 @@ const handleUserCommand = (command: string) => {
   if (command === currentStationId.value) {
     return
   }
-  router.push({ path: route.path, query: { stationId: command } })
+  // 统一使用动态路由参数
+  router.push({ name: activeTab.value, params: { stationId: command } })
 }
 
 // 返回按钮处理
@@ -312,7 +327,9 @@ const handleBack = () => {
 // Tab切换处理
 const handleTabClick = (tab: string) => {
   activeTab.value = tab
-  router.push({ name: tab, query: { stationId: route.query.stationId } })
+  const stationId = getStationIdFromRoute()
+  // 统一使用动态路由参数
+  router.push({ name: tab, params: { stationId } })
 }
 
 // 电站下拉选择处理
@@ -338,7 +355,7 @@ const fetchStationList = async () => {
 
 // 拆分：根据路由参数获取电站详情
 const fetchStationDetailByRoute = async () => {
-  const stationId = route.query.stationId as string | number
+  const stationId = getStationIdFromRoute()
   if (!stationId) return
   const res = await getStationDetail(stationId)
   if (res.code === 200) {
@@ -349,9 +366,9 @@ const fetchStationDetailByRoute = async () => {
 // 首次挂载：分别请求列表与详情
 // 移除 onMounted，改为监听路由变化触发，并在首次进入时立即执行
 
-// 监听路由变化：仅重新拉取详情
+// 监听路由变化：仅重新拉取详情（同时监听 query 和 params）
 watch(
-  () => route.query.stationId,
+  () => getStationIdFromRoute(),
   async () => {
     stationLoading.value = true
     try {

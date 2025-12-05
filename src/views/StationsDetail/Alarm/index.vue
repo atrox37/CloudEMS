@@ -123,9 +123,9 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
 }
 
 
-// 改为监听路由变化触发，并在首次进入时立即执行
+// 监听路由 params 变化触发，并在首次进入时立即执行（Alarm 使用动态路由参数）
 watch(
-  () => route.query.stationId,
+  () => route.params.stationId,
   (stationId) => {
     if (!stationId) return
     fetchStationAlarmStatisticsData(stationId as string | number)

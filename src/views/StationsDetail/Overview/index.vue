@@ -99,9 +99,9 @@ const fetchStationOverchartData = async (stationId: string | number) => {
     lineChartLoading.value = false
   }
 }
-// 改为监听路由变化触发，并在首次进入时立即执行
+// 监听路由 params 变化触发，并在首次进入时立即执行（使用动态路由参数）
 watch(
-  () => route.query.stationId,
+  () => route.params.stationId,
   (stationId) => {
     if (!stationId) return
     fetchStationOverviewData(stationId as string | number)

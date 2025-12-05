@@ -591,10 +591,6 @@ const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
     overflow: hidden;
     z-index: 9998;
     box-sizing: border-box;
-
-    @media (min-width: 7.68rem) {
-      width: 4rem;
-    }
   }
 
   .ai-assistant__dialog-header {

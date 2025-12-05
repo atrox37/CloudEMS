@@ -65,11 +65,18 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://52.91.141.40:9010/',
+        target: 'http://192.168.40.114:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        // rewrite: (path) => path.replace(/^\/api/),
         ws: true, // 启用 WebSocket 代理支持
         secure: false, // 如果后端是 https，设置为 true
+      },
+      // 预测 API 代理
+      '/forecast-api': {
+        target: 'https://f4620xyw86.execute-api.us-east-1.amazonaws.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/forecast-api/, ''),
+        secure: true,
       },
     },
   },

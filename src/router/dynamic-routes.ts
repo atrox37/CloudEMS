@@ -43,7 +43,7 @@ export const dynamicRoutes: RouteItem[] = [
     },
     children: [
       {
-        path: 'overview',
+        path: 'overview/:stationId',
         name: 'Overview',
         component: () => import('@/views/StationsDetail/Overview/index.vue'),
         meta: {
@@ -53,7 +53,7 @@ export const dynamicRoutes: RouteItem[] = [
         },
       },
       {
-        path:'performance',
+        path:'performance/:stationId',
         name:'Performance',
         component:()=>import('@/views/StationsDetail/Performance/index.vue'),
         meta:{
@@ -63,7 +63,7 @@ export const dynamicRoutes: RouteItem[] = [
         },
       },
       {
-        path:'analytics',
+        path:'analytics/:stationId',
         name:'Analytics',
         component:()=>import('@/views/StationsDetail/Analytics/index.vue'),
         meta:{
@@ -73,7 +73,7 @@ export const dynamicRoutes: RouteItem[] = [
         }
       },
       {
-        path:'maintenance',
+        path:'maintenance/:stationId',
         name:'Maintenance',
         component:()=>import('@/views/StationsDetail/Maintenance/index.vue'),
         meta:{
@@ -83,11 +83,21 @@ export const dynamicRoutes: RouteItem[] = [
         },
       },
       {
-        path:'Alarm',
+        path:'Alarm/:stationId',
         name:'Alarm',
         component:()=>import('@/views/StationsDetail/Alarm/index.vue'),
         meta:{
           title:'Alarm',
+          activeNav:'/stations',
+          roles: ['Admin', 'Operator', 'Engineer'],
+        },
+      },
+      {
+        path:'forecast/:stationId',
+        name:'Forecast',
+        component:()=>import('@/views/StationsDetail/Forecast/index.vue'),
+        meta:{
+          title:'Forecast',
           activeNav:'/stations',
           roles: ['Admin', 'Operator', 'Engineer'],
         },

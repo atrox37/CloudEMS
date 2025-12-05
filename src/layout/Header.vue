@@ -2,28 +2,18 @@
   <div class="voltage-class header">
     <div class="header__left">
       <div class="header__left-title">MOSS Solar</div>
-      <!-- <div class="header__left-status">
-        <div class="header__left-statusIcon">
-          <div class="header__left-statusIconCircle"></div>
-        </div>
-        <div class="header__left-statusText">Online</div>
-      </div> -->
     </div>
 
     <div class="header__right">
       <div class="header__right-avatar">
         <el-dropdown @command="handleUserCommand" trigger="click" :teleported="false" @visible-change="handleDropdownChange">
           <div class="header__user">
-            <!-- 头像图片无法显示的常见原因有：路径写法不对、图片未被正确引入、打包后路径丢失等。推荐用import方式引入图片资源。 -->
-            <!-- <el-avatar  :src="userStore.userInfo?.avatar" class="header__user-avatar" /> -->
-            <!-- <el-avatar :src="headerAvatar" class="header__user-avatar" /> -->
             <div class="header__user-avatar">
               <div class="header__user-avatar-initials">
                 {{ getAvatarName(userStore.userInfo?.sysUserPo?.username) }}
               </div>
             </div>
             <span class="header__user-name">{{ userStore.userInfo?.sysUserPo?.username }}</span>
-            <!-- <span class="header__user-name">Esthera Jackson</span> -->
             <img :src="arrowDownIcon" class="header__user-arrow" :class="{ 'rotate': isDropdownVisible }" />
           </div>
           <template #dropdown>
@@ -38,12 +28,43 @@
           </template>
         </el-dropdown>
       </div>
+      <!-- 告警通知下拉框 -->
       <div class="header__right-notice">
-        <el-button link class="header__right-noticeBtn" @click="toggleNotifications">
-          <el-badge :value="globalStore.alarmNum" :hidden="globalStore.alarmNum === 0">
-            <img :src="noticeIcon" class="header__right-noticeIcon" />
-          </el-badge>
-        </el-button>
+        <el-dropdown 
+          trigger="click" 
+          :teleported="false" 
+          @command="handleAlarmCommand"
+          @visible-change="handleAlarmDropdownChange"
+        >
+          <el-button link class="header__right-noticeBtn">
+            <el-badge :value="stationStore.totalAlarmCount" :hidden="stationStore.totalAlarmCount === 0">
+              <img :src="noticeIcon" class="header__right-noticeIcon" />
+            </el-badge>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item 
+                v-for="station in stationStore.stations" 
+                :key="station.stationId"
+                :command="station.stationId"
+              >
+                <div class="header__user-Item">
+                  <span class="header__alarm-item-name">{{ station.stationName }}</span>
+                  <el-badge 
+                    :value="station.alarmCount" 
+                    :hidden="station.alarmCount === 0"
+                    class="header__alarm-item-badge"
+                  />
+                </div>
+              </el-dropdown-item>
+              <el-dropdown-item v-if="stationStore.stations.length === 0" disabled>
+                <div class="header__user-Item header__user-Item--empty">
+                  暂无站点数据
+                </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
   </div>
@@ -52,30 +73,30 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useGlobalStore } from '@/stores/global'
+import { useStationStore } from '@/stores/station'
 // 正确引入头像图片，确保路径无误，推荐用import方式
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import noticeIcon from '@/assets/icons/notice.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
+
 const router = useRouter()
 const userStore = useUserStore()
-const globalStore = useGlobalStore()
+const stationStore = useStationStore()
 const isDropdownVisible = ref(false)
+const isAlarmDropdownVisible = ref(false)
 
-// // 切换通知
-const toggleNotifications = () => {
-  router.push({ name: 'Alarm' })
+// 处理告警下拉框点击，跳转到对应站点的告警页面
+const handleAlarmCommand = (stationId: number) => {
+  router.push({ name: 'Alarm', params: { stationId } })
 }
 
 // 用户操作
 const handleUserCommand = (command: string) => {
   switch (command) {
     case 'logout':
-      
       userStore.logout()
       break
   }
-
 }
 
 const getAvatarName = (name: string | undefined): string | undefined => {
@@ -93,6 +114,10 @@ const getAvatarName = (name: string | undefined): string | undefined => {
 
 const handleDropdownChange = (visible: boolean) => {
   isDropdownVisible.value = visible
+}
+
+const handleAlarmDropdownChange = (visible: boolean) => {
+  isAlarmDropdownVisible.value = visible
 }
 </script>
 
@@ -172,31 +197,6 @@ const handleDropdownChange = (visible: boolean) => {
     justify-content: flex-end;
     align-items: center;
 
-    // .header__right-weather {
-    //   display: flex;
-    //   align-items: center;
-    //   gap: 10px;
-    //   font-size: 20px;
-    //   letter-spacing: 0%;
-    //   margin-right: 126px;
-
-    //   .header__right-weatherIcon {
-    //     width: 40px;
-    //     height: 36px;
-    //     object-fit: contain;
-    //   }
-
-    //   .header__right-weatherStatus {
-    //     font-weight: 500;
-    //     font-style: Medium;
-    //   }
-
-    //   .header__right-weatherValue {
-    //     font-weight: 700;
-    //     font-style: Bold;
-    //   }
-    // }
-
     .header__right-avatar {
       cursor: pointer;
       margin-right: 0.3rem;
@@ -223,6 +223,9 @@ const handleDropdownChange = (visible: boolean) => {
           height: 0.2rem;
           object-fit: contain;
         }
+      }
+      :deep(.el-popper.is-light){
+        top: 0.52rem !important;
       }
     }
   }
@@ -288,6 +291,7 @@ const handleDropdownChange = (visible: boolean) => {
   padding: 0.1rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   color: #ffffff;
   font-weight: 500;
   font-size: 0.14rem;
@@ -299,6 +303,39 @@ const handleDropdownChange = (visible: boolean) => {
     height: 0.2rem;
     object-fit: contain;
     margin-right: 0.1rem;
+  }
+  
+  .header__alarm-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 0.1rem;
+  }
+  
+  .header__alarm-item-badge {
+    :deep(.el-badge__content) {
+      position: relative;
+      top: auto;
+      right: auto;
+      transform: none;
+      width: auto;
+      min-width: 0.2rem;
+      height: 0.2rem;
+      padding: 0 0.06rem;
+      border: none;
+      border-radius: 0.1rem;
+      background-color: rgba(218, 45, 44, 1);
+      font-family: Arimo;
+      font-weight: 400;
+      font-size: 0.12rem;
+      line-height: 0.2rem;
+    }
+  }
+
+  &--empty {
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 </style>

@@ -27,11 +27,13 @@ import energyAlarms from '@/assets/icons/energy-alarms.svg'
 import energySavingBilling from '@/assets/icons/energy-savingBilling.svg'
 import LoadingBg from '@/components/common/LoadingBg.vue'
 import { getHomeTotalData } from '@/api/home'
-import { getStations } from '@/api/station'
 import { useGlobalStore } from '@/stores/global'
+import { useStationStore } from '@/stores/station'
 import type { Stations } from '@/types/Stations'
-import type { ApiResponse } from '@/utils/request'
+
 const globalStore = useGlobalStore()
+const stationStore = useStationStore()
+
 // 发电站数据
 const powerStations = reactive<PowerStation[]>([])
 
@@ -71,11 +73,11 @@ onMounted(async () => {
     }
   }
 
-  // 获取所有发电站数据
+  // 获取所有发电站数据（使用 stationStore）
   const fetchStationsData = async () => {
-    const stationsRes: ApiResponse<Stations[]> = await getStations()
+    const stationsRes = await stationStore.fetchStations()
     if (stationsRes.code === 200) {
-      stationsRes.data.forEach((station) => {
+      stationsRes.data.forEach((station: Stations) => {
         const longitude =
           station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue ||
           ''

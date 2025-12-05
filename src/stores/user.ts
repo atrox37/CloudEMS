@@ -81,7 +81,7 @@ export const useUserStore = defineStore(
           return { success: false, message: response.msg || 'Login failed' }
         }
       } catch (error: any) {
-        return { success: false, message: error.msg || 'Login failed' }
+        return { success: false}
       }
     }
 
@@ -108,11 +108,12 @@ export const useUserStore = defineStore(
           return { success: false, message: response.msg || 'Get user info failed' }
         }
       } catch (error: any) {
-        return { success: false, message: error.msg || 'Get user info failed' }
+        return { success: false}
       }
     }
 
     // 刷新用户Token
+    // 注意：此方法会被 request.ts 中的 401 拦截器调用，也可能被外部主动调用
     const refreshUserToken = async () => {
       try {
         // 这里应该调用刷新Token的API
@@ -123,9 +124,15 @@ export const useUserStore = defineStore(
           userInfo.value.sysRolePo.roleName = response.data.role
           return { success: true, message: 'Token refreshed successfully' }
         } else {
+          // 业务层面刷新失败，执行登出
+          console.log('[user] 刷新 token 业务失败，执行登出')
+          logout()
           return { success: false, message: response.msg || 'Token refresh failed' }
         }
       } catch (error: any) {
+        // 刷新异常（可能是网络错误或 401），执行登出
+        console.log('[user] 刷新 token 异常，执行登出')
+        logout()
         return { success: false, message: error.msg || 'Token refresh failed' }
       }
     }

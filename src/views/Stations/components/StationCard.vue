@@ -193,7 +193,8 @@ const formatTime = (time: string) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 const handleDetail = () => {
-  router.push({ name: 'stationsDetail', query: { stationId: props.station.stationId } })
+  // 跳转到 Overview 页面，使用动态路由参数
+  router.push({ name: 'Overview', params: { stationId: props.station.stationId } })
 }
 const emit = defineEmits<{
   (e: 'sync', stationId: number): void
