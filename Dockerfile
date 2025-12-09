@@ -18,7 +18,8 @@
     
     # ---- Runtime stage ----
     FROM nginx:alpine
-    COPY nginx.conf /etc/nginx/conf.d/default.conf
+    # 不再内置 nginx.conf，运行时通过卷挂载使用 EC2 上的配置
+    # COPY nginx.conf /etc/nginx/conf.d/default.conf
     COPY --from=builder /app/dist /usr/share/nginx/html
     EXPOSE 80
     CMD ["nginx", "-g", "daemon off;"]
