@@ -65,7 +65,7 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://192.168.40.114:8080',
+        target: 'http://52.91.141.40:8080',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/),
         ws: true, // 启用 WebSocket 代理支持

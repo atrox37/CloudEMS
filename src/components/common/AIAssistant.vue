@@ -2,9 +2,12 @@
   <div class="ai-assistant">
     <div
       class="ai-assistant__icon"
+      :class="{ 'ai-assistant__icon--snapped': isSnapped && !isIconHovered && !isDraggingIcon }"
       :style="iconStyle"
       @mousedown="startDragIcon"
       @touchstart.prevent="startDragIcon"
+      @mouseenter="onIconMouseEnter"
+      @mouseleave="onIconMouseLeave"
       title="AI Assistant"
     >
       <img src="@/assets/icons/ai_assistant.svg" alt="AI Assistant" />
@@ -111,7 +114,7 @@
  * 5. 响应式布局，基于rem单位
  */
 import { ref, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
-import { getCurrentFontSize } from '@/utils/responsive'
+import { getCurrentFontSize, pxToResponsive } from '@/utils/responsive'
 import { getAIAssistantAnswer } from '@/api/common'
 
 interface Message {
@@ -128,6 +131,11 @@ const getIconSize = () => getCurrentFontSize() * ICON_REM
 const PADDING = 16
 const GAP = 10
 const MIN_DIALOG_HEIGHT = 260
+const SNAP_THRESHOLD_DESIGN = 20 // 吸附阈值（设计稿中的px值）
+const SNAP_OFFSET_RATIO = 0.5 // 吸附后隐藏的比例（0.5表示隐藏一半）
+
+// 获取响应式吸附阈值
+const getSnapThreshold = () => pxToResponsive(SNAP_THRESHOLD_DESIGN)
 
 // 状态管理
 const isDialogVisible = ref(false)
@@ -150,6 +158,14 @@ const dragOffsetX = ref(0)
 const dragOffsetY = ref(0)
 const hasMoved = ref(false)
 
+// 边缘吸附相关
+type SnapDirection = 'left' | 'right' | 'top' | 'bottom' | null
+const isSnapped = ref(false)
+const snapDirection = ref<SnapDirection>(null)
+const isIconHovered = ref(false)
+let snapDebounceTimer: ReturnType<typeof setTimeout> | null = null
+const SNAP_DEBOUNCE_DELAY = 150 // 防抖延迟（毫秒）
+
 // 调整高度相关
 const isResizing = ref(false)
 const resizeStartY = ref(0)
@@ -166,21 +182,66 @@ onMounted(() => {
   const vh = window.innerHeight
   const size = getIconSize()
   iconX.value = vw - size - PADDING
-  iconY.value = vh - size - PADDING
+  iconY.value = vh - size - PADDING - 20
+  
+  // 首次加载完成后，检测是否需要吸附到边缘
+  nextTick(() => {
+    debouncedCheckAndApplySnap()
+  })
 })
 
 onBeforeUnmount(() => {
   removeGlobalDragListeners()
+  // 清理防抖定时器
+  if (snapDebounceTimer !== null) {
+    clearTimeout(snapDebounceTimer)
+    snapDebounceTimer = null
+  }
+})
+
+// 计算吸附后的图标位置
+const snappedIconPosition = computed(() => {
+  if (!isSnapped.value || !snapDirection.value || isIconHovered.value || isDraggingIcon.value) {
+    return { x: iconX.value, y: iconY.value }
+  }
+  
+  const size = getIconSize()
+  const hiddenOffset = size * SNAP_OFFSET_RATIO
+  
+  let x = iconX.value
+  let y = iconY.value
+  
+  switch (snapDirection.value) {
+    case 'left':
+      x = -hiddenOffset
+      break
+    case 'right':
+      x = window.innerWidth - size + hiddenOffset
+      break
+    case 'top':
+      y = -hiddenOffset
+      break
+    case 'bottom':
+      y = window.innerHeight - size + hiddenOffset
+      break
+  }
+  
+  return { x, y }
 })
 
 // 图标样式
-const iconStyle = computed(() => ({
-  position: 'fixed' as const,
-  left: iconX.value + 'px',
-  top: iconY.value + 'px',
-  transition: isDraggingIcon.value ? 'none' : undefined,
-  transform: isDraggingIcon.value ? 'none' : undefined
-}))
+const iconStyle = computed(() => {
+  const pos = snappedIconPosition.value
+  const shouldAnimate = !isDraggingIcon.value
+  
+  return {
+    position: 'fixed' as const,
+    left: pos.x + 'px',
+    top: pos.y + 'px',
+    transition: shouldAnimate ? 'left 0.3s ease, top 0.3s ease, transform 0.3s ease' : 'none',
+    transform: isDraggingIcon.value ? 'none' : undefined
+  }
+})
 
 // 计算图标所在象限
 const quadrant = computed<Quadrant>(() => {
@@ -267,6 +328,8 @@ const dialogPositionStyle = computed(() => {
 
 // 切换对话框显示
 const toggleDialog = () => {
+  const wasVisible = isDialogVisible.value
+  
   if (!isDialogVisible.value) {
     dialogHeight.value = calculateInitialDialogHeight()
     dialogTopOverride.value = null
@@ -277,12 +340,22 @@ const toggleDialog = () => {
     nextTick(() => {
       scrollToBottom()
     })
+  } else if (wasVisible) {
+    // 如果是从显示状态切换到隐藏状态（关闭对话框），检测是否需要吸附
+    nextTick(() => {
+      debouncedCheckAndApplySnap()
+    })
   }
 }
 
 // 关闭对话框
 const closeDialog = () => {
   isDialogVisible.value = false
+  
+  // 关闭对话框后，检测图标是否需要吸附到边缘
+  nextTick(() => {
+    debouncedCheckAndApplySnap()
+  })
 }
 
 // 发送消息
@@ -320,10 +393,12 @@ const sendMessage = async () => {
       return
     }
     
-    if (response.code === 200) {
+    if (response.code === 200 && response.data?.data?.response) {
+      // 读取嵌套的 response 字段
+      // JSON.parse 会自动将 JSON 字符串中的 \n 转换为实际的换行符
       const aiMessage: Message = {
         id: Date.now() + 1,
-        content: response.data.answer,
+        content: response.data.data.response,
         type: 'ai'
       }
       messages.value.push(aiMessage)
@@ -428,6 +503,33 @@ const getPoint = (e: MouseEvent | TouchEvent) => {
 const startDragIcon = (e: MouseEvent | TouchEvent) => {
   e.preventDefault()
   const point = getPoint(e)
+  
+  // 如果处于吸附状态，先将图标位置调整到可见位置
+  if (isSnapped.value && snapDirection.value) {
+    const size = getIconSize()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    
+    switch (snapDirection.value) {
+      case 'left':
+        iconX.value = PADDING
+        break
+      case 'right':
+        iconX.value = vw - size - PADDING
+        break
+      case 'top':
+        iconY.value = PADDING
+        break
+      case 'bottom':
+        iconY.value = vh - size - PADDING
+        break
+    }
+    
+    // 取消吸附状态
+    isSnapped.value = false
+    snapDirection.value = null
+  }
+  
   isDraggingIcon.value = true
   hasMoved.value = false
   dragOffsetX.value = point.clientX - iconX.value
@@ -482,6 +584,55 @@ const onMouseMove = (e: MouseEvent | TouchEvent) => {
   }
 }
 
+// 检测是否应该吸附到边缘（实际执行函数）
+const checkAndApplySnap = () => {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const size = getIconSize()
+  const iconRight = iconX.value + size
+  const iconBottom = iconY.value + size
+  const snapThreshold = getSnapThreshold() // 获取响应式阈值
+  
+  // 检测各边缘的距离
+  const distanceLeft = iconX.value
+  const distanceRight = vw - iconRight
+  const distanceTop = iconY.value
+  const distanceBottom = vh - iconBottom
+  
+  // 找出最近的边缘
+  const distances = [
+    { dir: 'left' as SnapDirection, dist: distanceLeft },
+    { dir: 'right' as SnapDirection, dist: distanceRight },
+    { dir: 'top' as SnapDirection, dist: distanceTop },
+    { dir: 'bottom' as SnapDirection, dist: distanceBottom }
+  ]
+  
+  const nearest = distances.reduce((a, b) => a.dist < b.dist ? a : b)
+  
+  // 如果最近的边缘小于阈值，则吸附
+  if (nearest.dist < snapThreshold) {
+    isSnapped.value = true
+    snapDirection.value = nearest.dir
+  } else {
+    isSnapped.value = false
+    snapDirection.value = null
+  }
+}
+
+// 防抖版本的吸附检测
+const debouncedCheckAndApplySnap = () => {
+  // 清除之前的定时器
+  if (snapDebounceTimer !== null) {
+    clearTimeout(snapDebounceTimer)
+  }
+  
+  // 设置新的定时器
+  snapDebounceTimer = setTimeout(() => {
+    checkAndApplySnap()
+    snapDebounceTimer = null
+  }, SNAP_DEBOUNCE_DELAY)
+}
+
 // 停止拖动
 const stopDragAndResize = () => {
   const wasDraggingIcon = isDraggingIcon.value
@@ -491,9 +642,39 @@ const stopDragAndResize = () => {
   isResizing.value = false
   removeGlobalDragListeners()
   
-  // 如果是拖动图标结束，且没有移动，则触发点击（打开/关闭对话框）
-  if (wasDraggingIcon && !hadMoved) {
-    toggleDialog()
+  // 如果是拖动图标结束
+  if (wasDraggingIcon) {
+    if (hadMoved) {
+      // 移动了，检测是否应该吸附（使用防抖版本）
+      debouncedCheckAndApplySnap()
+    } else {
+      // 没有移动，触发点击（打开/关闭对话框）
+      // 如果是从吸附状态点击，先取消吸附并恢复图标位置
+      if (isSnapped.value && snapDirection.value) {
+        const size = getIconSize()
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        
+        switch (snapDirection.value) {
+          case 'left':
+            iconX.value = PADDING
+            break
+          case 'right':
+            iconX.value = vw - size - PADDING
+            break
+          case 'top':
+            iconY.value = PADDING
+            break
+          case 'bottom':
+            iconY.value = vh - size - PADDING
+            break
+        }
+        
+        isSnapped.value = false
+        snapDirection.value = null
+      }
+      toggleDialog()
+    }
   }
 }
 
@@ -546,6 +727,16 @@ const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
   }
   startResize(e)
 }
+
+// 图标鼠标进入事件
+const onIconMouseEnter = () => {
+  isIconHovered.value = true
+}
+
+// 图标鼠标离开事件
+const onIconMouseLeave = () => {
+  isIconHovered.value = false
+}
 </script>
 
 <style lang="scss" scoped>
@@ -577,6 +768,26 @@ const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
       height: 0.55rem;
       object-fit: contain;
       object-position: center;
+    }
+
+    // 吸附状态样式 - 添加微弱的脉冲动画提示用户
+    &.ai-assistant__icon--snapped {
+      opacity: 0.7;
+      animation: snapped-pulse 2s ease-in-out infinite;
+
+      &:hover {
+        opacity: 1;
+        animation: none;
+      }
+    }
+  }
+
+  @keyframes snapped-pulse {
+    0%, 100% {
+      opacity: 0.7;
+    }
+    50% {
+      opacity: 0.85;
     }
   }
 

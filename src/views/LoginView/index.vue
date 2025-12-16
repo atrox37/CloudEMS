@@ -66,7 +66,7 @@ const form = reactive<LoginParams>({
 })
 const formRules = reactive<FormRules<LoginParams>>({
   account: [
-    { required: true, message: 'Please enter your account', trigger: 'blur' },
+    { required: true, message: 'Please enter your email', trigger: 'blur' },
     {
       pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       message: 'Please enter a valid email address',
