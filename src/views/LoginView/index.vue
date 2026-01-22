@@ -11,20 +11,16 @@
         <div class="loginPage__form-content">
           <el-form :model="form" label-position="top" ref="formRef" :rules="formRules">
             <el-form-item label="Email" prop="account">
-              <el-input v-model="form.account" />
+              <el-input v-model="form.account" @keyup.enter="handleLogin(formRef)" />
             </el-form-item>
             <el-form-item label="Password" prop="password">
-              <el-input v-model="form.password" type="password" />
+              <el-input v-model="form.password" type="password" @keyup.enter="handleLogin(formRef)" />
             </el-form-item>
             <el-form-item label="Verify Code" prop="captcha">
               <div class="loginPage__form-captch">
-                <el-input v-model="form.captcha" />
-                <el-image
-                  class="loginPage__form-captch-img"
-                  :src="captchImgUrl"
-                  alt="click to refresh"
-                  @click="getCaptchImg"
-                >
+                <el-input v-model="form.captcha" @keyup.enter="handleLogin(formRef)" />
+                <el-image class="loginPage__form-captch-img" :src="captchImgUrl" alt="click to refresh"
+                  @click="getCaptchImg">
                   <template #error>
                     <div class="image-viewer-slot image-slot">
                       <el-icon class="is-loading">
@@ -36,9 +32,7 @@
                 <!-- <img :src="captchImgUrl" alt="Verify Code" /> -->
               </div>
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)" :loading="loginLoading"
-              >Log in</el-button
-            >
+            <el-button type="primary" @click="handleLogin(formRef)"  :loading="globalStore.loading">Log in</el-button>
           </el-form>
         </div>
       </ModuleCard>
@@ -53,11 +47,11 @@ import { getVerifyCode } from '@/api/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'
-
+import { useGlobalStore } from '@/stores/global'
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loginFormContainer = ref()
-const loginLoading = ref(false)
+const globalStore = useGlobalStore()
 const captchImgUrl = ref('')
 const form = reactive<LoginParams>({
   account: '',
@@ -90,7 +84,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   formEl.validate(async (valid: boolean) => {
     try {
       if (valid) {
-        loginLoading.value = true
         const res = await userStore.login(form)
         if (res.success) {
           const userInfo = await userStore.getUserInfo()
@@ -103,19 +96,20 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             router.push({ path: '/' })
             // }
           } else {
-            if(userInfo.message) ElMessage.error(userInfo.message)
+            if (userInfo.message) ElMessage.error(userInfo.message)
             getCaptchImg()
           }
         } else {
-          if(res.message) ElMessage.error(res.message)
+          if (res.message) ElMessage.error(res.message)
           getCaptchImg()
         }
         // 这里可以添加登录请求逻辑
       } else {
         console.log('表单校验未通过')
       }
-    } finally {
-      loginLoading.value = false
+    }
+    catch (error) {
+      console.error(error)
     }
   })
 }
@@ -145,13 +139,11 @@ onMounted(() => {
   background-repeat: no-repeat;
   border: 0.01rem solid;
 
-  border-image-source: linear-gradient(
-    117.31deg,
+  border-image-source: linear-gradient(117.31deg,
     rgba(148, 166, 197, 0.3) 2.77%,
     rgba(148, 166, 197, 0) 32.18%,
     rgba(148, 166, 197, 0.103266) 72.63%,
-    rgba(148, 166, 197, 0.3) 99.05%
-  );
+      rgba(148, 166, 197, 0.3) 99.05%);
 
   // 顶部标题栏
   .loginPage__header {

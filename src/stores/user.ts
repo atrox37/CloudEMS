@@ -173,7 +173,7 @@ export const useUserStore = defineStore(
       // 清除动态路由
       try {
         if (router.hasRoute('main')) {
-          router.removeRoute('main')
+      router.removeRoute('main')
         }
         // 重新添加顶级主路由（不是作为子路由添加）
         if (!router.hasRoute('main')) {

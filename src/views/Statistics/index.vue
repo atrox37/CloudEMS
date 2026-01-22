@@ -241,7 +241,7 @@ const powerCurveData = ref({
     xAxiosData: [] as string[],
   },
   yAxiosOption: {
-    yUnit: 'kWh',
+    yUnit: 'kW',
   },
   series: [
     {

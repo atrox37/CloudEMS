@@ -8,7 +8,7 @@
       </div>
       <!-- 无数据提示 -->
       <div class="stations-empty" v-else>
-        <span class="stations-empty-text">No station data available</span>
+        <span class="stations-empty-text">No station data</span>
       </div>
     </LoadingBg>
   </div>

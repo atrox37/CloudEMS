@@ -132,13 +132,17 @@ export interface AnalyticsIntervalDataItem {
 export interface AnalyticsIntervalData {
   [key: string]: AnalyticsIntervalDataItem[]
 }
+export interface AnalyticsIntervalModel {
+  interval: 'MIN' | 'HOUR' | 'DAY'
+  time: number
+}
+
 export interface AnalyticsParams {
-  stationId: string | number
+  chartType: 'CHART1' | 'CHART2' | 'CHART3' | 'CHART4' | 'CHART5' | 'CHART6'
+  stationId: number
   startTime: string
   endTime: string
-  chartType: 'CHART1' | 'CHART2' | 'CHART3' | 'CHART4' | 'CHART5' | 'CHART6'
-  interval: string
-  isInterval: boolean
+  intervalModel: AnalyticsIntervalModel
 }
 export interface MainteranceData {
   id: number

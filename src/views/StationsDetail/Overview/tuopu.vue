@@ -95,7 +95,7 @@
                             <div class="no-rem__card-content-item">
                                 <div class="no-rem__name">P:</div>
                                 <div class="no-rem__value">{{ props.data.pvP || 0 }}</div>
-                                <div class="no-rem__unit">kw</div>
+                                <div class="no-rem__unit">kW</div>
                             </div>
                         </div>
                         <div class="no-rem__card-alarm"></div>
@@ -116,7 +116,7 @@
                             <div class="no-rem__card-content-item">
                                 <span class="no-rem__name">P:</span>
                                 <span class="no-rem__value">{{ props.data.loadP || 0 }}</span>
-                                <span class="no-rem__unit">kw</span>
+                                <span class="no-rem__unit">kW</span>
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                             <div class="no-rem__card-content-item">
                                 <span class="no-rem__name">P:</span>
                                 <span class="no-rem__value">{{ data.dieselP || 0 }}</span>
-                                <span class="no-rem__unit">kw</span>
+                                <span class="no-rem__unit">kW</span>
                             </div>
                             <div class="no-rem__card-content-item">
                                 <span class="no-rem__name">Oil:</span>
@@ -158,7 +158,7 @@
                             <div class="no-rem__card-content-item">
                                 <span class="no-rem__name">P:</span>
                                 <span class="no-rem__value">{{ props.data.essP || 0 }}</span>
-                                <span class="no-rem__unit">kw</span>
+                                <span class="no-rem__unit">kW</span>
                             </div>
                             <div class="no-rem__card-content-item">
                                 <span class="no-rem__name">SOC:</span>

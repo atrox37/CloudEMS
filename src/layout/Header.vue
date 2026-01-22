@@ -21,7 +21,7 @@
               <el-dropdown-item command="logout">
                 <div class="header__user-Item">
                   <img :src="logoutIcon" class="header__user-logoutIcon" />
-                  退出登录
+                  Logout
                 </div>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -306,6 +306,8 @@ const handleAlarmDropdownChange = (visible: boolean) => {
   }
   
   .header__alarm-item-name {
+    height: 0.2rem;
+    line-height: 0.2rem;
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;

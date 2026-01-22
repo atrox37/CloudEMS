@@ -64,7 +64,7 @@
         <!-- <IconButton type="primary" :icon="buttonSyncIcon" text="Data Synced" @click="handleSync" />
           -->
         <el-button type="primary" @click="handleSync" :loading="loading">Data Synced</el-button>
-        <div class="station-card__last-update">Last Update: {{ formatTime(station.time) }}</div>
+        <div class="station-card__last-update">Last Update: {{ format(station.time) }}</div>
       </div>
       <div class="footer-right">
         <el-button type="primary" @click="handleDetail">Detail</el-button>
@@ -85,7 +85,7 @@ import detailIcon from '@/assets/icons/button-detail.svg'
 import pvIcon from '@/assets/icons/station-pv.svg'
 import essIcon from '@/assets/icons/station-ess.svg'
 import ValueCard from './ValueCard.vue'
-import dayjs from 'dayjs'
+import { format } from '@/utils/time'
 import type { Stations } from '@/types/Stations'
 
 // interface Station {
@@ -188,9 +188,6 @@ const cardData = computed(() => {
 const handleSync = () => {
   // console.log('handleSync')
   emit('sync', props.station.stationId)
-}
-const formatTime = (time: string) => {
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 const handleDetail = () => {
   // 跳转到 Overview 页面，使用动态路由参数

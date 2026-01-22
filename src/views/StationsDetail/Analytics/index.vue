@@ -17,7 +17,7 @@
               ref="toolbarRightRef"
             >
               <el-select
-                v-model="timeInterval"
+                v-model="timeIntervalModel"
                 @change="getAllAnalyticsData"
                 :append-to="toolbarRightRef"
                 placeholder="Select Time Interval"
@@ -132,11 +132,11 @@
 // import PVEnergy from '@/assets/icons/PVEnergy.svg'
 // import ESS from '@/assets/icons/ESSEnergy.svg'
 // import DG from '@/assets/icons/DGEnergy.svg'
-import { getTimeRangeArray } from '@/utils/time'
+import { getTimeRangeArray, calculateAutoInterval } from '@/utils/time'
 import { getAnalyticsData } from '@/api/station'
 import { useRoute } from 'vue-router'
 import { cancelAllPendingRequests } from '@/utils/request'
-import type { AnalyticsIntervalData } from '@/types/Stations'
+import type { AnalyticsIntervalData, AnalyticsIntervalModel } from '@/types/Stations'
 // import { getSmartTimeStep } from '@/utils/time'
 defineProps<{
   stationLoading: boolean
@@ -162,19 +162,28 @@ const chart3Loading = ref(false)
 const chart4Loading = ref(false)
 const chart5Loading = ref(false)
 const chart6Loading = ref(false)
-const interval = ref('')
-const timeInterval = ref('15m')
-const intervalList = ref([
-  { label: '30 Seconds', value: '30s' },
-  { label: '1 Minute', value: '1m' },
-  { label: '15 Minutes', value: '15m' },
-  { label: '1 Hour', value: '1h' },
-  { label: '6 Hours', value: '6h' },
-  { label: '1 Day', value: '1d' },
-  { label: '1 Week', value: '1w' },
-  { label: '1 Month', value: '1M' },
-  { label: '1 Year', value: '1y' },
+const intervalList = ref<Array<{ label: string; value: string }>>([
+  { label: '1 Minute', value: '1minute' },
+  { label: '15 Minutes', value: '15minutes' },
+  { label: '1 Hour', value: '1hour' },
+  { label: '6 Hours', value: '6hours' },
+  { label: '1 Day', value: '1day' },
+  { label: '1 Week', value: '1week' },
+  { label: '1 Month', value: '1month' },
+  { label: '1 Year', value: '1year' },
 ])
+const IntervalListMap = new Map<string, AnalyticsIntervalModel>([
+  ['1minute', { interval: 'MIN', time: 1 }],
+  ['15minutes', { interval: 'MIN', time: 15 }],
+  ['1hour', { interval: 'HOUR', time: 1 }],
+  ['6hours', { interval: 'MIN', time: 20 }],
+  ['1day', { interval: 'DAY', time: 1 }],
+  ['1week', { interval: 'DAY', time: 7 }],
+  ['1month', { interval: 'DAY', time: 30 }],
+  ['1year', { interval: 'DAY', time: 365 }],
+])
+const intervalModel = ref<AnalyticsIntervalModel>({ interval: 'MIN', time: 15 })
+const timeIntervalModel = ref<string | null>(null)
 const chart1Series = ref([
   {
     name: 'PV',
@@ -237,7 +246,7 @@ const chart3Series = ref({
   ],
 })
 const EssyAxiosOption = {
-  yUnit: ['kw', '%'],
+  yUnit: ['kW', '%'],
 }
 
 const chart4Series = ref([
@@ -270,15 +279,15 @@ const chart5Series = ref([
     stack: 'generation',
   },
   {
-    name: 'ESS charge',
+    name: 'ESS Charge',
     data: [] as number[],
     color: '#91CC75',
     stack: 'generation',
   },
   {
-    name: 'ESS discharge',
+    name: 'ESS Discharge',
     data: [] as number[],
-    color: '#91CC75',
+    color: '#57A9BA',
     stack: 'load',
   },
 
@@ -316,7 +325,10 @@ const handleTimeBtnClick = (event: MouseEvent) => {
   if (btn && btn.dataset.value) {
     selectedTimeBtn.value = btn.dataset.value as '6hours' | '1day' | '1week' | '1month' | 'custom'
     rangeArray.value = []
-    if (selectedTimeBtn.value !== 'custom') {
+    if (selectedTimeBtn.value === 'custom') {
+      // 点击 Custom 时，重置时间间隔为 null，不触发数据获取
+      timeIntervalModel.value = null
+    } else {
       getAllAnalyticsData()
     }
   }
@@ -328,12 +340,11 @@ const fetchChart1Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART1',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART1',
-      interval: interval.value,
-      isInterval: false,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       chart1Series.value[0].value = (res.data.data1 as number) || 0
@@ -351,12 +362,11 @@ const fetchChart2Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART2',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART2',
-      interval: interval.value,
-      isInterval: true,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
@@ -384,12 +394,11 @@ const fetchChart3Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART3',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART3',
-      interval: interval.value,
-      isInterval: true,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
@@ -419,12 +428,11 @@ const fetchChart4Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART4',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART4',
-      interval: interval.value,
-      isInterval: true,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
@@ -451,12 +459,11 @@ const fetchChart5Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART5',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART5',
-      interval: interval.value,
-      isInterval: true,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
@@ -481,12 +488,11 @@ const fetchChart6Data = async () => {
       item.data = []
     })
     const res = await getAnalyticsData({
-      stationId: stationId.value,
+      chartType: 'CHART6',
+      stationId: Number(stationId.value),
       startTime: rangeArray.value[0],
       endTime: rangeArray.value[1],
-      chartType: 'CHART6',
-      interval: interval.value,
-      isInterval: true,
+      intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
       // 修复数据更新逻辑：直接更新每个系列的data数组
@@ -505,33 +511,38 @@ const fetchChart6Data = async () => {
     chart6Loading.value = false
   }
 }
+
+
 const getAllAnalyticsData = () => {
   cancelAllPendingRequests()
 
-  // chart1Loading.value = true
-  // chart2Loading.value = true
-  // chart3Loading.value = true
-  // chart4Loading.value = true
-  // chart5Loading.value = true
-  // chart6Loading.value = true
   setTimeout(() => {
     if (selectedTimeBtn.value === 'custom') {
-      interval.value = timeInterval.value
-      if (rangeArray.value.every((item: string) => item === '')) return
+      // Custom 模式下，需要检查日期范围是否已选择
+      if (rangeArray.value.every((item: string) => item === '')) {
+        return
+      }
+      // 如果没有选择时间间隔，根据日期范围自动计算
+      if (!timeIntervalModel.value) {
+        intervalModel.value = calculateAutoInterval(rangeArray.value[0], rangeArray.value[1])
+      } else {
+        // 如果选择了时间间隔，使用选择的间隔
+        intervalModel.value = IntervalListMap.get(timeIntervalModel.value) as AnalyticsIntervalModel
+      }
     } else {
       rangeArray.value = getTimeRangeArray(selectedTimeBtn.value)
       switch (selectedTimeBtn.value) {
         case '6hours':
-          interval.value = '1h'
+          intervalModel.value = { interval: 'MIN', time: 20 }
           break
         case '1day':
-          interval.value = '1h'
+          intervalModel.value = { interval: 'HOUR', time: 1 }
           break
         case '1week':
-          interval.value = '1d'
+          intervalModel.value = { interval: 'HOUR', time: 8 }
           break
         case '1month':
-          interval.value = '1d'
+          intervalModel.value = { interval: 'DAY', time: 1 }
           break
         default:
           return
