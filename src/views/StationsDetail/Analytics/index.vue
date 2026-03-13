@@ -11,7 +11,8 @@
 
         <div class="analytics__toolbar-right">
           <div class="analytics__toolbar-time-btns" @click="handleTimeBtnClick">
-            <div
+            <!-- 暂时注释掉时间间隔选择功能 -->
+            <!-- <div
               v-show="selectedTimeBtn === 'custom'"
               class="analytics__toolbar-time-interval"
               ref="toolbarRightRef"
@@ -29,7 +30,7 @@
                   :value="btn.value"
                 />
               </el-select>
-            </div>
+            </div> -->
             <el-date-picker
               v-if="selectedTimeBtn === 'custom'"
               v-model="rangeArray"
@@ -162,28 +163,29 @@ const chart3Loading = ref(false)
 const chart4Loading = ref(false)
 const chart5Loading = ref(false)
 const chart6Loading = ref(false)
-const intervalList = ref<Array<{ label: string; value: string }>>([
-  { label: '1 Minute', value: '1minute' },
-  { label: '15 Minutes', value: '15minutes' },
-  { label: '1 Hour', value: '1hour' },
-  { label: '6 Hours', value: '6hours' },
-  { label: '1 Day', value: '1day' },
-  { label: '1 Week', value: '1week' },
-  { label: '1 Month', value: '1month' },
-  { label: '1 Year', value: '1year' },
-])
-const IntervalListMap = new Map<string, AnalyticsIntervalModel>([
-  ['1minute', { interval: 'MIN', time: 1 }],
-  ['15minutes', { interval: 'MIN', time: 15 }],
-  ['1hour', { interval: 'HOUR', time: 1 }],
-  ['6hours', { interval: 'MIN', time: 20 }],
-  ['1day', { interval: 'DAY', time: 1 }],
-  ['1week', { interval: 'DAY', time: 7 }],
-  ['1month', { interval: 'DAY', time: 30 }],
-  ['1year', { interval: 'DAY', time: 365 }],
-])
+// 暂时注释掉时间间隔选择相关逻辑
+// const intervalList = ref<Array<{ label: string; value: string }>>([
+//   { label: '1 Minute', value: '1minute' },
+//   { label: '15 Minutes', value: '15minutes' },
+//   { label: '1 Hour', value: '1hour' },
+//   { label: '6 Hours', value: '6hours' },
+//   { label: '1 Day', value: '1day' },
+//   { label: '1 Week', value: '1week' },
+//   { label: '1 Month', value: '1month' },
+//   { label: '1 Year', value: '1year' },
+// ])
+// const IntervalListMap = new Map<string, AnalyticsIntervalModel>([
+//   ['1minute', { interval: 'MIN', time: 1 }],
+//   ['15minutes', { interval: 'MIN', time: 15 }],
+//   ['1hour', { interval: 'HOUR', time: 1 }],
+//   ['6hours', { interval: 'MIN', time: 20 }],
+//   ['1day', { interval: 'DAY', time: 1 }],
+//   ['1week', { interval: 'DAY', time: 7 }],
+//   ['1month', { interval: 'DAY', time: 30 }],
+//   ['1year', { interval: 'DAY', time: 365 }],
+// ])
 const intervalModel = ref<AnalyticsIntervalModel>({ interval: 'MIN', time: 15 })
-const timeIntervalModel = ref<string | null>(null)
+// const timeIntervalModel = ref<string | null>(null)
 const chart1Series = ref([
   {
     name: 'PV',
@@ -226,13 +228,13 @@ const poweryAxiosOption = {
 const chart3Series = ref({
   barSeries: [
     {
-      name: 'charge',
+      name: 'Charge',
       data: [] as number[],
 
       color: '#fc8452',
     },
     {
-      name: 'discharge',
+      name: 'Discharge',
       data: [] as number[],
       color: '#597ef7',
     },
@@ -304,7 +306,7 @@ const energyyAxiosOption = {
 
 const economicSeries = ref([
   {
-    name: 'total revenue',
+    name: 'Total Revenue',
     data: [] as number[],
     color: '#9ACD32',
   },
@@ -327,7 +329,7 @@ const handleTimeBtnClick = (event: MouseEvent) => {
     rangeArray.value = []
     if (selectedTimeBtn.value === 'custom') {
       // 点击 Custom 时，重置时间间隔为 null，不触发数据获取
-      timeIntervalModel.value = null
+      // timeIntervalModel.value = null // 暂时注释掉
     } else {
       getAllAnalyticsData()
     }
@@ -522,13 +524,14 @@ const getAllAnalyticsData = () => {
       if (rangeArray.value.every((item: string) => item === '')) {
         return
       }
+      // 暂时注释掉时间间隔选择逻辑，始终使用自动计算
       // 如果没有选择时间间隔，根据日期范围自动计算
-      if (!timeIntervalModel.value) {
+      // if (!timeIntervalModel.value) {
         intervalModel.value = calculateAutoInterval(rangeArray.value[0], rangeArray.value[1])
-      } else {
-        // 如果选择了时间间隔，使用选择的间隔
-        intervalModel.value = IntervalListMap.get(timeIntervalModel.value) as AnalyticsIntervalModel
-      }
+      // } else {
+      //   // 如果选择了时间间隔，使用选择的间隔
+      //   intervalModel.value = IntervalListMap.get(timeIntervalModel.value) as AnalyticsIntervalModel
+      // }
     } else {
       rangeArray.value = getTimeRangeArray(selectedTimeBtn.value)
       switch (selectedTimeBtn.value) {

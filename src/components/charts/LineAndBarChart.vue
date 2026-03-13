@@ -233,9 +233,9 @@ function getChartOption({
     isFullScreen?: boolean
 }) {
     // 配置参数
-    const xUnit = props.xAxiosOption.xUnit || ''
-    const yUnit = props.yAxiosOption.yUnit || ''
-    const yUnitRight = props.yAxiosOption.yUnit?.[1] || ''
+    const xUnit = props.xAxiosOption.xUnit ?? ''
+    const yUnit = props.yAxiosOption.yUnit ?? ''
+    const yUnitRight = props.yAxiosOption.yUnit?.[1] ?? ''
 
     // 背景数据 - 取每个索引位置上的最大值
     const totalData = props.xAxiosOption.xAxiosData.map((_, index: number) => {
@@ -404,7 +404,7 @@ function getChartOption({
     const yAxisLeft = isFullScreen
         ? {
             type: 'value',
-            name: yUnit?.[0] || '',
+            name: yUnit?.[0] ?? '',
             nameTextStyle: {
                 color: 'rgba(255, 255, 255, 0.6)',
                 fontFamily: 'Arimo',
@@ -432,7 +432,7 @@ function getChartOption({
         }
         : {
             type: 'value',
-            name: yUnit?.[0] || '',
+            name: yUnit?.[0] ?? '',
             nameTextStyle: {
                 color: 'rgba(255, 255, 255, 0.6)',
                 fontFamily: 'Arimo',
@@ -560,34 +560,34 @@ function getChartOption({
     // series - 先添加背景，然后添加柱状图，最后添加折线图
     const seriesData = [
         // 背景系列
-        {
-            name: 'background',
-            type: 'bar',
-            barWidth: '70%',
-            barGap: '-100%',
-            itemStyle: {
-                color: 'rgba(255,255,255,0)',
-            },
-            data: totalData,
-            showBackground: true,
-            backgroundStyle: {
-                color: 'rgba(252, 252, 253, 0.04)',
-            },
-            silent: true,
-            emphasis: { disabled: true },
-            tooltip: { show: false },
-            label: { show: false },
-            z: 0,
-            yAxisIndex: 0, // 背景用左y轴
-        },
+        // {
+        //     name: 'background',
+        //     type: 'bar',
+        //     barWidth: '70%', 
+        //     barGap: '-100%',
+        //     itemStyle: {
+        //         color: 'rgba(255,255,255,0)',
+        //     },
+        //     data: totalData,
+        //     showBackground: true,
+        //     backgroundStyle: {
+        //         color: 'rgba(252, 252, 253, 0.04)',
+        //     },
+        //     silent: true,
+        //     emphasis: { disabled: true },
+        //     tooltip: { show: false },
+        //     label: { show: false },
+        //     z: 0,
+        //     yAxisIndex: 0, // 背景用左y轴
+        // },
         // 柱状图系列
         ...props.barSeries.map((s: BarSeriesData) => ({
             name: s.name,
             type: 'bar',
             data: s.data,
             stack: 'data',
-            barWidth: '50%', // 柱状图稍微窄一点
-            barGap: '10%',
+            barWidth: '50%', 
+            // barGap: '-85%',
             itemStyle: {
                 color: s.color,
                 borderRadius: isFullScreen ? pxToResponsive(4) : pxToResponsive(2),
@@ -695,7 +695,7 @@ function getChartOption({
 
     // 计算滑动范围
     const totalDataLength = props.xAxiosOption.xAxiosData.length
-    const visibleCount = isFullScreen ? 30 : 15
+    const visibleCount = isFullScreen ? 3000 : 1000
     const shouldAutoScroll = props.enableAutoScroll && totalDataLength > visibleCount
 
     // 计算当前滑动位置
@@ -708,12 +708,12 @@ function getChartOption({
         type: 'inside',
         show: true,
         start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (30 / totalDataLength) * 100),
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
     }] : [{
         type: 'inside',
         show: true,
         start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (15 / totalDataLength) * 100),
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
     }]
 
     return {
@@ -733,7 +733,7 @@ const startAutoScroll = () => {
     if (!props.enableAutoScroll || isHovered.value) return
 
     const totalDataLength = props.xAxiosOption.xAxiosData.length
-    const visibleCount = 15 // 普通模式固定15个
+    const visibleCount = 1000 // 普通模式固定1000个
 
     if (totalDataLength <= visibleCount) return
 

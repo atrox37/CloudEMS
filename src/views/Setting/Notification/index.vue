@@ -151,9 +151,9 @@ async function onSubmit() {
   try {
     submitLoading.value = true
     const res = await updateUserNotification({
-      id: userStore.userInfo?.sysUserPo?.id || 0,
-      email: userStore.userInfo?.sysUserPo?.email || '',
-      phone: userStore.userInfo?.sysUserPo?.phone || '',
+      id: userStore.userInfo?.sysUserPo?.id ?? 0,
+      email: userStore.userInfo?.sysUserPo?.email ?? '',
+      phone: userStore.userInfo?.sysUserPo?.phone ?? '',
       metadata: notificationData.value,
     })
     if (res.code === 200) {

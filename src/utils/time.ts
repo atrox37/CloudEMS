@@ -157,14 +157,14 @@ export function calculateAutoInterval(startTime: string, endTime: string): Analy
   const totalMinutes = end.diff(start, 'minute')
 
   // 计算：总时长除以 30，向下取整，最小为 1
-  const calculatedMinutes = Math.max(1, Math.floor(totalMinutes / 30))
+  // const calculatedMinutes = )
 
   // 根据计算结果确定单位
-  if (calculatedMinutes < 60) {
-    return { interval: 'MIN', time: calculatedMinutes }
-  } else if (calculatedMinutes < 24 * 60) {
-    return { interval: 'HOUR', time: Math.floor(calculatedMinutes / 60) }
-  } else {
-    return { interval: 'DAY', time: Math.floor(calculatedMinutes / (24 * 60)) }
-  }
+  // if (calculatedMinutes < 60) {
+  return { interval: 'MIN', time: Math.max(1, Math.ceil(totalMinutes / 1000)) }
+  // } else if (calculatedMinutes < 24 * 60) {
+  //   return { interval: 'HOUR', time: Math.floor(calculatedMinutes / 60) }
+  // } else {
+  //   return { interval: 'DAY', time: Math.floor(calculatedMinutes / (24 * 60)) }
+  // }
 }

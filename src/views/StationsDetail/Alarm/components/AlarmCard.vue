@@ -3,7 +3,7 @@
         <div class="Alarm-card__header">
             <div class="header-icon" :class="`${levelList[level-1]}`"></div>
             <div class="header-level" :class="`${levelList[level-1]}`">{{ levelList[level-1] }}</div>
-            <div class="header-device">{{ AlarmData.device }}</div>
+            <div class="header-device">{{ AlarmData.deviceName ?? '' }}</div>
         </div>
         <div class="Alarm-card__content">
             <div class="card-left">
@@ -95,10 +95,10 @@ const levelList = ['Critical', 'Warning', 'Info']
 
         .header-device {
             font-size: 0.16rem;
-            line-height: 0.2133rem;
+            line-height: 0.21rem;
             letter-spacing: 0%;
             color: rgba(255, 255, 255, 0.6);
-
+            
         }
     }
 

@@ -178,8 +178,17 @@
       font-size: 0.14rem;
       padding: 0 0.04rem;
       min-width: 0.32rem;
-      &.btn-prev {
-        margin-left: 0.16rem;
+      // &.btn-prev {
+      //   // margin-left: 0.16rem;
+      //   &:disabled{
+      //     background-color: transparent;
+      //   }
+      // }
+      &.btn-next,
+      &.btn-prev{
+        &:disabled{
+          background-color: transparent;
+        }
       }
       .el-icon {
         font-size: 0.12rem;

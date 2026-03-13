@@ -114,7 +114,8 @@ export interface StationAlarmItem {
   channel_id: number,
   value: number,
   status: number,
-  timestamp: string
+  timestamp: string,
+  deviceName: string
 }
 // StationInformation 将在下方以更完整的结构重新声明
 

@@ -30,6 +30,7 @@ import { getHomeTotalData } from '@/api/home'
 import { useGlobalStore } from '@/stores/global'
 import { useStationStore } from '@/stores/station'
 import type { Stations } from '@/types/Stations'
+import type { EnergyCardProps } from '@/components/card/EnergyCard.vue'
 
 const globalStore = useGlobalStore()
 const stationStore = useStationStore()
@@ -37,27 +38,28 @@ const stationStore = useStationStore()
 // 发电站数据
 const powerStations = reactive<PowerStation[]>([])
 
-const dashboardData = reactive([
+const dashboardData = reactive<EnergyCardProps[]>([
   {
     title: 'Energy Today',
-    value: 0,
+    value: '-',
     unit: 'kWh',
     iconUrl: energyToday,
   },
   {
     title: 'Online Stations',
-    value: 0,
+    value: '-',
     iconUrl: energyOnlineStations,
   },
   {
     title: 'Alarms',
-    value: 0,
+    value: '-',
     iconUrl: energyAlarms,
   },
   {
     title: 'Saving Billing',
-    value: 0,
+    value: '-',
     iconUrl: energySavingBilling,
+    unit: '$',
   },
 ])
 
@@ -66,10 +68,10 @@ onMounted(async () => {
   const fetchHomeTotalData = async () => {
     const res = await getHomeTotalData()
     if (res.code === 200) {
-      dashboardData[0].value = res.data.todayEnergy
-      dashboardData[1].value = res.data.stationOnline
-      dashboardData[2].value = res.data.stationAlarmSum
-      dashboardData[3].value = res.data.todayPrice
+      dashboardData[0].value = res.data.todayEnergy 
+      dashboardData[1].value = res.data.stationOnline 
+      dashboardData[2].value = res.data.stationAlarmSum 
+      dashboardData[3].value = res.data.todayPrice 
     }
   }
 

@@ -77,14 +77,14 @@
                 <div class="header-station-info__time">
                   <img :src="timeIcon" class="header-station-info__time-icon" />
                   <div class="header-station-info__time-text">
-                    {{ stationDetail.deviceInstancePo.statusTime }}
+                    {{ stationDetail.deviceInstancePo.statusTime??'-' }}
                   </div>
                 </div>
                 <div class="header-station-info__address">
                   <img :src="addressIcon" class="header-station-info__address-icon" />
                   <div class="header-station-info__address-text">
                     {{
-                      stationDetail.wgTags.find((tag) => tag.tagKey === 'Location')?.tagValue || '-'
+                      stationDetail.wgTags.find((tag) => tag.tagKey === 'Location')?.tagValue ?? '-'
                     }}
                   </div>
                 </div>
@@ -96,7 +96,7 @@
             <div class="header__right-weather">
               <img :src="sunIcon" alt="sunIcon" class="header__right-weatherIcon" />
               <div class="header__right-weatherStatus">wind</div>
-              <div class="header__right-weatherValue">67F~79F</div>
+              <div class="header__right-weatherValue">67℉~79℉</div>
             </div>
             <!-- 当前功率信息（静态展示） -->
             <div class="header-station-info__power">
@@ -195,7 +195,7 @@ import addressIcon from '@/assets/icons/address.svg' // 地址图标
 import LoadingBg from '@/components/common/LoadingBg.vue' // 加载背景组件
 
 import { getStationDetail, getStationList } from '@/api/station' // API方法
-// import { useStationStore } from '@/stores/station' // Pinia电站store
+import { useStationStore } from '@/stores/station' // Pinia电站store
 import type { StationInformation, StationListItem } from '@/types/Stations' // 类型定义
 
 // 电站列表项类型
@@ -347,11 +347,14 @@ const fetchStationList = async () => {
       name: item.deviceInstancePo.name,
       status: item.deviceInstancePo.status,
       address:
-        item.deviceInstancePo.metadata.tags.find((tag) => tag.tagKey === 'Location')?.tagValue ||
+        item.deviceInstancePo.metadata.tags.find((tag) => tag.tagKey === 'Location')?.tagValue ??
         '',
     }))
   }
 }
+
+// 获取 station store
+const stationStore = useStationStore()
 
 // 拆分：根据路由参数获取电站详情
 const fetchStationDetailByRoute = async () => {
@@ -360,6 +363,8 @@ const fetchStationDetailByRoute = async () => {
   const res = await getStationDetail(stationId)
   if (res.code === 200) {
     stationDetail.value = res.data
+    // 将站点详情存储到 store 中
+    stationStore.setCurrentStationDetail(res.data)
   }
 }
 

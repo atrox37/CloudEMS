@@ -43,7 +43,7 @@
           }"
         ></div>
       </div>
-      <div class="station-card__power-percentage">{{ station.soc || '-' }}%</div>
+      <div class="station-card__power-percentage">{{ station.soc }}%</div>
     </div>
 
     <!-- Metric Cards Grid -->

@@ -22,13 +22,14 @@
 </template>
 
 <script lang="ts" setup>
-const props = withDefaults(defineProps<{
-  title: string
-  value: string | number
-  unit?: string
-  iconUrl: string
-  bgColor?: string
-}>(), {
+  export interface EnergyCardProps {
+    title: string
+    value: string | number
+    unit?: string
+    iconUrl: string
+    bgColor?: string
+  }
+const props = withDefaults(defineProps<EnergyCardProps>(), {
   title: '',
   value: '',
   iconUrl: '',

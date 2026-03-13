@@ -109,18 +109,18 @@ import DashboardCard from '@/components/card/DashboardCard.vue'
 
 import locationIcon from '@/assets/icons/dashboard-location.svg'
 import installatonateIcon from '@/assets/icons/dashboard-installatonate.svg'
-// import maintenanceIcon from '@/assets/icons/dashboard-maintenance.svg'
+import maintenanceIcon from '@/assets/icons/dashboard-maintenance.svg'
 import assignedIcon from '@/assets/icons/dashboard-assigned.svg'
 import capacityIcon from '@/assets/icons/dashboard-capacity.svg'
-// import warrantyIcon from '@/assets/icons/dashboard-warranty.svg'
+import warrantyIcon from '@/assets/icons/dashboard-warranty.svg'
 import ethernetIcon from '@/assets/icons/station-dashboard-ethernet.svg'
 import wifiIcon from '@/assets/icons/station-dashboard-wifi.svg'
 import cellularIcon from '@/assets/icons/station-dashboard-cellular.svg'
 import onlineIcon from '@/assets/icons/station-status__online.svg'
 import offlineIcon from '@/assets/icons/station-status__offline.svg'
-import { getMainteranceData } from '@/api/station'
-import type { MainteranceData } from '@/types/Stations'
-import { arrayToObjectByKey } from '@/utils/common'
+import { useStationStore } from '@/stores/station'
+import { storeToRefs } from 'pinia'
+import { watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
 // import { useStationStore } from '@/stores/station'
@@ -137,29 +137,29 @@ const dashboardList = ref([
       icon: locationIcon,
     },
   },
-  // {
-  //   id: 2,
-  //   data: { title: 'Warranty Status', value: 'Active', icon: warrantyIcon },
-  //   valueColor: 'rgba(106, 193, 97, 1)'
-  // },
   {
     id: 2,
+    data: { title: 'Warranty Status', value: 'Active', icon: warrantyIcon },
+    valueColor: 'rgba(106, 193, 97, 1)'
+  },
+  {
+    id: 3,
     data: {
       title: 'Installation Date',
       value: '-',
       icon: installatonateIcon,
     },
   },
-  // {
-  //   id: 4,
-  //   data: {
-  //     title: 'Next Maintenance',
-  //     value: '-',
-  //     icon: maintenanceIcon,
-  //   },
-  // },
   {
-    id: 3,
+    id: 4,
+    data: {
+      title: 'Next Maintenance',
+      value: '-',
+      icon: maintenanceIcon,
+    },
+  },
+  {
+    id: 5,
     data: {
       title: 'Assigned Technician',
       value: '-',
@@ -167,7 +167,7 @@ const dashboardList = ref([
     },
   },
   {
-    id: 4,
+    id: 6,
     data: {
       title: 'System Capacity',
       value: '-',
@@ -192,20 +192,32 @@ const NetworkDashboardList = ref([
   },
 ])
 const loading = ref(false)
-const fetchMainteranceData = async (stationId: number | string) => {
-  try {
-    loading.value = true
-    const res = await getMainteranceData(Number(stationId))
-    if (res.code === 200) {
-      const mainteranceData = arrayToObjectByKey(res.data, 'tagKey')
-      dashboardList.value[0].data.value = mainteranceData['Location'].tagValue
-      dashboardList.value[1].data.value = mainteranceData['Installatonate'].tagValue
-      dashboardList.value[2].data.value = mainteranceData['AssignedTechnician'].tagValue
-      dashboardList.value[3].data.value = mainteranceData['SystemCapacity'].tagValue
-    }
-  } finally {
-    loading.value = false
+
+// 获取 station store
+const stationStore = useStationStore()
+const { currentStationDetail } = storeToRefs(stationStore)
+
+// 从 store 中读取站点详情并更新 dashboardList
+const updateDashboardFromStore = () => {
+  if (!currentStationDetail.value) {
+    return
   }
+
+  // 从 wgTags 中获取对应的 tagKey
+  const wgTagsMap = new Map(currentStationDetail.value.wgTags.map((tag: any) => [tag.tagKey, tag.tagValue]))
+  
+  // Location (index 0)
+  dashboardList.value[0].data.value = (wgTagsMap.get('Location') ?? '-') as string
+  // Warranty Status (index 1) - tagKey: WarrantyStatus
+  dashboardList.value[1].data.value = (wgTagsMap.get('WarrantyStatus') ?? '-') as string
+  // Installation Date (index 2) - tagKey: Installatonate
+  dashboardList.value[2].data.value = (wgTagsMap.get('Installatonate') ?? '-') as string
+  // Next Maintenance (index 3) - tagKey: NextMaintenance
+  dashboardList.value[3].data.value = (wgTagsMap.get('NextMaintenance') ?? '-') as string
+  // Assigned Technician (index 4) - tagKey: AssignedTechnician
+  dashboardList.value[4].data.value = (wgTagsMap.get('AssignedTechnician') ?? '-') as string
+  // System Capacity (index 5) - tagKey: SystemCapacity
+  dashboardList.value[5].data.value = (wgTagsMap.get('SystemCapacity') ?? '-') as string
 }
 // watchEffect(() => {
 //   dashboardList.value[0].data.value = stationDetail.value.description.address
@@ -219,14 +231,13 @@ const fetchMainteranceData = async (stationId: number | string) => {
 //   NetworkDashboardList.value[2].data.value = stationDetail.value.description.netCellular
 // })
 
-// 监听路由 params 变化触发，并在首次进入时立即执行（使用动态路由参数）
+// 监听 store 中的站点详情变化，更新 dashboardList
 watch(
-  () => route.params.stationId,
-  (stationId) => {
-    if (!stationId) return
-    fetchMainteranceData(stationId as number | string)
+  currentStationDetail,
+  () => {
+    updateDashboardFromStore()
   },
-  { immediate: true },
+  { immediate: true, deep: true }
 )
 
 // const systemDashboardList = ref([

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="ai-assistant">
     <div
       class="ai-assistant__icon"
@@ -145,9 +145,20 @@ const messages = ref<Message[]>([])
 const messageListRef = ref<HTMLElement | null>(null)
 const abortController = ref<AbortController | null>(null)
 
-// 图标位置
-const iconX = ref(0)
-const iconY = ref(0)
+// 图标位置（初始化为右下角，避免登录后从左上角飞入的动画）
+const getInitialIconPosition = () => {
+  if (typeof window === 'undefined') return { x: 0, y: 0 }
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const size = getIconSize()
+  return {
+    x: vw - size - PADDING,
+    y: vh - size - PADDING - 20,
+  }
+}
+const { x: initX, y: initY } = getInitialIconPosition()
+const iconX = ref(initX)
+const iconY = ref(initY)
 
 // 对话框高度
 const dialogHeight = ref(MIN_DIALOG_HEIGHT)

@@ -39,6 +39,7 @@ import dieselGeneratorIcon from '@/assets/icons/station-dashboard-dieselGenerato
 import { getPerformanceView, getPerformancechart } from '@/api/station'
 import { getLastWeekArray } from '@/utils/time'
 import { useRoute } from 'vue-router'
+import dayjs from 'dayjs'
 
 import type { DashboardProps } from '@/components/card/DashboardCard.vue'
 import type { SeriesData, XAxisOption, YAxisOption } from '@/components/charts/MultiBarChar.vue'
@@ -157,13 +158,13 @@ const fetchPerformanceViewData = async (stationId: string | number) => {
     systemDashboardLoading.value = true
     const res = await getPerformanceView(stationId)
     if (res.code === 200) {
-      systemDashboardList.value[0].dashboardData.value = res.data.sysPe
-      systemDashboardList.value[1].dashboardData.value = res.data.sysAe
-      systemDashboardList.value[2].dashboardData.value = res.data.sysMe
-      deviceDashboardList.value[0].dashboardData.value = res.data.deviceSp
-      deviceDashboardList.value[1].dashboardData.value = res.data.deviceBs
-      deviceDashboardList.value[2].dashboardData.value = res.data.devicePs
-      deviceDashboardList.value[3].dashboardData.value = res.data.deviceDg
+      systemDashboardList.value[0].dashboardData.value = res.data.sysPe 
+      systemDashboardList.value[1].dashboardData.value = res.data.sysAe 
+      systemDashboardList.value[2].dashboardData.value = res.data.sysMe 
+      deviceDashboardList.value[0].dashboardData.value = res.data.deviceSp 
+      deviceDashboardList.value[1].dashboardData.value = res.data.deviceBs 
+      deviceDashboardList.value[2].dashboardData.value = res.data.devicePs 
+      deviceDashboardList.value[3].dashboardData.value = res.data.deviceDg 
     }
   } catch (error) {
     // 可以根据需要添加错误处理
@@ -179,7 +180,8 @@ const fetchPerformanceChartData = async (stationId: string | number) => {
     chartLoading.value = true
     const res2 = await getPerformancechart(stationId)
     if (res2.code === 200) {
-      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => item.ts)
+      // 格式化时间戳为日期格式（不包含时分秒）
+      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => dayjs(item.ts).format('YYYY-MM-DD'))
       series.value[0].data = res2.data.guangFu.map(item => item.numberValue)
       series.value[1].data = res2.data.chaiFa.map(item => item.numberValue)
     }

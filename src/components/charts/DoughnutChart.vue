@@ -120,7 +120,7 @@ function customTooltipFormatter(
   },
 ) {
   const { width, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
-  const name = params.name || ''
+  const name = params.name ?? ''
   const value = params.value || 0
   const percent = params.percent || 0
   const unit = params.data.unit ? ' ' + params.data.unit : ''
@@ -341,7 +341,7 @@ function getChartOption({
       data: props.series.map((s: SeriesData) => ({
         name: s.name,
         value: s.value,
-        unit: s.unit || '',
+        unit: s.unit ?? '',
         itemStyle: {
           color: s.color,
         },

@@ -255,8 +255,8 @@ function getGridConfig(isFullScreen: boolean) {
 
 // 统一生成option的方法
 function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
-  const xUnit = props.xAxiosOption.xUnit || ''
-  const yUnit = props.yAxiosOption.yUnit || ''
+  const xUnit = props.xAxiosOption.xUnit ?? ''
+  const yUnit = props.yAxiosOption.yUnit ?? ''
 
   // 背景数据 - 取每个索引位置上的最大值
   const totalData = props.xAxiosOption.xAxiosData.map((_, index: number) => {
@@ -456,25 +456,25 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
 
   // 生成系列数据
   const seriesData: any[] = [
-    {
-      name: 'background',
-      type: 'bar',
-      barWidth: '70%',
-      barGap: '-100%',
-      itemStyle: {
-        color: 'rgba(255,255,255,0)',
-      },
-      data: totalData,
-      showBackground: true,
-      backgroundStyle: {
-        color: 'rgba(252, 252, 253, 0.04)',
-      },
-      silent: true,
-      emphasis: { disabled: true },
-      tooltip: { show: false },
-      label: { show: false },
-      z: 0,
-    },
+    // {
+    //   name: 'background',
+    //   type: 'bar',
+    //   barWidth: '70%',
+    //   barGap: '-100%',
+    //   itemStyle: {
+    //     color: 'rgba(255,255,255,0)',
+    //   },
+    //   data: totalData,
+    //   showBackground: true,
+    //   backgroundStyle: {
+    //     color: 'rgba(252, 252, 253, 0.04)',
+    //   },
+    //   silent: true,
+    //   emphasis: { disabled: true },
+    //   tooltip: { show: false },
+    //   label: { show: false },
+    //   z: 0,
+    // },
   ]
 
   // 是否已添加分界线标记
@@ -545,7 +545,7 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
           data: props.splitLines.map(sl => ({
             xAxis: sl.index,
             label: {
-              formatter: sl.label || ''
+              formatter: sl.label ?? ''
             }
           }))
         }

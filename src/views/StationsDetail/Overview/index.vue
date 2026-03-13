@@ -35,6 +35,7 @@ import { getStationOverview, getStationOverchart } from '@/api/station'
 import type { StationOverview } from '@/types/Stations'
 import type { SeriesData, XAxisOption, YAxisOption } from '@/components/charts/lineChart.vue'
 import { useRoute } from 'vue-router'
+import dayjs from 'dayjs'
 const route = useRoute()
 defineProps<{
   stationLoading: boolean
@@ -51,17 +52,17 @@ const stationOverview = ref<StationOverview>({
 })
 const overviewSeries = ref<SeriesData[]>([
   {
-    name: 'pv',
+    name: 'PV',
     data: [],
     color: '#4FADF7'
   },
   {
-    name: 'diesel generator',
+    name: 'DG',
     data: [],
     color: '#F6C85F'
   },
   {
-    name: 'ess',
+    name: 'ESS',
     data: [],
     color: '#6DD400'
   }
@@ -90,7 +91,8 @@ const fetchStationOverchartData = async (stationId: string | number) => {
     lineChartLoading.value = true
     const res2 = await getStationOverchart(stationId)
     if (res2.code === 200) {
-      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => item.ts)
+      // 格式化时间戳为日期格式（不包含时分秒）
+      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => dayjs(item.ts).format('YYYY-MM-DD'))
       overviewSeries.value[0].data = res2.data.guangFu.map(item => item.numberValue)
       overviewSeries.value[1].data = res2.data.chaiFa.map(item => item.numberValue)
       overviewSeries.value[2].data = res2.data.chuNeng.map(item => item.numberValue)

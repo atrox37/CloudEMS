@@ -166,7 +166,7 @@ class StompManager {
 
           // 连接头部（可携带认证信息）
           connectHeaders: {
-            Authorization: `Bearer ${userStore.token}`,
+            Authorization: `${userStore.token}`,
           },
 
           // 心跳配置
@@ -266,14 +266,10 @@ class StompManager {
             console.error('[STOMP] 错误详情:', frame.body)
             this.status.value = 'error'
             this.connectionStats.errorCount++
-
-            // 触发错误回调
             this.globalListeners.onError?.({
               message: frame.headers['message'],
               body: frame.body,
             })
-
-            ElMessage.error(`STOMP错误: ${frame.headers['message']}`)
           },
         })
 

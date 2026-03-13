@@ -25,7 +25,7 @@
     "autofit.js": "^3.2.8",
     "axios": "^1.11.0",
     "crypto-js": "^4.2.0",
-    "dayjs": "^1.11.18",
+    "dayjs": "^1.11.19",
     "echarts": "^6.0.0",
     "element-plus": "^2.10.4",
     "pinia": "^3.0.3",

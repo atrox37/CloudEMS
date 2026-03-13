@@ -101,9 +101,9 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
     dashboardListLoading.value = true
     const res2 = await getStationAlarmStatistics(stationId)
     if (res2.code === 200) {
-      dashboardList.value[0].dashboardData.value = res2.data.level1
-      dashboardList.value[1].dashboardData.value = res2.data.level2
-      dashboardList.value[2].dashboardData.value = res2.data.level3
+      dashboardList.value[0].dashboardData.value = res2.data.level1 
+      dashboardList.value[1].dashboardData.value = res2.data.level2 
+      dashboardList.value[2].dashboardData.value = res2.data.level3 
       stationAlarm.value.level1 = res2.data.level1Data || []
       stationAlarm.value.level2 = res2.data.level2Data || []
       stationAlarm.value.level3 = res2.data.level3Data || []

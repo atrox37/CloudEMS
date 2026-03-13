@@ -104,7 +104,7 @@ const requestInterceptor = (config: any) => {
     config.headers['LOGINTYPE'] = 'PASS'
   }
   // 如果是POST/PUT/PATCH请求且没有设置Content-Type，设置为json
-  if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
+  if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() ?? '')) {
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json'
     }
@@ -201,8 +201,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       return response
     } else {
       // 业务逻辑错误
-      let errorMessage = data.msg || 'Request failed'
-      const requestUrl = response.config?.url || ''
+      let errorMessage = data.msg ?? 'Request failed'
+      const requestUrl = response.config?.url ?? ''
       
       // 根据不同的业务状态码进行处理
       switch (data.code) {
@@ -252,7 +252,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
     console.error(`${logPrefix}[响应错误]`, error)
 
     const originalRequest = error.config
-    const requestUrl = originalRequest?.url || ''
+    const requestUrl = originalRequest?.url ?? ''
 
     // 特殊处理：如果刷新 token 的请求本身返回 401，直接登出，不再尝试刷新
     if (error.response?.status === 401 && isRefreshTokenRequest(requestUrl)) {

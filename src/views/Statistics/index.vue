@@ -392,7 +392,7 @@ const getAnalyticsLine = async () => {
       tableData.value = res.data.map((item: AnalyticsAllData) => ({
         id: item.deviceInstancePo.id,
         stationName: item.deviceInstancePo.name,
-        address: item.wgTag.find((tag: AnalyticsWgTag) => tag.tagKey === 'Location')?.tagValue || '',
+        address: item.wgTag.find((tag: AnalyticsWgTag) => tag.tagKey === 'Location')?.tagValue ?? '',
         status: item.deviceInstancePo.status,
         'battery(soc)': item.batteryRate,
         Alarm: item.alarmCount,

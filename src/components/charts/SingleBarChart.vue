@@ -197,8 +197,8 @@ function getChartOption({
   isFullScreen?: boolean
 }) {
   // 配置参数
-  const xUnit = props.xAxiosOption.xUnit || ''
-  const yUnit = props.yAxiosOption.yUnit || ''
+  const xUnit = props.xAxiosOption.xUnit ?? ''
+  const yUnit = props.yAxiosOption.yUnit ?? ''
   // 背景柱
   const totalData = props.xAxiosOption.xAxiosData.map((_, index) => {
     return props.series.reduce((sum, s) => sum + (s.data[index] || 0), 0)
@@ -379,25 +379,25 @@ function getChartOption({
 
   // series
   const seriesData = [
-    {
-      name: 'background',
-      type: 'bar',
-      barGap: '-100%',
-      itemStyle: {
-        color: 'rgba(255,255,255,0)',
-      },
-      barWidth: '70%',
-      data: totalData,
-      showBackground: true,
-      backgroundStyle: {
-        color: 'rgba(252, 252, 253, 0.04)',
-      },
-      silent: true,
-      emphasis: { disabled: true },
-      tooltip: { show: false },
-      label: { show: false },
-      z: 0,
-    },
+    // {
+    //   name: 'background',
+    //   type: 'bar',
+    //   barGap: '-100%',
+    //   itemStyle: {
+    //     color: 'rgba(255,255,255,0)',
+    //   },
+    //   barWidth: '70%',
+    //   data: totalData,
+    //   showBackground: true,
+    //   backgroundStyle: {
+    //     color: 'rgba(252, 252, 253, 0.04)',
+    //   },
+    //   silent: true,
+    //   emphasis: { disabled: true },
+    //   tooltip: { show: false },
+    //   label: { show: false },
+    //   z: 0,
+    // },
     ...props.series.map((s) => ({
       name: s.name,
       type: 'bar',
@@ -405,7 +405,7 @@ function getChartOption({
       stack: 'data',
       emphasis: { focus: 'series' },
       barWidth: '50%',
-      barGap: '-85%',
+      // barGap: '-85%',
       itemStyle: {
         color: s.color,
       },
@@ -530,7 +530,7 @@ function getChartOption({
   } : {}
   // 计算滑动范围
   const totalDataLength = props.xAxiosOption.xAxiosData.length
-  const visibleCount = isFullScreen ? 30 : 15
+  const visibleCount = isFullScreen ? 3000 : 1000
   const shouldAutoScroll = props.enableAutoScroll && totalDataLength > visibleCount
 
   // 计算当前滑动位置
@@ -543,12 +543,12 @@ function getChartOption({
     type: 'inside',
     show: true,
     start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-    end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (30 / totalDataLength) * 100),
+    end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
   }] : [{
     type: 'inside',
     show: true,
     start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-    end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (15 / totalDataLength) * 100),
+    end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
   }]
   return {
     legend,
@@ -567,7 +567,7 @@ const startAutoScroll = () => {
   if (!props.enableAutoScroll || isHovered.value) return
 
   const totalDataLength = props.xAxiosOption.xAxiosData.length
-  const visibleCount = 15 // 普通模式固定15个
+  const visibleCount = 1000 // 普通模式固定1000个
 
   if (totalDataLength <= visibleCount) return
 

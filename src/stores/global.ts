@@ -4,9 +4,12 @@ import { defineStore } from 'pinia'
 export const useGlobalStore = defineStore('global', () => {
   const isCollapse = ref(false)
   const loading = ref(false)
+  // 应用初始化中（token 刷新、路由注入），用于显示全局骨架屏
+  const appInitializing = ref(false)
   return {
     isCollapse,
     loading,
+    appInitializing,
   }
 },{
   persist: {

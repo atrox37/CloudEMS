@@ -201,8 +201,8 @@ function getChartOption({
     chartWidth?: number
 }) {
     // 配置参数
-    const xUnit = props.xAxiosOption.xUnit || ''
-    const yUnit = props.yAxiosOption.yUnit || ''
+    const xUnit = props.xAxiosOption.xUnit ?? ''
+    const yUnit = props.yAxiosOption.yUnit ?? ''
     // const dataCount = props.xAxiosOption.xAxiosData.length
 
     // // 尺寸参数
@@ -521,7 +521,7 @@ function getChartOption({
 
     // 计算滑动范围
     const totalDataLength = props.xAxiosOption.xAxiosData.length
-    const visibleCount = isFullScreen ? 30 : 15
+    const visibleCount = isFullScreen ? 3000 : 1000
     const shouldAutoScroll = props.enableAutoScroll && totalDataLength > visibleCount
 
     // 计算当前滑动位置
@@ -534,12 +534,12 @@ function getChartOption({
         type: 'inside',
         show: true,
         start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (30 / totalDataLength) * 100),
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
     }] : [{
-        type: 'inside',
+        type: 'inside', 
         show: true,
         start: shouldAutoScroll ? (scrollStart / totalDataLength) * 100 : 0,
-        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (15 / totalDataLength) * 100),
+        end: shouldAutoScroll ? (scrollEnd / totalDataLength) * 100 : Math.min(100, (visibleCount / totalDataLength) * 100),
     }]
 
     return {
@@ -559,7 +559,7 @@ const startAutoScroll = () => {
     if (!props.enableAutoScroll || isHovered.value) return
 
     const totalDataLength = props.xAxiosOption.xAxiosData.length
-    const visibleCount = 15 // 普通模式固定15个
+    const visibleCount = 1000 // 普通模式固定1000个
 
     if (totalDataLength <= visibleCount) return
 
