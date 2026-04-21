@@ -3,7 +3,7 @@ name: Deploy to ECS (EC2 + bridge, AccessKey)
 on:
   workflow_dispatch:
   push:
-    branches: ['prod']
+    branches: ['main']
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
