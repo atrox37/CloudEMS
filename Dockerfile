@@ -5,6 +5,8 @@
     
     # 先拷贝锁文件和 package.json，充分利用缓存
     COPY package.json pnpm-lock.yaml ./
+    # postinstall 会执行该脚本；须在安装依赖前存在，否则 pnpm install 失败
+    COPY scripts/setup-git-hooks.mjs scripts/setup-git-hooks.mjs
     
     # 不用 corepack，直接装指定版本 pnpm
     RUN npm install -g pnpm@10.15.1
