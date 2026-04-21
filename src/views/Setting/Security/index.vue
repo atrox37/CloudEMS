@@ -8,17 +8,17 @@
     </div>
     <div class="security__body">
       <SettingCard title="Password Policy">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <SettingItem title="Minimum password length">
           <el-input v-model="passwordForm.minLength" placeholder="Enter password" />
         </SettingItem>
         <SettingItem title="Require uppercase letters">
-          <el-switch v-model="passwordForm.requireUppercase" style="margin-right:2.04rem" />
+          <el-switch v-model="passwordForm.requireUppercase" style="margin-right: 2.04rem" />
         </SettingItem>
         <SettingItem title="Require lowercase letters">
-          <el-switch v-model="passwordForm.requireLowercase" style="margin-right:2.04rem" />
+          <el-switch v-model="passwordForm.requireLowercase" style="margin-right: 2.04rem" />
         </SettingItem>
         <SettingItem title="Password expiration (days)">
           <el-input v-model="passwordForm.expiration" placeholder="Enter password" />
@@ -26,31 +26,28 @@
         <div class="security__submit-btn">
           <el-button type="primary">submit</el-button>
         </div>
-
       </SettingCard>
       <SettingCard title="Two-Factor Authentication">
-        <template #control>
+        <!-- <template #control>
           <el-button type="primary">submit</el-button>
-        </template>
+        </template> -->
         <SettingItem title="Require 2FA for all users">
-          <el-switch v-model="twoFactorForm.require2FA" style="margin-right:2.04rem" />
+          <el-switch v-model="twoFactorForm.require2FA" style="margin-right: 2.04rem" />
         </SettingItem>
         <SettingItem title="Require 2FA for admin users">
-          <el-switch v-model="twoFactorForm.require2FAAdmin" style="margin-right:2.04rem" />
+          <el-switch v-model="twoFactorForm.require2FAAdmin" style="margin-right: 2.04rem" />
         </SettingItem>
         <div class="security__submit-btn">
           <el-button type="primary">submit</el-button>
         </div>
       </SettingCard>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import SettingCard from '@/components/card/settingCard.vue'
 import SettingItem from '@/components/card/settingItem.vue'
-
 
 const passwordForm = ref({
   minLength: 8,
@@ -63,7 +60,6 @@ const twoFactorForm = ref({
   require2FA: true,
   require2FAAdmin: true,
 })
-
 </script>
 
 <style scoped lang="scss">
@@ -81,10 +77,17 @@ const twoFactorForm = ref({
     height: 1.02rem;
     padding: 0.2rem;
     margin-bottom: 0.2rem;
-    background-color: rgba(84, 98, 140, 0.2);
+    background-color: var(--vt-bg-input);
     border: 0.01rem solid;
 
-    border-image: linear-gradient(117.64deg, rgba(148, 166, 197, 0.3) 2.73%, rgba(148, 166, 197, 0) 31.73%, rgba(148, 166, 197, 0.103266) 71.62%, rgba(148, 166, 197, 0.3) 97.67%) 1;
+    border-image: linear-gradient(
+        117.64deg,
+        var(--vt-border-color) 2.73%,
+        rgba(148, 166, 197, 0) 31.73%,
+        rgba(148, 166, 197, 0.103266) 71.62%,
+        var(--vt-border-color) 97.67%
+      )
+      1;
 
     backdrop-filter: blur(0.1rem);
 
@@ -99,7 +102,7 @@ const twoFactorForm = ref({
         font-size: 0.26rem;
         line-height: 0.26rem;
         letter-spacing: 0%;
-        color: #fff;
+        color: var(--vt-text-primary);
       }
 
       .security__header-left-desc {
@@ -107,7 +110,7 @@ const twoFactorForm = ref({
         line-height: 100%;
         letter-spacing: 0%;
         vertical-align: middle;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--vt-white-60);
       }
     }
 
@@ -124,12 +127,15 @@ const twoFactorForm = ref({
     height: calc(100% - 1.22rem);
     overflow-y: auto;
 
-    &>div {
+    & > div {
       margin-bottom: 0.2rem;
 
       &:last-child {
         margin-bottom: 0;
       }
+    }
+    :deep(.el-input){
+      width: 2.4rem;
     }
   }
 
@@ -140,7 +146,5 @@ const twoFactorForm = ref({
     display: flex;
     justify-content: flex-end;
   }
-
-
 }
 </style>

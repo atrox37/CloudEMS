@@ -1,4 +1,3 @@
-
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
@@ -16,10 +15,7 @@ dayjs.extend(relativeTime)
  */
 export function getLast6HoursArray(): string[] {
   const now = dayjs()
-  return [
-    now.subtract(6, 'hour').format('YYYY-MM-DD HH:mm:ss'),
-    now.format('YYYY-MM-DD HH:mm:ss'),
-  ]
+  return [now.subtract(6, 'hour').format('YYYY-MM-DD HH:mm:ss'), now.format('YYYY-MM-DD HH:mm:ss')]
 }
 
 /**
@@ -28,10 +24,7 @@ export function getLast6HoursArray(): string[] {
  */
 export function getLast24HoursArray(): string[] {
   const now = dayjs()
-  return [
-    now.subtract(24, 'hour').format('YYYY-MM-DD HH:mm:ss'),
-    now.format('YYYY-MM-DD HH:mm:ss'),
-  ]
+  return [now.subtract(24, 'hour').format('YYYY-MM-DD HH:mm:ss'), now.format('YYYY-MM-DD HH:mm:ss')]
 }
 
 /**
@@ -51,10 +44,7 @@ export function getLastMonthArray(): string[] {
   // 获取当前时间
   const now = dayjs()
   // 获取一个月前的时间
-  return [
-    now.subtract(1, 'month').format('YYYY-MM-DD HH:mm:ss'),
-    now.format('YYYY-MM-DD HH:mm:ss'),
-  ]
+  return [now.subtract(1, 'month').format('YYYY-MM-DD HH:mm:ss'), now.format('YYYY-MM-DD HH:mm:ss')]
 }
 
 /**
@@ -83,7 +73,10 @@ export function getTimeRangeArray(type: '6hours' | '1day' | '1week' | '1month'):
  * @param formatStr 格式字符串，默认为 'YYYY-MM-DD HH:mm:ss'
  * @returns 格式化后的时间字符串
  */
-export function format(date: string | Date | ReturnType<typeof dayjs>, formatStr: string = 'YYYY-MM-DD HH:mm:ss') {
+export function format(
+  date: string | Date | ReturnType<typeof dayjs>,
+  formatStr: string = 'YYYY-MM-DD HH:mm:ss',
+) {
   return dayjs(date).format(formatStr)
 }
 

@@ -6,7 +6,12 @@
 
     <div class="header__right">
       <div class="header__right-avatar">
-        <el-dropdown @command="handleUserCommand" trigger="click" :teleported="false" @visible-change="handleDropdownChange">
+        <el-dropdown
+          @command="handleUserCommand"
+          trigger="click"
+          :teleported="false"
+          @visible-change="handleDropdownChange"
+        >
           <div class="header__user">
             <div class="header__user-avatar">
               <div class="header__user-avatar-initials">
@@ -14,7 +19,11 @@
               </div>
             </div>
             <span class="header__user-name">{{ userStore.userInfo?.sysUserPo?.username }}</span>
-            <img :src="arrowDownIcon" class="header__user-arrow" :class="{ 'rotate': isDropdownVisible }" />
+            <img
+              :src="arrowDownIcon"
+              class="header__user-arrow"
+              :class="{ rotate: isDropdownVisible }"
+            />
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -30,37 +39,38 @@
       </div>
       <!-- 告警通知下拉框 -->
       <div class="header__right-notice">
-        <el-dropdown 
-          trigger="click" 
-          :teleported="false" 
+        <el-dropdown
+          trigger="click"
+          :teleported="false"
           @command="handleAlarmCommand"
           @visible-change="handleAlarmDropdownChange"
         >
           <el-button link class="header__right-noticeBtn">
-            <el-badge :value="stationStore.totalAlarmCount" :hidden="stationStore.totalAlarmCount === 0">
+            <el-badge
+              :value="stationStore.totalAlarmCount"
+              :hidden="stationStore.totalAlarmCount === 0"
+            >
               <img :src="noticeIcon" class="header__right-noticeIcon" />
             </el-badge>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item 
-                v-for="station in stationStore.stations" 
+              <el-dropdown-item
+                v-for="station in stationStore.stations"
                 :key="station.stationId"
                 :command="station.stationId"
               >
                 <div class="header__user-Item">
                   <span class="header__alarm-item-name">{{ station.stationName }}</span>
-                  <el-badge 
-                    :value="station.alarmCount" 
+                  <el-badge
+                    :value="station.alarmCount"
                     :hidden="station.alarmCount === 0"
                     class="header__alarm-item-badge"
                   />
                 </div>
               </el-dropdown-item>
               <el-dropdown-item v-if="stationStore.stations.length === 0" disabled>
-                <div class="header__user-Item header__user-Item--empty">
-                  暂无站点数据
-                </div>
+                <div class="header__user-Item header__user-Item--empty">暂无站点数据</div>
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -125,8 +135,8 @@ const handleAlarmDropdownChange = (visible: boolean) => {
 .voltage-class.header {
   position: relative;
   height: 0.85rem;
-  background: rgba(84, 98, 140, 0.3);
-  border-bottom: 0.01rem solid rgba(148, 166, 197, 0.3);
+  background: var(--vt-bg-header);
+  border-bottom: 0.01rem solid var(--vt-border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -145,7 +155,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
       font-size: 0.3rem;
       line-height: 150%;
       letter-spacing: 0%;
-      color: #ffffff;
+      color: var(--vt-text-primary);
       margin-right: 0.1rem;
     }
 
@@ -156,7 +166,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
       padding: 0.07rem 0 0.07rem 0.1rem;
       display: flex;
       align-items: center;
-      background: rgba(84, 98, 140, 0.5);
+      background: var(--vt-bg-header-strong);
       border-radius: 0.15rem;
       backdrop-filter: blur(0.1rem);
 
@@ -167,14 +177,14 @@ const handleAlarmDropdownChange = (visible: boolean) => {
         justify-content: center;
         align-items: center;
         border-radius: 50%;
-        background-color: rgba(106, 193, 97, 0.2);
+        background-color: var(--vt-bg-success-soft);
         margin-right: 0.06rem;
 
         .header__left-statusIconCircle {
           width: 0.1rem;
           height: 0.1rem;
           border-radius: 50%;
-          background-color: rgba(106, 193, 97, 1);
+          background-color: var(--vt-status-online);
         }
       }
 
@@ -186,7 +196,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
         line-height: 100%;
         letter-spacing: 0%;
         vertical-align: middle;
-        color: #ffffff;
+        color: var(--vt-text-primary);
       }
     }
   }
@@ -212,7 +222,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
           height: 0.16rem;
           border: none;
           border-radius: 50%;
-          background-color: rgba(218, 45, 44, 1);
+          background-color: var(--vt-status-danger);
           font-family: Arimo;
           font-weight: 400;
           font-size: 0.14rem;
@@ -224,7 +234,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
           object-fit: contain;
         }
       }
-      :deep(.el-popper.is-light){
+      :deep(.el-popper.is-light) {
         top: 0.52rem !important;
       }
     }
@@ -247,10 +257,10 @@ const handleAlarmDropdownChange = (visible: boolean) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(29, 134, 255, 0.2);
+  background-color: var(--vt-bg-accent-blue-soft);
 
   .header__user-avatar-initials {
-    color: rgba(29, 134, 255, 1);
+    color: var(--vt-accent-blue);
     font-weight: 700;
     font-size: 0.19rem;
     line-height: 100%;
@@ -265,14 +275,14 @@ const handleAlarmDropdownChange = (visible: boolean) => {
   font-size: 0.18rem;
   line-height: 140%;
   letter-spacing: 0%;
-  color: #ffffff;
+  color: var(--vt-text-primary);
 }
 
 .header__user-arrow {
   height: 0.08rem;
   width: 0.1rem;
   font-size: 0.12rem;
-  color: #909399;
+  color: var(--vt-text-secondary);
   transition: all 0.3s ease;
 
   &.rotate {
@@ -292,7 +302,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #ffffff;
+  color: var(--vt-text-primary);
   font-weight: 500;
   font-size: 0.14rem;
   line-height: 100%;
@@ -304,7 +314,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
     object-fit: contain;
     margin-right: 0.1rem;
   }
-  
+
   .header__alarm-item-name {
     height: 0.2rem;
     line-height: 0.2rem;
@@ -314,7 +324,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
     white-space: nowrap;
     margin-right: 0.1rem;
   }
-  
+
   .header__alarm-item-badge {
     :deep(.el-badge__content) {
       position: relative;
@@ -327,7 +337,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
       padding: 0 0.06rem;
       border: none;
       border-radius: 0.1rem;
-      background-color: rgba(218, 45, 44, 1);
+      background-color: var(--vt-status-danger);
       font-family: Arimo;
       font-weight: 400;
       font-size: 0.12rem;
@@ -337,7 +347,7 @@ const handleAlarmDropdownChange = (visible: boolean) => {
 
   &--empty {
     justify-content: center;
-    color: rgba(255, 255, 255, 0.5);
-  }
+    color: var(--vt-white-50);
+}
 }
 </style>

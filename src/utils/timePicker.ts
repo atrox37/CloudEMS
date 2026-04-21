@@ -53,7 +53,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const endHour = endTime.getHours()
       const endMinute = endTime.getMinutes()
       const endSecond = endTime.getSeconds()
-      
+
       // 如果结束时间的分钟和秒都是0，则禁用当前小时
       if (endMinute === 0 && endSecond === 0) {
         for (let i = endHour; i < 24; i++) {
@@ -80,7 +80,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const endHour = endTime.getHours()
       const endMinute = endTime.getMinutes()
       const endSecond = endTime.getSeconds()
-      
+
       // 如果当前小时等于结束小时
       if (hour === endHour) {
         // 如果结束时间的秒是0，则禁用结束分钟之后的分钟
@@ -110,7 +110,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const endHour = endTime.getHours()
       const endMinute = endTime.getMinutes()
       const endSecond = endTime.getSeconds()
-      
+
       // 如果当前小时和分钟都等于结束时间
       if (hour === endHour && minute === endMinute) {
         // 禁用结束秒之后的秒
@@ -133,7 +133,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const startHour = startTime.getHours()
       const startMinute = startTime.getMinutes()
       const startSecond = startTime.getSeconds()
-      
+
       // 如果开始时间的分钟和秒都是59，则禁用当前小时
       if (startMinute === 59 && startSecond === 59) {
         for (let i = 0; i <= startHour; i++) {
@@ -160,7 +160,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const startHour = startTime.getHours()
       const startMinute = startTime.getMinutes()
       const startSecond = startTime.getSeconds()
-      
+
       // 如果当前小时等于开始小时
       if (hour === startHour) {
         // 如果开始时间的秒是59，则禁用开始分钟之前的分钟
@@ -190,7 +190,7 @@ export function useTimePickerLimits(form: TimePickerForm) {
       const startHour = startTime.getHours()
       const startMinute = startTime.getMinutes()
       const startSecond = startTime.getSeconds()
-      
+
       // 如果当前小时和分钟都等于开始时间
       if (hour === startHour && minute === startMinute) {
         // 禁用开始秒之前的秒
@@ -215,7 +215,9 @@ export function useTimePickerLimits(form: TimePickerForm) {
       return (
         date.getFullYear() > endDate.getFullYear() ||
         (date.getFullYear() === endDate.getFullYear() && date.getMonth() > endDate.getMonth()) ||
-        (date.getFullYear() === endDate.getFullYear() && date.getMonth() === endDate.getMonth() && date.getDate() > endDate.getDate())
+        (date.getFullYear() === endDate.getFullYear() &&
+          date.getMonth() === endDate.getMonth() &&
+          date.getDate() > endDate.getDate())
       )
     }
     return false
@@ -233,8 +235,11 @@ export function useTimePickerLimits(form: TimePickerForm) {
       // 只比较年月日
       return (
         date.getFullYear() < startDate.getFullYear() ||
-        (date.getFullYear() === startDate.getFullYear() && date.getMonth() < startDate.getMonth()) ||
-        (date.getFullYear() === startDate.getFullYear() && date.getMonth() === startDate.getMonth() && date.getDate() < startDate.getDate())
+        (date.getFullYear() === startDate.getFullYear() &&
+          date.getMonth() < startDate.getMonth()) ||
+        (date.getFullYear() === startDate.getFullYear() &&
+          date.getMonth() === startDate.getMonth() &&
+          date.getDate() < startDate.getDate())
       )
     }
     return false
@@ -260,14 +265,17 @@ export function useTimePickerLimits(form: TimePickerForm) {
  * @param endTime 结束时间
  * @returns 是否有效
  */
-export function validateTimeRange(startTime: string | Date | null, endTime: string | Date | null): boolean {
+export function validateTimeRange(
+  startTime: string | Date | null,
+  endTime: string | Date | null,
+): boolean {
   if (!startTime || !endTime) {
     return true // 如果任一时间为空，认为是有效的
   }
-  
+
   const start = new Date(startTime)
   const end = new Date(endTime)
-  
+
   return start < end
 }
 
@@ -278,11 +286,11 @@ export function validateTimeRange(startTime: string | Date | null, endTime: stri
  */
 export function formatTime(time: string | Date | null): string {
   if (!time) return ''
-  
+
   const date = new Date(time)
   const hours = date.getHours().toString().padStart(2, '0')
   const minutes = date.getMinutes().toString().padStart(2, '0')
   const seconds = date.getSeconds().toString().padStart(2, '0')
-  
+
   return `${hours}:${minutes}:${seconds}`
 }

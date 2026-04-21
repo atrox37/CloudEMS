@@ -1,53 +1,54 @@
-/**
- * Axios 请求封装
- * 提供统一的HTTP请求配置、拦截器和错误处理
- */
-
-import axios, { type AxiosRequestConfig } from 'axios'
+﻿import axios, {
+  type AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type Canceler,
+} from 'axios'
+import { getActivePinia } from 'pinia'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
+import { reactive } from 'vue'
 import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
 
-// 存储所有pending的请求
-const pendingRequests = reactive(new Map())
-
-
-watch(pendingRequests, () => {
-  const globalStore = useGlobalStore()
-  globalStore.loading = pendingRequests.size > 0
-})
-// 定义响应数据的通用接口
 export interface ApiResponse<T = any> {
-  code: number // 响应状态码
-  msg: string // 响应消息
-  data: T // 响应数据
+  code: number
+  msg: string
+  data: T
 }
 
-// 扩展请求配置,添加自定义属性
 export interface RequestConfig extends AxiosRequestConfig {
-  skipCancel?: boolean // 是否跳过自动取消重复请求
+  skipCancel?: boolean
+  showSuccessMessage?: boolean
+  _requestKey?: string
+  _retry?: boolean
 }
+
+const pendingRequests = reactive(new Map<string, { cancel: Canceler }>())
 const WHITE_LIST = ['/user-app/login', '/sys-app/common/captcha', '/sys-app/common/refresh']
-// 刷新 token 的接口路径
 const REFRESH_TOKEN_URL = '/sys-app/common/refresh'
 
-/**
- * 判断是否是刷新 token 的请求
- */
-const isRefreshTokenRequest = (url: string | undefined): boolean => {
-  return url?.includes(REFRESH_TOKEN_URL) || false
-}
-const createRequestKey = (config: AxiosRequestConfig): string => {
-  const params = { ...(config.params || {}) }
-  if ('_t' in params) {
-    delete params._t
+const syncGlobalLoading = () => {
+  if (!getActivePinia()) {
+    return
   }
-  return `${config.method}-${config.url}-${JSON.stringify(params)}-${JSON.stringify(config?.data)}`
+  const globalStore = useGlobalStore()
+  globalStore.loading = pendingRequests.size > 0
 }
-/**
- * 创建axios实例
- * 设置基础配置项
- */
+
+const isRefreshTokenRequest = (url?: string): boolean => url?.includes(REFRESH_TOKEN_URL) ?? false
+
+const createRequestKey = (config: AxiosRequestConfig): string => {
+  const params = { ...(config.params as Record<string, unknown> | undefined) }
+  delete params._t
+  return [
+    config.method ?? 'get',
+    config.url ?? '',
+    JSON.stringify(params),
+    JSON.stringify(config.data ?? null),
+  ].join('-')
+}
+
 const service = axios.create({
   baseURL: '/api',
   timeout: 15000,
@@ -57,89 +58,79 @@ const service = axios.create({
   withCredentials: false,
 })
 
-// 已统一为单一请求通道
+const removePendingRequest = (config?: RequestConfig) => {
+  if (!config || config.skipCancel || !config._requestKey) {
+    return
+  }
+  pendingRequests.delete(config._requestKey)
+  syncGlobalLoading()
+}
 
-/**
- * 请求拦截器
- * 在发送请求之前做一些统一处理
- */
-const requestInterceptor = (config: any) => {
-  // 如果配置了 skipCancel，跳过自动取消逻辑
-  if (!config.skipCancel) {
-    // 生成请求的唯一标识（在 data 被 Axios 序列化之前生成）
-    const requestKey = createRequestKey(config)
-    // 将 requestKey 存储到 config 上，响应时直接使用，避免因 data 被序列化导致 key 不一致
-    config._requestKey = requestKey
-    console.log(requestKey, 'requestKey - created')
+const requestInterceptor = (config: RequestConfig) => {
+  const nextConfig = config
 
-    // 如果存在相同的pending请求，取消它
-    if (pendingRequests.has(requestKey)) {
-      const cancelToken = pendingRequests.get(requestKey)
-      cancelToken.cancel('请求被取消')
+  if (!nextConfig.skipCancel) {
+    const requestKey = createRequestKey(nextConfig)
+    nextConfig._requestKey = requestKey
+
+    const existing = pendingRequests.get(requestKey)
+    if (existing) {
+      existing.cancel('Request canceled due to duplicate request')
       pendingRequests.delete(requestKey)
+      syncGlobalLoading()
     }
 
-    // 创建新的cancelToken
-    const cancelToken = axios.CancelToken.source()
-    config.cancelToken = cancelToken.token
-    pendingRequests.set(requestKey, cancelToken)
+    const cancelSource = axios.CancelToken.source()
+    nextConfig.cancelToken = cancelSource.token
+    pendingRequests.set(requestKey, { cancel: cancelSource.cancel })
+    syncGlobalLoading()
   }
 
-  // 从localStorage获取token并添加到请求头
   const userStore = useUserStore()
   const token = userStore.token
-  if (token && config.headers && !WHITE_LIST.includes(config.url)) {
-    // config.headers.Authorization = `Bearer ${token}`
-    config.headers.Authorization = `${token}`
-  } else if (!WHITE_LIST.includes(config.url)) {
+  const requestUrl = nextConfig.url ?? ''
+
+  if (token && nextConfig.headers && !WHITE_LIST.includes(requestUrl)) {
+    nextConfig.headers.Authorization = `${token}`
+  } else if (!token && !WHITE_LIST.includes(requestUrl)) {
     userStore.logout()
-    // const router = getRouter()
-    // router.push({
-    //   path: '/login',
-    //   query: { redirect: router.currentRoute.value.path, ...router.currentRoute.value.query },
-    // })
   }
 
-  if (config.url?.includes('/login')) {
-    config.headers['LOGINTYPE'] = 'PASS'
+  if (requestUrl.includes('/login') && nextConfig.headers) {
+    nextConfig.headers.LOGINTYPE = 'PASS'
   }
-  // 如果是POST/PUT/PATCH请求且没有设置Content-Type，设置为json
-  if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() ?? '')) {
-    if (!config.headers['Content-Type']) {
-      config.headers['Content-Type'] = 'application/json'
+
+  if (['post', 'put', 'patch'].includes(nextConfig.method?.toLowerCase() ?? '')) {
+    nextConfig.headers = {
+      ...nextConfig.headers,
+      'Content-Type': nextConfig.headers?.['Content-Type'] || 'application/json',
     }
   }
 
-  // 添加时间戳防止缓存 (GET请求)
-  if (config.method?.toLowerCase() === 'get') {
-    config.params = {
-      ...config.params,
+  if (nextConfig.method?.toLowerCase() === 'get') {
+    nextConfig.params = {
+      ...(nextConfig.params as Record<string, unknown> | undefined),
       _t: Date.now(),
     }
   }
 
-  console.log(`[请求] ${config.method?.toUpperCase()} ${config.url}`, config)
-  return config
+  return nextConfig
 }
 
-const requestErrorInterceptor = (error: any) => {
-  console.error('[请求错误]', error)
-  ElMessage.error({message:'Request configuration error',grouping:true})
+const requestErrorInterceptor = (error: AxiosError) => {
+  ElMessage.error({ message: 'Request configuration error', grouping: true })
   return Promise.reject(error)
 }
 
 service.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 
-// 用于防止重复刷新token的标志
 let isRefreshing = false
-// 存储等待token刷新的请求队列
 let failedQueue: Array<{
-  resolve: (value: any) => void
-  reject: (error: any) => void
+  resolve: (token: string | null) => void
+  reject: (error: unknown) => void
 }> = []
 
-// 处理队列中的请求
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error)
@@ -147,335 +138,232 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token)
     }
   })
-
   failedQueue = []
 }
 
-/**
- * 响应拦截器工厂函数
- * 创建统一的响应拦截器，避免代码重复
- */
-const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '') => {
+const handleBusinessError = (response: AxiosResponse<ApiResponse>, config: RequestConfig) => {
+  const data = response.data
+  const requestUrl = config.url ?? ''
+  let errorMessage = data?.msg || 'Request failed'
 
-  
-  // 从 pendingRequests 中移除请求的辅助函数
-  const removePendingRequest = (config: any) => {
-    if (!config || config.skipCancel) return
-    
-    // 直接使用请求拦截器中存储的 _requestKey，避免因 Axios 序列化 data 导致 key 不一致
-    const requestKey = config._requestKey
-    if (!requestKey) {
-      console.warn('[请求] 未找到 _requestKey，无法从 pendingRequests 中移除')
-      return
-    }
-    
-    console.log(requestKey, 'requestKey - removing from pending')
-    pendingRequests.delete(requestKey)
-  }
-  // 响应成功时的处理
-  const responseSuccessHandler = (response: any) => {
-    // 请求完成后，从pendingRequests中移除
-    console.log(response, 'response1')
-
-    // 从 pendingRequests 中移除请求
-    removePendingRequest(response.config)
-    console.log(
-      `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
-      response,
-    )
-
-    const { data } = response
-    const customConfig = response.config as any
-
-    // 检查业务状态码
-    // 如果返回的是blob类型，直接认为请求成功，否则判断业务code或success
-    if (
-      response.request?.responseType === 'blob' ||
-      (data && data.code === 200) ||
-      response.status === 200
-    ) {
-      // 请求成功
-      if (customConfig.showSuccessMessage && data.msg) {
-        ElMessage.success({message:data.msg,grouping:true})
-      }
-      return response
-    } else {
-      // 业务逻辑错误
-      let errorMessage = data.msg ?? 'Request failed'
-      const requestUrl = response.config?.url ?? ''
-      
-      // 根据不同的业务状态码进行处理
-      switch (data.code) {
-        case 401:
-          // 未授权，清除token并跳转到登录页
-          // 如果是刷新 token 请求本身返回 401，重置刷新状态
-          if (isRefreshTokenRequest(requestUrl)) {
-            isRefreshing = false
-            processQueue(new Error('Token refresh failed'), null)
-          }
-          const userStore = useUserStore()
-          userStore.logout()
-          errorMessage = 'Login expired, please log in again'
-          break
-        case 403:
-          errorMessage = 'No permission to access this resource'
-          break
-        case 404:
-          errorMessage = 'Requested resource not found'
-          break
-        case 500:
-          errorMessage = 'Internal server error'
-          break
-        default:
-          break
-      }
-      ElMessage.error({message:response.data.msg || errorMessage,grouping:true})
-      return Promise.reject(new Error(errorMessage))
-    }
-  }
-
-
-  // 响应失败时的处理
-  const responseErrorHandler = async (error: any) => {
-    console.log(error, 'error1')
-
-    // 无论什么错误（包括取消请求），都要从 pendingRequests 中移除
-    // 确保 loading 状态能正确关闭
-    removePendingRequest(error.config)
-
-    // 如果是取消请求的错误，不显示错误信息
-    if (axios.isCancel(error)) {
-      console.log(`${logPrefix}[请求已取消] ${error.message}`)
-      return Promise.reject(error)
-    }
-
-    console.error(`${logPrefix}[响应错误]`, error)
-
-    const originalRequest = error.config
-    const requestUrl = originalRequest?.url ?? ''
-
-    // 特殊处理：如果刷新 token 的请求本身返回 401，直接登出，不再尝试刷新
-    if (error.response?.status === 401 && isRefreshTokenRequest(requestUrl)) {
-      console.log('[请求] 刷新 token 接口返回 401，直接执行登出')
-      const userStore = useUserStore()
-      // 重置刷新状态
-      isRefreshing = false
-      // 处理队列中的请求（全部拒绝）
-      processQueue(error, null)
-      // 执行登出
-      userStore.logout()
-      return Promise.reject(error)
-    }
-
-    // 处理401错误 - 自动刷新token（排除刷新 token 请求本身）
-    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshTokenRequest(requestUrl)) {
-      if (isRefreshing) {
-        // 如果正在刷新token，将请求加入队列
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`
-            return serviceInstance(originalRequest)
-          })
-          .catch((err) => {
-            return Promise.reject(err)
-          })
-      }
-
-      originalRequest._retry = true
-      isRefreshing = true
-      try {
-        const userStore = useUserStore()
-
-        // 调用刷新token的API
-        // 注意：refreshUserToken 内部失败时会自动调用 logout()
-        const response = await userStore.refreshUserToken()
-        
-        if (response.success) {
-          // 更新当前请求的Authorization头
-          originalRequest.headers['Authorization'] = `Bearer ${userStore.token}`
-
-          // 处理队列中的请求
-          processQueue(null, userStore.token)
-
-          // 重试原请求
-          return serviceInstance(originalRequest)
-        } else {
-          // 刷新token接口返回失败（业务层面失败）
-          // refreshUserToken 内部已经调用了 logout()，这里只需要处理队列和返回
-          console.log('[请求] 刷新 token 业务失败')
-          const error = new Error(response.message || 'Token refresh failed')
-          processQueue(error, null)
-          return Promise.reject(error)
-        }
-      } catch (refreshError: any) {
-        // 刷新token异常
-        // refreshUserToken 内部已经调用了 logout()，这里只需要处理队列和返回
-        console.log('[请求] 刷新 token 异常')
-        processQueue(refreshError, null)
-        return Promise.reject(refreshError)
-      } finally {
+  switch (data?.code) {
+    case 401: {
+      if (isRefreshTokenRequest(requestUrl)) {
         isRefreshing = false
+        processQueue(new Error('Token refresh failed'), null)
       }
+      const userStore = useUserStore()
+      userStore.logout()
+      errorMessage = 'Login expired, please log in again'
+      break
     }
+    case 403:
+      errorMessage = 'No permission to access this resource'
+      break
+    case 404:
+      errorMessage = 'Requested resource not found'
+      break
+    case 500:
+      errorMessage = 'Internal server error'
+      break
+  }
 
-    // 处理其他错误
-    let errorMessage = 'Network request failed'
+  ElMessage.error({ message: errorMessage, grouping: true })
+  return Promise.reject(new Error(errorMessage))
+}
 
-    if (error.response) {
-      // 服务器返回错误状态码
-      const { status, statusText } = error.response
+const responseSuccessHandler = (response: AxiosResponse<ApiResponse>) => {
+  const config = response.config as RequestConfig
+  removePendingRequest(config)
 
-      switch (status) {
-        case 400:
-          errorMessage = 'Bad request'
-          break
-        case 401:
-          errorMessage = 'Login expired, please log in again'
-          const userStore = useUserStore()
-          userStore.logout()
-          // ElMessage.error(errorMessage)
-          break
-        case 403:
-          errorMessage = 'Access denied'
-          break
-        case 404:
-          errorMessage = 'Request URL not found'
-          break
-        case 408:
-          errorMessage = 'Request timeout'
-          break
-        case 500:
-          errorMessage = 'Internal server error'
-          break
-        case 502:
-          errorMessage = 'Bad gateway'
-          break
-        case 503:
-          errorMessage = 'Service unavailable'
-          break
-        case 504:
-          errorMessage = 'Gateway timeout'
-          break
-        default:
-          errorMessage = `Connection error ${status}: ${statusText}`
-      }
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
-      if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout'
-      } else {
-        errorMessage = 'Network connection error'
-      }
-    } else {
-      // 请求配置出错
-      errorMessage = error.message || 'Request configuration error'
+  if (response.request?.responseType === 'blob') {
+    return response
+  }
+
+  const data = response.data
+  if ((data && data.code === 200) || response.status === 200) {
+    if (config.showSuccessMessage && data?.msg) {
+      ElMessage.success({ message: data.msg, grouping: true })
     }
-    ElMessage.error({message:error.response?.data?.msg || errorMessage,grouping:true})
+    return response
+  }
+
+  return handleBusinessError(response, config)
+}
+
+const retryOriginalRequest = (serviceInstance: AxiosInstance, originalRequest: RequestConfig) => {
+  const userStore = useUserStore()
+  originalRequest.headers = {
+    ...originalRequest.headers,
+    Authorization: `${userStore.token}`,
+  }
+  return serviceInstance(originalRequest)
+}
+
+const responseErrorHandler = async (error: AxiosError) => {
+  const originalRequest = (error.config || {}) as RequestConfig
+  removePendingRequest(originalRequest)
+
+  if (axios.isCancel(error)) {
     return Promise.reject(error)
   }
 
-  return [responseSuccessHandler, responseErrorHandler]
-}
+  const requestUrl = originalRequest.url ?? ''
 
-// 为服务实例添加响应拦截器
-service.interceptors.response.use(...createResponseInterceptor(service))
-
-/**
- * 封装的请求方法类
- */
-class Request {
-  private axiosInstance: any
-
-  constructor(axiosInstance: any) {
-    this.axiosInstance = axiosInstance
+  if (error.response?.status === 401 && isRefreshTokenRequest(requestUrl)) {
+    const userStore = useUserStore()
+    isRefreshing = false
+    processQueue(error, null)
+    userStore.logout()
+    return Promise.reject(error)
   }
 
-  // 静态：统一返回单一 axios 实例
-  private static getAxiosInstance() {
+  if (
+    error.response?.status === 401 &&
+    !originalRequest._retry &&
+    !isRefreshTokenRequest(requestUrl)
+  ) {
+    if (isRefreshing) {
+      return new Promise<string | null>((resolve, reject) => {
+        failedQueue.push({ resolve, reject })
+      }).then(() => retryOriginalRequest(service, originalRequest))
+    }
+
+    originalRequest._retry = true
+    isRefreshing = true
+
+    try {
+      const userStore = useUserStore()
+      const refreshResult = await userStore.refreshUserToken()
+      if (refreshResult.success) {
+        processQueue(null, userStore.token)
+        return retryOriginalRequest(service, originalRequest)
+      }
+
+      const refreshError = new Error(refreshResult.message || 'Token refresh failed')
+      processQueue(refreshError, null)
+      return Promise.reject(refreshError)
+    } catch (refreshError) {
+      processQueue(refreshError, null)
+      return Promise.reject(refreshError)
+    } finally {
+      isRefreshing = false
+    }
+  }
+
+  let errorMessage = 'Network request failed'
+  if (error.response) {
+    switch (error.response.status) {
+      case 400:
+        errorMessage = 'Bad request'
+        break
+      case 401:
+        errorMessage = 'Login expired, please log in again'
+        useUserStore().logout()
+        break
+      case 403:
+        errorMessage = 'Access denied'
+        break
+      case 404:
+        errorMessage = 'Request URL not found'
+        break
+      case 408:
+        errorMessage = 'Request timeout'
+        break
+      case 500:
+        errorMessage = 'Internal server error'
+        break
+      case 502:
+        errorMessage = 'Bad gateway'
+        break
+      case 503:
+        errorMessage = 'Service unavailable'
+        break
+      case 504:
+        errorMessage = 'Gateway timeout'
+        break
+      default:
+        errorMessage = `Connection error ${error.response.status}`
+    }
+  } else if (error.code === 'ECONNABORTED') {
+    errorMessage = 'Request timeout'
+  } else if (error.request) {
+    errorMessage = 'Network connection error'
+  } else if (error.message) {
+    errorMessage = error.message
+  }
+
+  ElMessage.error({
+    message: (error.response?.data as { msg?: string } | undefined)?.msg || errorMessage,
+    grouping: true,
+  })
+  return Promise.reject(error)
+}
+
+service.interceptors.response.use(responseSuccessHandler, responseErrorHandler)
+
+class Request {
+  private static getAxiosInstance(): AxiosInstance {
     return service
   }
 
-  /**
-   * 静态 GET 请求
-   */
   static async get<T = any>(
     url: string,
     params?: any,
     config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.get(url, { params, ...config })
+    const response = await Request.getAxiosInstance().get<ApiResponse<T>>(url, {
+      params,
+      ...config,
+    })
     return response.data
   }
 
-  /**
-   * 静态 POST 请求
-   */
   static async post<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.post(url, data, config)
+    const response = await Request.getAxiosInstance().post<ApiResponse<T>>(url, data, config)
     return response.data
   }
 
-  /**
-   * 静态 PUT 请求
-   */
   static async put<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.put(url, data, config)
+    const response = await Request.getAxiosInstance().put<ApiResponse<T>>(url, data, config)
     return response.data
   }
 
-  /**
-   * 静态 DELETE 请求
-   */
   static async delete<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.delete(url, config)
+    const response = await Request.getAxiosInstance().delete<ApiResponse<T>>(url, config)
     return response.data
   }
 
-  /**
-   * 静态 PATCH 请求
-   */
   static async patch<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.patch(url, data, config)
+    const response = await Request.getAxiosInstance().patch<ApiResponse<T>>(url, data, config)
     return response.data
   }
 
-  /**
-   * 静态 文件上传
-   */
   static async upload<T = any>(
     url: string,
     file: File,
-    data?: any,
+    data?: Record<string, unknown>,
     config?: RequestConfig,
   ): Promise<ApiResponse<T>> {
     const formData = new FormData()
     formData.append('file', file)
-    if (data) {
-      Object.keys(data).forEach((key) => {
-        formData.append(key, data[key])
-      })
-    }
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.post(url, formData, {
+    Object.entries(data || {}).forEach(([key, value]) => {
+      formData.append(key, String(value))
+    })
+
+    const response = await Request.getAxiosInstance().post<ApiResponse<T>>(url, formData, {
       ...config,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -484,18 +372,15 @@ class Request {
     return response.data
   }
 
-  /**
-   * 静态 获取图片/文件 Blob
-   */
-  static async getUrl<T = any>(url: string, params?: any, config?: RequestConfig): Promise<Blob> {
-    const axiosIns = Request.getAxiosInstance()
-    const response = await axiosIns.get(url, { params, responseType: 'blob', ...config })
+  static async getUrl(url: string, params?: any, config?: RequestConfig): Promise<Blob> {
+    const response = await Request.getAxiosInstance().get<Blob>(url, {
+      params,
+      responseType: 'blob',
+      ...config,
+    })
     return response.data
   }
 
-  /**
-   * 静态 下载文件
-   */
   static async download(
     url: string,
     params?: any,
@@ -503,8 +388,7 @@ class Request {
     config?: RequestConfig,
   ): Promise<void> {
     try {
-      const axiosIns = Request.getAxiosInstance()
-      const response = await axiosIns.get(url, {
+      const response = await Request.getAxiosInstance().get<Blob>(url, {
         params,
         responseType: 'blob',
         ...config,
@@ -518,23 +402,20 @@ class Request {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
-      ElMessage.success({message:'File downloaded successfully',grouping:true})
+      ElMessage.success({ message: 'File downloaded successfully', grouping: true })
     } catch (error) {
       console.error('File download failed:', error)
-      ElMessage.error({message:'File download failed',grouping:true})
+      ElMessage.error({ message: 'File download failed', grouping: true })
     }
   }
 }
 
-// 不再导出实例形式
-
-// 取消所有pending请求的方法
 export const cancelAllPendingRequests = () => {
-  pendingRequests.forEach((cancelToken) => {
-    cancelToken.cancel('路由切换，请求被取消')
+  pendingRequests.forEach(({ cancel }) => {
+    cancel('Request canceled due to route change')
   })
   pendingRequests.clear()
+  syncGlobalLoading()
 }
 
-// 导出仅限默认类与工具方法
 export default Request

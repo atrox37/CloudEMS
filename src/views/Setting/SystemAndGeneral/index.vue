@@ -1,37 +1,64 @@
 <template>
   <div class="system-and-general">
-    <HeaderCard title="System & General Settings" desc="Configure system-wide settings and general preferences" />
+    <HeaderCard
+      title="System & General Settings"
+      desc="Configure system-wide settings and general preferences"
+    />
     <div class="system-and-general__body">
       <SettingCard title="Company Information">
         <!-- <template #control>
           <el-button type="primary">submit</el-button>
         </template> -->
-        <el-form :model="companyInfoForm" label-width="1rem" label-position="top" inline class="company-info-form">
-          <el-form-item label="Company Name" style="margin-right: 1.08rem;">
-            <el-input v-model="companyInfoForm.companyName" placeholder="Enter Company Name" style="width: 7.52rem !important;"/>
+        <el-form
+          :model="companyInfoForm"
+          label-width="1rem"
+          label-position="top"
+          inline
+          class="company-info-form"
+        >
+          <el-form-item label="Company Name" style="margin-right: 1.08rem">
+            <el-input
+              v-model="companyInfoForm.companyName"
+              placeholder="Enter Company Name"
+              style="width: 7.52rem !important"
+            />
           </el-form-item>
-          <el-form-item label="Time cone" style="margin-right: 0;">
+          <el-form-item label="Time cone" style="margin-right: 0">
             <div class="form-item-time-cone" ref="timeConeRef">
-              <el-select v-model="companyInfoForm.timeCone" placeholder="Select Time Cone" :append-to="timeConeRef" style="width: 7.52rem;">
+              <el-select
+                v-model="companyInfoForm.timeCone"
+                placeholder="Select Time Cone"
+                :append-to="timeConeRef"
+                style="width: 7.52rem"
+              >
                 <el-option label="UTC-8(Pacific Time)" value="UTC-8" />
                 <el-option label="UTC+8(China Standard Time)" value="UTC+8" />
                 <el-option label="UTC+9(Japan Standard Time)" value="UTC+9" />
                 <el-option label="UTC+10(Australia Standard Time)" value="UTC+10" />
               </el-select>
-
             </div>
           </el-form-item>
-          <el-form-item label="Language" style="margin-right: 1.08rem;">
+          <el-form-item label="Language" style="margin-right: 1.08rem">
             <div class="form-item-language" ref="languageRef">
-              <el-select v-model="companyInfoForm.language" placeholder="Select Language" :append-to="languageRef" style="width: 7.52rem;">
+              <el-select
+                v-model="companyInfoForm.language"
+                placeholder="Select Language"
+                :append-to="languageRef"
+                style="width: 7.52rem"
+              >
                 <el-option label="English" value="en" />
                 <el-option label="Chinese" value="zh" />
               </el-select>
             </div>
           </el-form-item>
-          <el-form-item label="Currency" style="margin-right: 0;">
-            <div class="form-item-currency" ref="currencyRef" style="margin-right:0;">
-              <el-select v-model="companyInfoForm.currency" placeholder="Select Currency" :append-to="currencyRef" style="width: 7.52rem;">
+          <el-form-item label="Currency" style="margin-right: 0">
+            <div class="form-item-currency" ref="currencyRef" style="margin-right: 0">
+              <el-select
+                v-model="companyInfoForm.currency"
+                placeholder="Select Currency"
+                :append-to="currencyRef"
+                style="width: 7.52rem"
+              >
                 <el-option label="USD" value="USD" />
                 <el-option label="CNY" value="CNY" />
               </el-select>
@@ -47,13 +74,13 @@
           <el-button type="primary">submit</el-button>
         </template> -->
         <SettingItem title="Dark mode">
-          <el-switch v-model="displayPreferencesForm.darkMode" style="margin-right: 2.04rem;"/>
+          <el-switch v-model="displayPreferencesForm.darkMode" style="margin-right: 2.04rem" />
         </SettingItem>
         <SettingItem title="Show grid lines on charts">
-          <el-switch v-model="displayPreferencesForm.showGridLines" style="margin-right: 2.0rem;"/>
+          <el-switch v-model="displayPreferencesForm.showGridLines" style="margin-right: 2rem" />
         </SettingItem>
         <SettingItem title="Auto-refresh dashboard (minutes)">
-          <el-switch v-model="displayPreferencesForm.autoRefresh" style="margin-right: 2.0rem;"/>
+          <el-switch v-model="displayPreferencesForm.autoRefresh" style="margin-right: 2rem" />
         </SettingItem>
         <div class="display-preferences-form__submit-btn">
           <el-button type="primary">submit</el-button>
@@ -64,10 +91,18 @@
           <el-button type="primary">submit</el-button>
         </template> -->
         <SettingItem title="Historical data retention (months)">
-          <el-input v-model="dataRetentionForm.historicalDataRetention" placeholder="Enter Historical Data Retention" />
+          <el-input
+            v-model="dataRetentionForm.historicalDataRetention"
+            placeholder="Enter Historical Data Retention"
+            style="width: 2.4rem"
+          />
         </SettingItem>
         <SettingItem title="Log retention (days)">
-          <el-input v-model="dataRetentionForm.logRetention" placeholder="Enter Log Retention" />
+          <el-input
+            v-model="dataRetentionForm.logRetention"
+            placeholder="Enter Log Retention"
+            style="width: 2.4rem"
+          />
         </SettingItem>
         <div class="data-retention-form__submit-btn">
           <el-button type="primary">submit</el-button>
@@ -78,10 +113,17 @@
           <el-button type="primary">submit</el-button>
         </template> -->
         <SettingItem title="Automatic daily backups">
-          <el-switch v-model="backupAndRecoveryForm.automaticDailyBackups" style="margin-right: 2.0rem;"/>
+          <el-switch
+            v-model="backupAndRecoveryForm.automaticDailyBackups"
+            style="margin-right: 2rem"
+          />
         </SettingItem>
         <SettingItem title="Backup retention (days)">
-          <el-input v-model="backupAndRecoveryForm.backupRetention" placeholder="Enter Backup Retention" />
+          <el-input
+            v-model="backupAndRecoveryForm.backupRetention"
+            placeholder="Enter Backup Retention"
+            style="width: 2.4rem"
+          />
         </SettingItem>
         <div class="backup-and-recovery-form__submit-btn">
           <el-button type="primary">submit</el-button>
@@ -95,10 +137,10 @@
 </template>
 
 <script setup lang="ts">
-import SettingItem from '@/components/card/settingItem.vue';
-import SettingCard from '@/components/card/settingCard.vue';
-import downloadIcon from '@/assets/icons/button-download.svg';
-import { ref } from 'vue';
+import SettingItem from '@/components/card/settingItem.vue'
+import SettingCard from '@/components/card/settingCard.vue'
+import downloadIcon from '@/assets/icons/button-download.svg'
+import { ref } from 'vue'
 const companyInfoForm = ref({
   companyName: '',
   timeCone: '',
@@ -133,19 +175,18 @@ const backupAndRecoveryForm = ref({
     height: calc(100% - 1.22rem);
     overflow-y: auto;
 
-    &>div {
+    & > div {
       margin-bottom: 0.2rem;
     }
     .form-item-language,
     .form-item-time-cone,
-    .form-item-currency{
+    .form-item-currency {
       display: flex;
       position: relative;
     }
 
     .company-info-form {
       padding: 0.2rem 0.2rem 0 0.2rem;
-
     }
     .company-info-form__submit-btn,
     .display-preferences-form__submit-btn,
@@ -158,7 +199,7 @@ const backupAndRecoveryForm = ref({
       margin-top: 0.2rem;
       padding-right: 0.2rem;
     }
-    .system-and-general__download-btn{
+    .system-and-general__download-btn {
       border-top: 0.01rem solid rgba(255, 255, 255, 0.4);
       padding-top: 0.2rem;
     }

@@ -22,19 +22,18 @@
 </template>
 
 <script lang="ts" setup>
-  export interface EnergyCardProps {
-    title: string
-    value: string | number
-    unit?: string
-    iconUrl: string
-    bgColor?: string
-  }
+export interface EnergyCardProps {
+  title: string
+  value: string | number
+  unit?: string
+  iconUrl: string
+  bgColor?: string
+}
 const props = withDefaults(defineProps<EnergyCardProps>(), {
   title: '',
   value: '',
   iconUrl: '',
 })
-
 </script>
 
 <style lang="scss" scoped>
@@ -48,11 +47,14 @@ const props = withDefaults(defineProps<EnergyCardProps>(), {
     background-color: v-bind(bgColor);
     border: 0.01rem solid;
 
-    border-image: linear-gradient(116.72deg,
+    border-image: linear-gradient(
+        116.72deg,
         rgba(148, 166, 197, 0.3) 2.77%,
         rgba(148, 166, 197, 0) 32.16%,
         rgba(148, 166, 197, 0.103266) 72.59%,
-        rgba(148, 166, 197, 0.3) 98.99%) 1;
+        rgba(148, 166, 197, 0.3) 98.99%
+      )
+      1;
     backdrop-filter: blur(0.1rem);
     padding: 0.2rem;
   }

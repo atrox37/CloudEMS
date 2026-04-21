@@ -3,7 +3,9 @@
     <div class="app-skeleton__left">
       <!-- 侧边栏骨架 -->
       <div class="app-skeleton__sidebar">
-        <div class="app-skeleton__logo skeleton-block" />
+        <div class="app-skeleton__logo" aria-hidden="true">
+          <div class="app-skeleton__logo-img" />
+        </div>
         <div class="app-skeleton__nav">
           <div v-for="i in 5" :key="i" class="app-skeleton__nav-item skeleton-block" />
         </div>
@@ -13,7 +15,7 @@
     <div class="app-skeleton__right">
       <!-- 头部骨架 -->
       <div class="app-skeleton__header">
-        <div class="app-skeleton__header-title skeleton-block" />
+        <div class="app-skeleton__header-title">MOSS Solar</div>
         <div class="app-skeleton__header-right">
           <div class="app-skeleton__avatar skeleton-block skeleton-circle" />
           <div class="app-skeleton__notice skeleton-block" />
@@ -60,9 +62,19 @@ import LoadingBg from './LoadingBg.vue'
 }
 
 .app-skeleton__logo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.2rem auto;
+}
+
+.app-skeleton__logo-img {
   width: 1rem;
   height: 0.686rem;
-  margin: 0.2rem auto;
+  background-image: url('@/assets/images/sidebar-logo.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 .app-skeleton__nav {
@@ -102,9 +114,12 @@ import LoadingBg from './LoadingBg.vue'
 }
 
 .app-skeleton__header-title {
-  width: 1.2rem;
-  height: 0.24rem;
-  border-radius: 0.04rem;
+  font-family: Montserrat, sans-serif;
+  font-weight: 600;
+  font-size: 0.3rem;
+  line-height: 150%;
+  color: var(--vt-text-primary);
+  margin-right: 0.1rem;
 }
 
 .app-skeleton__header-right {

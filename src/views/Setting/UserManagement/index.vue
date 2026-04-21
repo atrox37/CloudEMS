@@ -3,18 +3,25 @@
     <div class="user-management__header">
       <div class="user-management__header-left">
         <div class="user-management__header-left-title">User Management</div>
-        <div class="user-management__header-left-desc">Manage platform users and their permissions</div>
+        <div class="user-management__header-left-desc">
+          Manage platform users and their permissions
+        </div>
       </div>
       <div class="user-management__header-right">
         <IconButton type="primary" text="Add User" :icon="addUserIcon" @click="handleAddUser" />
       </div>
     </div>
 
-    <!-- 用户操作表单 -->
+    <!-- 鐢ㄦ埛鎿嶄綔琛ㄥ崟 -->
     <UserOperationForm ref="userFormRef" @submit="handleUserSubmit" />
     <div class="user-management__table">
       <LoadingBg :loading="loading">
-        <el-table :data="tableData" class="user-management__table-content" align="left" table-layout="fixed">
+        <el-table
+          :data="tableData"
+          class="user-management__table-content"
+          align="left"
+          table-layout="fixed"
+        >
           <el-table-column prop="sysUserPo.username" label="User" min-width="120">
             <template #default="{ row }">
               <div class="user-info">
@@ -28,18 +35,19 @@
               </div>
             </template>
           </el-table-column>
-          <!-- 角色列改为纯文字类型 -->
+          <!-- 瑙掕壊鍒楁敼涓虹函鏂囧瓧绫诲瀷 -->
           <el-table-column prop="sysRolePo.roleName" label="Role" show-overflow-tooltip>
             <template #default="{ row }">
-              <div class="role-name" :class="row.sysRolePo?.roleName">{{ row.sysRolePo?.roleName }}</div>
+              <div class="role-name" :class="row.sysRolePo?.roleName">
+                {{ row.sysRolePo?.roleName }}
+              </div>
             </template>
           </el-table-column>
           <el-table-column prop="sysUserPo.state" label="Status">
             <template #default="{ row }">
-              <div class="user-status" :class="row.sysUserPo?.state ? 'active' : 'inactive'">{{ row.sysUserPo?.state ==
-                1
-                ? 'Active' :
-                'Inactive' }}</div>
+              <div class="user-status" :class="row.sysUserPo?.state ? 'active' : 'inactive'">
+                {{ row.sysUserPo?.state == 1 ? 'Active' : 'Inactive' }}
+              </div>
             </template>
           </el-table-column>
           <el-table-column prop="sysUserPo.updateTime" label="Updated At" show-overflow-tooltip>
@@ -70,9 +78,15 @@
         </el-table>
 
         <div class="user-management__pagination">
-          <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
-            @size-change="handlePageSizeChange" @current-change="handlePageChange" />
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handlePageSizeChange"
+            @current-change="handlePageChange"
+          />
         </div>
       </LoadingBg>
     </div>
@@ -80,8 +94,7 @@
 </template>
 
 <script setup lang="ts">
-// 正确引入SVG图标，避免部署后图片加载不出来
-// import userAddIcon from '@/assets/icons/user-add.svg'
+// 姝ｇ‘寮曞叆SVG鍥炬爣锛岄伩鍏嶉儴缃插悗鍥剧墖鍔犺浇涓嶅嚭鏉?// import userAddIcon from '@/assets/icons/user-add.svg'
 // import tableEditIcon from '@/assets/icons/table-edit.svg'
 // import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import editIcon from '@/assets/icons/button-edit.svg'
@@ -92,13 +105,13 @@ import type { UserInfo } from '@/types/user'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import UserOperationForm from './UserOperationForm.vue'
 
-// 表格配置
+// 琛ㄦ牸閰嶇疆
 const tableConfig: TableConfig = {
   listUrl: 'sys-app/sys_user/_page',
   defaultPageSize: 20,
 }
 
-// 使用表格数据管理 composable
+// 浣跨敤琛ㄦ牸鏁版嵁绠＄悊 composable
 const {
   loading,
   tableData,
@@ -107,13 +120,12 @@ const {
   handlePageSizeChange,
   fetchTableData,
 } = useTableData<UserInfo>(tableConfig)
-// 创建可写的分页数据
 const pagination = reactive({
   page: 1,
   pageSize: 20,
   total: 0,
 })
-// 同步分页数据
+// 鍚屾鍒嗛〉鏁版嵁
 watch(
   paginationData,
   (newPagination) => {
@@ -124,25 +136,25 @@ watch(
   { immediate: true },
 )
 
-// 表单引用
+// 琛ㄥ崟寮曠敤
 const userFormRef = ref()
 
-// 添加用户
+// 娣诲姞鐢ㄦ埛
 const handleAddUser = () => {
   userFormRef.value?.open()
 }
 
-// 处理用户表单提交
-const handleUserSubmit = async (formData: any) => {
+// 澶勭悊鐢ㄦ埛琛ㄥ崟鎻愪氦
+const handleUserSubmit = async () => {
   await fetchTableData(true)
 }
 
-// 编辑用户
+// 缂栬緫鐢ㄦ埛
 const handleEdit = (row: UserInfo) => {
   userFormRef.value?.open(toRaw(row), 'edit')
 }
 
-// 删除用户
+// 鍒犻櫎鐢ㄦ埛
 // const handleDelete = async (row: UserListItem) => {
 //   await ElMessageBox.confirm(
 //     'Are you sure you want to delete this record?',
@@ -157,9 +169,8 @@ const handleEdit = (row: UserInfo) => {
 //   await deleteRow(row.sysUserPo?.id)
 // }
 /**
- * 获取用户名头像缩写：名和姓的首字母（如"张三"->"张三"，"John Smith"->"JS"，"王"->"王"）
- * @param name 用户名字符串
- * @returns string 头像缩写
+ * 鑾峰彇鐢ㄦ埛鍚嶅ご鍍忕缉鍐欙細鍚嶅拰濮撶殑棣栧瓧姣嶏紙濡?寮犱笁"->"寮犱笁"锛?John Smith"->"JS"锛?鐜?->"鐜?锛? * @param name 鐢ㄦ埛鍚嶅瓧绗︿覆
+ * @returns string 澶村儚缂╁啓
  */
 const getAvatarName = (name: string): string => {
   const nameStr = name.split(' ')
@@ -186,10 +197,17 @@ const getAvatarName = (name: string): string => {
     height: 1.02rem;
     padding: 0.2rem;
     margin-bottom: 0.2rem;
-    background-color: rgba(84, 98, 140, 0.2);
+    background-color: var(--vt-bg-input);
     border: 0.01rem solid;
 
-    border-image: linear-gradient(117.64deg, rgba(148, 166, 197, 0.3) 2.73%, rgba(148, 166, 197, 0) 31.73%, rgba(148, 166, 197, 0.103266) 71.62%, rgba(148, 166, 197, 0.3) 97.67%) 1;
+    border-image: linear-gradient(
+        117.64deg,
+        var(--vt-border-color) 2.73%,
+        rgba(148, 166, 197, 0) 31.73%,
+        rgba(148, 166, 197, 0.103266) 71.62%,
+        var(--vt-border-color) 97.67%
+      )
+      1;
 
     backdrop-filter: blur(0.1rem);
 
@@ -204,7 +222,7 @@ const getAvatarName = (name: string): string => {
         font-size: 0.26rem;
         line-height: 0.26rem;
         letter-spacing: 0%;
-        color: #fff;
+        color: var(--vt-text-primary);
       }
 
       .user-management__header-left-desc {
@@ -212,7 +230,7 @@ const getAvatarName = (name: string): string => {
         line-height: 100%;
         letter-spacing: 0%;
         vertical-align: middle;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--vt-white-60);
       }
     }
 
@@ -262,7 +280,7 @@ const getAvatarName = (name: string): string => {
           .user-name {
             font-size: 0.16rem;
             font-weight: 500;
-            color: rgba(255, 255, 255, 1);
+            color: var(--vt-text-primary);
             line-height: 1;
             letter-spacing: 0%;
             text-align: left;
@@ -273,7 +291,7 @@ const getAvatarName = (name: string): string => {
             letter-spacing: 0%;
             text-align: left;
             line-height: 1;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--vt-white-60);
           }
         }
 
@@ -290,15 +308,12 @@ const getAvatarName = (name: string): string => {
             color: rgba(29, 134, 255, 1);
           }
 
+          &.Viewer,
           &.Operator {
             color: rgba(148, 166, 197, 1);
           }
-
-
         }
       }
-
-
 
       .user-status {
         font-weight: 500;
@@ -311,8 +326,6 @@ const getAvatarName = (name: string): string => {
         &.inactive {
           color: rgba(148, 166, 197, 1);
         }
-
-
       }
 
       .user-management__operation {
@@ -342,7 +355,6 @@ const getAvatarName = (name: string): string => {
     }
   }
 }
-
 
 :deep(.el-table .el-table__inner-wrapper .el-table__body-wrapper td .cell) {
   height: 0.4rem !important;

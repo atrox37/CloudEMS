@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'node:url'
+﻿import { fileURLToPath } from 'node:url'
 import { mergeConfig, defineConfig, configDefaults } from 'vitest/config'
 import viteConfig from './vite.config'
 
@@ -11,7 +11,7 @@ export default mergeConfig(
       root: fileURLToPath(new URL('./', import.meta.url)),
       coverage: {
         provider: 'v8',
-        reporter: ['text', 'json', 'html', 'lcov'],
+        reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
         reportsDirectory: './coverage',
         include: ['src/**/*.{js,ts,vue}'],
         exclude: ['src/**/*.d.ts', 'src/**/*.test.{js,ts}', 'src/**/*.spec.{js,ts}', 'src/main.ts'],

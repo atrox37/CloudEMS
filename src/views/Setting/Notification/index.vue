@@ -39,10 +39,7 @@
         </SettingCard>
       </LoadingBg>
       <div class="notification__submit-btn">
-        <el-button
-          type="primary"
-          @click="onSubmit"
-          :loading="globalStore.loading"
+        <el-button type="primary" @click="onSubmit" :loading="globalStore.loading"
           >Submit</el-button
         >
       </div>

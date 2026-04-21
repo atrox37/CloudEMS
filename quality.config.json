@@ -1,0 +1,17 @@
+﻿{
+  "coverageThresholds": {
+    "lines": 70,
+    "statements": 70,
+    "functions": 70,
+    "branches": 60
+  },
+  "bundleThresholds": {
+    "maxJsAssetKb": 500,
+    "maxCssAssetKb": 250,
+    "maxTotalDistMb": 15
+  },
+  "auditPolicy": {
+    "failOn": ["critical", "high"],
+    "warnOn": ["moderate"]
+  }
+}

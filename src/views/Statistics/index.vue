@@ -4,12 +4,8 @@
       <LoadingBg :loading="statisticsTotalLoading">
         <div class="statisticsTotal">
           <div class="statisticsTotal__item" v-for="item in statisticsTotalList" :key="item.id">
-            <DashboardCard
-              :dashboardData="item.dashboardData"
-              :iconBgColor="item.iconBgColor"
-              :isDesc="true"
-              title=""
-            />
+            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" :isDesc="true"
+              title="" />
           </div>
         </div>
       </LoadingBg>
@@ -24,14 +20,8 @@
       </el-col>
       <el-col :span="8">
         <div class="statistics__content-item">
-          <ModuleCard
-            title="Energy Structure Analysis(Today)"
-            :loading="energyStructureAnalysisLoading"
-          >
-            <DoughnutChart
-              :series="EnergyStructureAnalysisSeries"
-              title="Energy Structure Analysis(Today)"
-            />
+          <ModuleCard title="Energy Structure Analysis(Today)" :loading="energyStructureAnalysisLoading">
+            <DoughnutChart :series="EnergyStructureAnalysisSeries" title="Energy Structure Analysis(Today)" />
           </ModuleCard>
         </div>
       </el-col>
@@ -47,27 +37,17 @@
       <el-col :span="12">
         <div class="statistics__content-item">
           <ModuleCard title="Power Curve (Today)" :loading="powerCurveLoading">
-            <LineChart
-              :xAxiosOption="powerCurveData.xAxiosOption"
-              :yAxiosOption="powerCurveData.yAxiosOption"
-              :series="powerCurveData.series"
-              title="Power Curve (Today)"
-            />
+            <LineChart :xAxiosOption="powerCurveData.xAxiosOption" :yAxiosOption="powerCurveData.yAxiosOption"
+              :series="powerCurveData.series" title="Power Curve (Today)" />
           </ModuleCard>
         </div>
       </el-col>
       <el-col :span="12">
         <div class="statistics__content-item">
-          <ModuleCard
-            title="Self-sufficiency rate curve (hourly)"
-            :loading="energyConsumptionLoading"
-          >
-            <LineChart
-              :xAxiosOption="energyConsumptionData.xAxiosOption"
-              :yAxiosOption="energyConsumptionData.yAxiosOption"
-              :series="energyConsumptionData.series"
-              title="Self-sufficiency rate curve (hourly)"
-            />
+          <ModuleCard title="Self-sufficiency rate curve (hourly)" :loading="energyConsumptionLoading">
+            <LineChart :xAxiosOption="energyConsumptionData.xAxiosOption"
+              :yAxiosOption="energyConsumptionData.yAxiosOption" :series="energyConsumptionData.series"
+              title="Self-sufficiency rate curve (hourly)" />
           </ModuleCard>
         </div>
       </el-col>
@@ -95,13 +75,8 @@
       <div class="statistic__list-header">
         <div class="header__title">Analytics Dashboard</div>
         <div class="header__btn">
-          <IconButton
-            :icon="refreshIcon"
-            type="warning"
-            text="refresh"
-            :disabled="analyticsLineLoading"
-            @click="getAnalyticsLine"
-          />
+          <IconButton :icon="refreshIcon" type="warning" text="refresh" :disabled="analyticsLineLoading"
+            @click="getAnalyticsLine" />
         </div>
       </div>
       <div class="statistic__list-content">
@@ -110,26 +85,24 @@
             <el-table-column prop="stationName" label="Station Name" />
             <el-table-column prop="address" label="Address">
               <template #default="scope">
-                <img :src="addressIcon" alt="address-icon" style="margin-right: 0.03rem" />
-                <div>{{ scope.row.address }}</div>
+                <div class="address-container">
+                  <img :src="addressIcon" alt="address-icon" style="margin-right: 0.03rem" />
+                  <div>{{ scope.row.address }}</div>
+                </div>
               </template>
             </el-table-column>
             <el-table-column prop="status" label="Status">
               <template #default="scope">
-                <!-- <div class="statistic__list-content-item-status"> -->
-                <img
-                  :src="scope.row.status === 'online' ? onlineIcon : offlineIcon"
-                  style="margin-right: 0.03rem"
-                />
-                <div style="">{{ scope.row.status }}</div>
-                <!-- </div> -->
+                <div class="status-container">
+                  <!-- <div class="statistic__list-content-item-status"> -->
+                  <img :src="scope.row.status === 'online' ? onlineIcon : offlineIcon" style="margin-right: 0.03rem" />
+                  <div style="">{{ scope.row.status }}</div>
+                </div>
               </template>
             </el-table-column>
 
             <el-table-column prop="battery(soc)" label="Battery(soc)">
-              <template #default="scope">
-                {{ scope.row['battery(soc)'] }}%
-              </template>
+              <template #default="scope"> {{ scope.row['battery(soc)'] }}% </template>
             </el-table-column>
             <el-table-column prop="loadPower" label="Load Power">
               <template #default="scope"> {{ scope.row.loadPower }} kW</template>
@@ -161,7 +134,7 @@ import {
   getEnergyConsumptionData,
   getAnalyticsLineData,
 } from '@/api/statistics'
-import type { AnalyticsAllData, AnalyticsWgTag   } from '@/types/statistics'
+import type { AnalyticsAllData, AnalyticsWgTag } from '@/types/statistics'
 
 import totalStationIcon from '@/assets/icons/dashboard-totalStation.svg'
 import currentOutputIcon from '@/assets/icons/dashboard-output.svg'
@@ -284,18 +257,18 @@ const energyConsumptionData = ref({
 })
 
 const StorageStateSeries = ref([
-  { value: 0, name: 'Charging ', color: '#fc8452',unit:'min' },
-  { value: 0, name: 'Discharging ', color: '#597ef7',unit:'min' },
-  { value: 0, name: 'Idle ', color: '#ffa726',unit:'min' },
+  { value: 0, name: 'Charging ', color: '#fc8452', unit: 'min' },
+  { value: 0, name: 'Discharging ', color: '#597ef7', unit: 'min' },
+  { value: 0, name: 'Idle ', color: '#ffa726', unit: 'min' },
 ])
 const EnergyStructureAnalysisSeries = ref([
-  { value: 0, name: 'PV', color: '#ee6666',unit:'kWh' },
-  { value: 0, name: 'DG', color: '#ffe58f',unit:'kWh' },
+  { value: 0, name: 'PV', color: '#ee6666', unit: 'kWh' },
+  { value: 0, name: 'DG', color: '#ffe58f', unit: 'kWh' },
 ])
 const DieselGeneratorStatusSeries = ref([
-  { value: 0, name: 'Running', color: '#6ac161',unit:'min' },
-  { value: 0, name: 'Standby', color: '#ff6b6b',unit:'min' },
-  { value: 0, name: 'Maintenance', color: '#ffa726',unit:'min' },
+  { value: 0, name: 'Running', color: '#6ac161', unit: 'min' },
+  { value: 0, name: 'Standby', color: '#ff6b6b', unit: 'min' },
+  { value: 0, name: 'Maintenance', color: '#ffa726', unit: 'min' },
 ])
 const tableData = ref<TableData[]>([])
 const getStatisticsTotal = async () => {
@@ -317,7 +290,7 @@ const getStorageState = async () => {
     storageStateLoading.value = true
     const res = await getStorageStateData()
     if (res.code === 200) {
-      // 
+      //
       StorageStateSeries.value[0].value = res.data.totalCharging
       StorageStateSeries.value[1].value = res.data.totalDischarging
       StorageStateSeries.value[2].value = res.data.totalIdle
@@ -373,7 +346,6 @@ const getEnergyConsumption = async () => {
     energyConsumptionLoading.value = true
     const res = await getEnergyConsumptionData()
     if (res.code === 200) {
-      
       energyConsumptionData.value.xAxiosOption.xAxiosData = res.data.map((item: any) =>
         item.ts.replace(' ', '\n'),
       )
@@ -392,7 +364,8 @@ const getAnalyticsLine = async () => {
       tableData.value = res.data.map((item: AnalyticsAllData) => ({
         id: item.deviceInstancePo.id,
         stationName: item.deviceInstancePo.name,
-        address: item.wgTag.find((tag: AnalyticsWgTag) => tag.tagKey === 'Location')?.tagValue ?? '',
+        address:
+          item.wgTag.find((tag: AnalyticsWgTag) => tag.tagKey === 'Location')?.tagValue ?? '',
         status: item.deviceInstancePo.status,
         'battery(soc)': item.batteryRate,
         Alarm: item.alarmCount,
@@ -443,8 +416,7 @@ onMounted(() => {
     }
   }
 
-  .statistics__content {
-  }
+  .statistics__content {}
 
   .statistics__content-item {
     height: 2.98rem;
@@ -471,6 +443,13 @@ onMounted(() => {
     }
 
     .statistic__list-content {
+      .status-container,
+      .address-container{
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.05rem;
+      }
       img {
         width: 0.12rem;
         height: 0.12rem;

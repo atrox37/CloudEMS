@@ -1,26 +1,26 @@
-<template>
+﻿<template>
   <div class="voltage-class analytics">
-    <!-- 表格区域 -->
+    <!-- 琛ㄦ牸鍖哄煙 -->
     <div class="analytics__content">
-      <!-- 表格工具栏 -->
+      <!-- 琛ㄦ牸宸ュ叿鏍?-->
       <div class="analytics__toolbar">
         <div class="analytics__toolbar-left">
-          <!-- 选择框 -->
+          <!-- 閫夋嫨妗?-->
           <div class="analytics__toolbar-left-title">Analytics Dashboard</div>
         </div>
 
         <div class="analytics__toolbar-right">
           <div class="analytics__toolbar-time-btns" @click="handleTimeBtnClick">
-            <!-- 暂时注释掉时间间隔选择功能 -->
+            <!-- 鏆傛椂娉ㄩ噴鎺夋椂闂撮棿闅旈€夋嫨鍔熻兘 -->
             <!-- <div
               v-show="selectedTimeBtn === 'custom'"
               class="analytics__toolbar-time-interval"
-              ref="toolbarRightRef"
+              ref="_toolbarRightRef"
             >
               <el-select
                 v-model="timeIntervalModel"
                 @change="getAllAnalyticsData"
-                :append-to="toolbarRightRef"
+                :append-to="_toolbarRightRef"
                 placeholder="Select Time Interval"
               >
                 <el-option
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- 表格 -->
+      <!-- 琛ㄦ牸 -->
       <div class="analytics__charts">
         <div class="analytics__chart-item">
           <ModuleCard title="Energy Structure" :loading="!stationLoading && chart1Loading">
@@ -144,8 +144,8 @@ defineProps<{
 }>()
 
 const route = useRoute()
-const toolbarRightRef = ref<HTMLElement | null>(null)
-// 时间按钮列表
+const _toolbarRightRef = ref<HTMLElement | null>(null)
+// 鏃堕棿鎸夐挳鍒楄〃
 const timeBtnList: { label: string; value: '6hours' | '1day' | '1week' | '1month' | 'custom' }[] = [
   { label: 'Custom', value: 'custom' },
   { label: '6 Hour', value: '6hours' },
@@ -163,7 +163,7 @@ const chart3Loading = ref(false)
 const chart4Loading = ref(false)
 const chart5Loading = ref(false)
 const chart6Loading = ref(false)
-// 暂时注释掉时间间隔选择相关逻辑
+// 鏆傛椂娉ㄩ噴鎺夋椂闂撮棿闅旈€夋嫨鐩稿叧閫昏緫
 // const intervalList = ref<Array<{ label: string; value: string }>>([
 //   { label: '1 Minute', value: '1minute' },
 //   { label: '15 Minutes', value: '15minutes' },
@@ -319,17 +319,17 @@ const xAxiosOption = ref({
 })
 const rangeArray = ref<string[]>([])
 
-// 事件代理处理时间按钮点击
+// 浜嬩欢浠ｇ悊澶勭悊鏃堕棿鎸夐挳鐐瑰嚮
 const handleTimeBtnClick = (event: MouseEvent) => {
   const target = event.target as HTMLElement
-  // 查找最近的按钮元素
+  // 查找最近的时间按钮
   const btn = target.closest('.analytics__toolbar-time-btn') as HTMLElement | null
   if (btn && btn.dataset.value) {
     selectedTimeBtn.value = btn.dataset.value as '6hours' | '1day' | '1week' | '1month' | 'custom'
     rangeArray.value = []
     if (selectedTimeBtn.value === 'custom') {
-      // 点击 Custom 时，重置时间间隔为 null，不触发数据获取
-      // timeIntervalModel.value = null // 暂时注释掉
+      // Custom 模式仅展示时间选择器，不直接发请求
+      // timeIntervalModel.value = null
     } else {
       getAllAnalyticsData()
     }
@@ -371,7 +371,7 @@ const fetchChart2Data = async () => {
       intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
-      // 修复数据更新逻辑：直接更新每个系列的data数组
+      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
       xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
         item.ts.replace(' ', '\n'),
       )
@@ -437,7 +437,7 @@ const fetchChart4Data = async () => {
       intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
-      // 修复数据更新逻辑：直接更新每个系列的data数组
+      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
       xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
         item.ts.replace(' ', '\n'),
       )
@@ -468,7 +468,7 @@ const fetchChart5Data = async () => {
       intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
-      // 修复数据更新逻辑：直接更新每个系列的data数组
+      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
       xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
         item.ts.replace(' ', '\n'),
       )
@@ -497,7 +497,7 @@ const fetchChart6Data = async () => {
       intervalModel: intervalModel.value,
     })
     if (res.code === 200) {
-      // 修复数据更新逻辑：直接更新每个系列的data数组
+      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
       xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
         item.ts.replace(' ', '\n'),
       )
@@ -514,24 +514,17 @@ const fetchChart6Data = async () => {
   }
 }
 
-
 const getAllAnalyticsData = () => {
   cancelAllPendingRequests()
 
   setTimeout(() => {
     if (selectedTimeBtn.value === 'custom') {
-      // Custom 模式下，需要检查日期范围是否已选择
+      // Custom 模式下需要先选完整时间范围
       if (rangeArray.value.every((item: string) => item === '')) {
         return
       }
-      // 暂时注释掉时间间隔选择逻辑，始终使用自动计算
-      // 如果没有选择时间间隔，根据日期范围自动计算
-      // if (!timeIntervalModel.value) {
-        intervalModel.value = calculateAutoInterval(rangeArray.value[0], rangeArray.value[1])
-      // } else {
-      //   // 如果选择了时间间隔，使用选择的间隔
-      //   intervalModel.value = IntervalListMap.get(timeIntervalModel.value) as AnalyticsIntervalModel
-      // }
+      // 时间粒度按选择范围自动计算
+      intervalModel.value = calculateAutoInterval(rangeArray.value[0], rangeArray.value[1])
     } else {
       rangeArray.value = getTimeRangeArray(selectedTimeBtn.value)
       switch (selectedTimeBtn.value) {
@@ -561,7 +554,7 @@ const getAllAnalyticsData = () => {
   }, 100)
 }
 
-// 路由变化时取消当前页面请求并重新获取数据；首次进入也执行（使用动态路由参数）
+// 璺敱鍙樺寲鏃跺彇娑堝綋鍓嶉〉闈㈣姹傚苟閲嶆柊鑾峰彇鏁版嵁锛涢娆¤繘鍏ヤ篃鎵ц锛堜娇鐢ㄥ姩鎬佽矾鐢卞弬鏁帮級
 watch(
   () => route.params.stationId,
   (id) => {

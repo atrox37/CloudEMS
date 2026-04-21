@@ -77,7 +77,7 @@
                 <div class="header-station-info__time">
                   <img :src="timeIcon" class="header-station-info__time-icon" />
                   <div class="header-station-info__time-text">
-                    {{ stationDetail.deviceInstancePo.statusTime??'-' }}
+                    {{ stationDetail.deviceInstancePo.statusTime ?? '-' }}
                   </div>
                 </div>
                 <div class="header-station-info__address">
@@ -141,12 +141,6 @@
             @click="handleTabClick('Alarm')"
           />
           <IconButton
-            :type="activeTab === 'Forecast' ? 'primary' : 'warning'"
-            :icon="forecastIcon"
-            text="Forecast"
-            @click="handleTabClick('Forecast')"
-          />
-          <IconButton
             :type="activeTab === 'Maintenance' ? 'primary' : 'warning'"
             :icon="maintenanceIcon"
             text="Maintenance"
@@ -188,7 +182,6 @@ import performanceIcon from '@/assets/icons/button-performance.svg' // 性能Tab
 import analyticsIcon from '@/assets/icons/button-analytics.svg' // 分析Tab图标
 import maintenanceIcon from '@/assets/icons/button-maintenance.svg' // 维护Tab图标
 import AlarmIcon from '@/assets/icons/button-Alarm.svg' // 告警Tab图标
-import forecastIcon from '@/assets/icons/button-analytics.svg' // 预测Tab图标（复用分析图标）
 import sunIcon from '@/assets/icons/sunny.svg' // 天气图标
 import timeIcon from '@/assets/icons/time.svg' // 时间图标
 import addressIcon from '@/assets/icons/address.svg' // 地址图标
@@ -197,6 +190,7 @@ import LoadingBg from '@/components/common/LoadingBg.vue' // 加载背景组件
 import { getStationDetail, getStationList } from '@/api/station' // API方法
 import { useStationStore } from '@/stores/station' // Pinia电站store
 import type { StationInformation, StationListItem } from '@/types/Stations' // 类型定义
+import { tryNumericStationId } from '@/utils/stationId'
 
 // 电站列表项类型
 interface StationList {
@@ -270,8 +264,8 @@ const stationDetail = ref<StationInformation>({
     },
   },
 })
-// 当前选中的电站ID
-const currentStationId = ref<number | string>()
+// 当前选中的电站ID（与路由、后端一致，使用 number）
+const currentStationId = ref<number>()
 // 响应式获取store中的stationDetail
 // let { stationDetail } = storeToRefs(useStationStore())
 // 路由相关
@@ -284,9 +278,11 @@ const stationsList = ref<StationList[]>([])
 // 加载状态
 const stationLoading = ref(true)
 const isDropdownVisible = ref(false)
-// 获取当前站点ID（统一从 params 获取）
-const getStationIdFromRoute = () => {
-  return route.params.stationId as string
+/** 从路由解析站点 ID；非法或缺失时为 null */
+const parseRouteStationId = (): number | null => {
+  const raw = route.params.stationId
+  if (raw === undefined || raw === null) return null
+  return tryNumericStationId(Array.isArray(raw) ? raw[0] : raw)
 }
 
 // 监听路由变化，切换Tab和电站
@@ -294,29 +290,27 @@ watch(
   () => route,
   async (newRoute) => {
     activeTab.value = newRoute.name as string
-    const stationId = getStationIdFromRoute()
-    // 如果没有stationId参数，提示并跳转回电站列表页
-    if (!stationId && stationId !== '0') {
+    const sid = parseRouteStationId()
+    if (sid === null) {
       ElMessage.error('Please select a station first')
       const timer = setTimeout(() => {
         clearTimeout(timer)
         router.push({ name: 'stations' })
       }, 1000)
     } else {
-      // 有stationId则设置当前电站ID
-      currentStationId.value = parseInt(stationId)
+      currentStationId.value = sid
     }
   },
   { immediate: true, deep: true },
 )
 
 // 处理电站下拉选择
-const handleUserCommand = (command: string) => {
-  if (command === currentStationId.value) {
+const handleUserCommand = (command: string | number) => {
+  const id = tryNumericStationId(command)
+  if (id === null || id === currentStationId.value) {
     return
   }
-  // 统一使用动态路由参数
-  router.push({ name: activeTab.value, params: { stationId: command } })
+  router.push({ name: activeTab.value, params: { stationId: id } })
 }
 
 // 返回按钮处理
@@ -327,9 +321,9 @@ const handleBack = () => {
 // Tab切换处理
 const handleTabClick = (tab: string) => {
   activeTab.value = tab
-  const stationId = getStationIdFromRoute()
-  // 统一使用动态路由参数
-  router.push({ name: tab, params: { stationId } })
+  const sid = parseRouteStationId()
+  if (sid === null) return
+  router.push({ name: tab, params: { stationId: sid } })
 }
 
 // 电站下拉选择处理
@@ -358,8 +352,8 @@ const stationStore = useStationStore()
 
 // 拆分：根据路由参数获取电站详情
 const fetchStationDetailByRoute = async () => {
-  const stationId = getStationIdFromRoute()
-  if (!stationId) return
+  const stationId = parseRouteStationId()
+  if (stationId === null) return
   const res = await getStationDetail(stationId)
   if (res.code === 200) {
     stationDetail.value = res.data
@@ -373,7 +367,7 @@ const fetchStationDetailByRoute = async () => {
 
 // 监听路由变化：仅重新拉取详情（同时监听 query 和 params）
 watch(
-  () => getStationIdFromRoute(),
+  () => parseRouteStationId(),
   async () => {
     stationLoading.value = true
     try {
@@ -402,14 +396,14 @@ watch(
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(84, 98, 140, 0.2);
+      background: var(--vt-bg-input);
       border: 0.01rem solid;
       border-image: linear-gradient(
           117.64deg,
-          rgba(148, 166, 197, 0.3) 2.73%,
-          rgba(148, 166, 197, 0) 31.73%,
-          rgba(148, 166, 197, 0.103266) 71.62%,
-          rgba(148, 166, 197, 0.3) 97.67%
+          var(--vt-border-color) 2.73%,
+          transparent 31.73%,
+          var(--vt-border-medium) 71.62%,
+          var(--vt-border-color) 97.67%
         )
         1;
       backdrop-filter: blur(0.1rem);
@@ -445,7 +439,7 @@ watch(
               font-size: 0.26rem;
               line-height: 0.26rem;
               letter-spacing: 0%;
-              color: #fff;
+              color: var(--vt-text-primary);
             }
 
             .header-station-info__arrow {
@@ -464,8 +458,8 @@ watch(
             width: 2.82rem;
 
             &.active {
-              border: 0.01rem solid rgba(255, 105, 0, 1) !important;
-              background-color: rgba(255, 255, 255, 0.1);
+              border: 0.01rem solid var(--vt-color-primary) !important;
+              background-color: var(--vt-white-10);
             }
 
             .item-info {
@@ -479,7 +473,7 @@ watch(
                 font-size: 0.16rem;
                 line-height: 0.26rem;
                 letter-spacing: 0%;
-                color: #fff;
+                color: var(--vt-text-primary);
               }
 
               .item-status {
@@ -498,7 +492,7 @@ watch(
                   line-height: 100%;
                   letter-spacing: 0%;
                   vertical-align: middle;
-                  color: #fff;
+                  color: var(--vt-text-primary);
                 }
               }
             }
@@ -512,7 +506,7 @@ watch(
             font-size: 0.16rem;
             line-height: 100%;
             letter-spacing: 0%;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--vt-white-60);
 
             .header-station-info__time,
             .header-station-info__address,
@@ -584,11 +578,11 @@ watch(
             font-size: 0.3rem;
             line-height: 0.3rem;
             letter-spacing: 0%;
-            color: #ffffff;
+            color: var(--vt-text-primary);
 
             span {
               font-size: 0.16rem;
-              color: rgba(255, 255, 255, 0.6);
+              color: var(--vt-white-60);
             }
           }
 
@@ -597,7 +591,7 @@ watch(
             font-size: 0.16rem;
             line-height: 0.16rem;
             letter-spacing: 0%;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--vt-white-60);
           }
 
           .header-station-info__power-value {
@@ -605,13 +599,13 @@ watch(
             font-size: 0.3rem;
             line-height: 0.3rem;
             letter-spacing: 0%;
-            color: #fff;
+            color: var(--vt-text-primary);
 
             span {
               font-size: 0.14rem;
               line-height: 0.3rem;
               letter-spacing: 0%;
-              color: rgba(255, 255, 255, 0.6);
+              color: var(--vt-white-60);
             }
           }
 
@@ -620,7 +614,7 @@ watch(
             font-size: 0.16rem;
             line-height: 0.16rem;
             letter-spacing: 0%;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--vt-white-60);
           }
         }
       }
@@ -674,7 +668,7 @@ watch(
   /* 下拉菜单样式调整 */
   :deep(.el-dropdown__popper.el-popper.is-light) {
     top: 0.38rem !important;
-    background-color: rgba(15, 35, 70, 0.7) !important;
+    background-color: var(--vt-bg-overlay) !important;
     z-index: 3000 !important;
   }
 
@@ -689,8 +683,8 @@ watch(
   }
 
   :deep(.el-dropdown-menu__item:hover) {
-    border: 0.01rem solid rgba(255, 105, 0, 1) !important;
-    background-color: rgba(255, 255, 255, 0.1);
+    border: 0.01rem solid var(--vt-color-primary) !important;
+    background-color: var(--vt-white-10);
   }
 }
 </style>

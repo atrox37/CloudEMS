@@ -7,11 +7,9 @@
     </HeaderCard>
     <div class="api-management__body">
       <el-table :data="tableData" class="api-management__table" align="left" table-layout="fixed">
-        <el-table-column prop="apiname" label="Name">
-        </el-table-column>
+        <el-table-column prop="apiname" label="Name"> </el-table-column>
         <!-- 角色列改为纯文字类型 -->
-        <el-table-column prop="key" label="Key" show-overflow-tooltip>
-        </el-table-column>
+        <el-table-column prop="key" label="Key" show-overflow-tooltip> </el-table-column>
         <el-table-column prop="permissions" label="Permissions">
           <template #default="{ row }">
             <div :style="{ color: permissionsColor[row.permissions] }">{{ row.permissions }}</div>
@@ -38,9 +36,15 @@
       </el-table>
 
       <div class="api-management__pagination">
-        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
-          @size-change="handlePageSizeChange" @current-change="handlePageSizeChange" />
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handlePageSizeChange"
+          @current-change="handlePageSizeChange"
+        />
       </div>
       <!-- </LoadingBg> -->
     </div>
@@ -48,38 +52,36 @@
 </template>
 
 <script setup lang="ts">
-import HeaderCard from '@/components/card/headerCard.vue';
-import addIcon from '@/assets/icons/button-add.svg';
+import HeaderCard from '@/components/card/headerCard.vue'
+import addIcon from '@/assets/icons/button-add.svg'
 import editIcon from '@/assets/icons/button-edit.svg'
 import deleteIcon from '@/assets/icons/button-delete.svg'
-
-
 
 const tableData = ref([
   {
     apiname: 'API Key 1',
     key: 'Sk-****... ****',
     permissions: 'Read, Write',
-    last_used: '2025-08-29 12:00:00'
+    last_used: '2025-08-29 12:00:00',
   },
   {
     apiname: 'API Key 2',
     key: 'Sk-****... ****',
     permissions: 'Read, Write',
-    last_used: '2025-08-29 12:00:00'
+    last_used: '2025-08-29 12:00:00',
   },
   {
     apiname: 'API Key 3',
     key: 'Sk-****... ****',
     permissions: 'Read, Write',
-    last_used: '2025-08-29 12:00:00'
-  }
+    last_used: '2025-08-29 12:00:00',
+  },
 ])
 
 const pagination = ref({
   page: 1,
   pageSize: 10,
-  total: 0
+  total: 0,
 })
 
 const handlePageSizeChange = (page: number, pageSize: number) => {
@@ -88,9 +90,9 @@ const handlePageSizeChange = (page: number, pageSize: number) => {
 }
 
 const permissionsColor: Record<string, string> = {
-  'Read': 'rgba(106, 193, 97, 1)',
-  'Write': 'rgba(242, 43, 47, 1)',
-  'Read, Write': 'rgba(29, 134, 255, 1)'
+  Read: 'rgba(106, 193, 97, 1)',
+  Write: 'rgba(242, 43, 47, 1)',
+  'Read, Write': 'rgba(29, 134, 255, 1)',
 }
 // 编辑用户
 const handleEdit = (row: any) => {
@@ -154,6 +156,5 @@ const handleDelete = async (row: any) => {
     justify-content: flex-end;
     margin: 0.2rem 0;
   }
-
 }
 </style>

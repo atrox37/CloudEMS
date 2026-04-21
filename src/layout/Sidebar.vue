@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class sidebar" :class="{ collapse: globalStore.isCollapse }">
     <div class="sidebar__header" :class="{ collapse: globalStore.isCollapse }">
       <div class="sidebar__header-img" :class="{ collapse: globalStore.isCollapse }"></div>
@@ -11,8 +11,8 @@
         :default-active="activeMenuPath"
         router
         background-color="transparent"
-        text-color="#fff"
-        active-text-color="#fff"
+        text-color="var(--vt-text-primary)"
+        active-text-color="var(--vt-text-primary)"
         :unique-opened="true"
       >
         <template v-for="item in filterRoutesList" :key="item.path">
@@ -39,7 +39,11 @@
               <span>{{ child.meta.title }}</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else-if="typeof item.meta.isSubMenu === 'boolean'" :index="item.meta.activeNav" class="sidebar__menu-item">
+          <el-menu-item
+            v-else-if="typeof item.meta.isSubMenu === 'boolean'"
+            :index="item.meta.activeNav"
+            class="sidebar__menu-item"
+          >
             <img
               v-if="item.meta.icon"
               :src="item.meta.icon"
@@ -71,26 +75,8 @@ const globalStore = useGlobalStore()
 const route = useRoute()
 const filterRoutesList = computed(() => getFilteredRoutesForSidebar())
 const activeMenuPath = ref<string>('/home')
-// 1. 使用import.meta.globEager批量导入侧边栏icon图片
-const sidebarIcons = import.meta.glob('@/assets/images/sidebar-*-icon.png', {
-  eager: true,
-  import: 'default',
-})
 
-/**
- * 获取侧边栏icon图片的真实路径
- * @param iconName 图标名
- * @returns 图片路径
- */
-function getSidebarIconUrl(iconName: string): string {
-  // 兼容@和/src两种写法
-  const key1 = `/src/assets/images/sidebar-${iconName}-icon.png`
-  const key2 = `@/assets/images/sidebar-${iconName}-icon.png`
-  const result = sidebarIcons[key1] || sidebarIcons[key2] || ''
-  return typeof result === 'string' ? result : ''
-}
-
-// 监听路由变化，更新激活的菜单
+// 鐩戝惉璺敱鍙樺寲锛屾洿鏂版縺娲荤殑鑿滃崟
 watch(
   route,
   (newPath) => {
@@ -110,13 +96,13 @@ const handleShrink = () => {
   position: relative;
   height: 100vh;
   padding: 0.2rem 0;
-  background: rgba(84, 98, 140, 0.4);
+  background: var(--vt-bg-sidebar);
   border-right: 0.01rem solid;
   border-image-source: linear-gradient(
     147.24deg,
-    rgba(148, 166, 197, 0.72) 39.16%,
-    rgba(148, 166, 197, 0.36) 66.27%,
-    rgba(148, 166, 197, 0.72) 98.58%
+    var(--vt-border-strong) 39.16%,
+    var(--vt-border-medium) 66.27%,
+    var(--vt-border-strong) 98.58%
   );
   backdrop-filter: blur(0.1rem);
   display: flex;
@@ -157,7 +143,7 @@ const handleShrink = () => {
     .sidebar__logo-text {
       font-size: 0.18rem;
       font-weight: 600;
-      color: #ffffff;
+      color: var(--vt-text-primary);
       font-family: 'Montserrat', sans-serif;
     }
   }
@@ -171,7 +157,7 @@ const handleShrink = () => {
   .sidebar__subMenu-img {
     width: 0.24rem;
     height: 0.24rem;
-    margin-right: 0.1rem; // 默认展开
+    margin-right: 0.1rem; // 榛樿灞曞紑
     &.collapse {
       margin-right: 0;
     }
@@ -186,7 +172,7 @@ const handleShrink = () => {
     font-style: Bold;
     font-size: 0.14rem;
     letter-spacing: 0%;
-    color: #fff;
+    color: var(--vt-text-primary);
   }
   .sidebar__footer {
     position: relative;

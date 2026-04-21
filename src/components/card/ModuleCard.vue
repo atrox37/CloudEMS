@@ -10,8 +10,13 @@
           <slot></slot>
         </div>
         <div class="card__content-footer" v-if="props.isShowFooter">
-          <IconButton type="primary" :icon="submitIcon" text="Submit" custom-class="card__content-footer-button"
-            @click="handleSubmitClick" />
+          <IconButton
+            type="primary"
+            :icon="submitIcon"
+            text="Submit"
+            custom-class="card__content-footer-button"
+            @click="handleSubmitClick"
+          />
         </div>
       </div>
     </LoadingBg>
@@ -52,11 +57,14 @@ function handleSubmitClick() {
   background: rgba(84, 98, 140, 0.2);
 
   border: 0.01rem solid;
-  border-image: linear-gradient(117.31deg,
+  border-image: linear-gradient(
+      117.31deg,
       rgba(148, 166, 197, 0.3) 2.77%,
       rgba(148, 166, 197, 0) 32.18%,
       rgba(148, 166, 197, 0.103266) 72.63%,
-      rgba(148, 166, 197, 0.3) 99.05%) 1;
+      rgba(148, 166, 197, 0.3) 99.05%
+    )
+    1;
   backdrop-filter: blur(0.1rem);
   display: flex;
   flex-direction: column;
@@ -125,6 +133,5 @@ function handleSubmitClick() {
       }
     }
   }
-
 }
 </style>

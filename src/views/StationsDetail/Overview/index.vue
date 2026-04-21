@@ -15,11 +15,15 @@
       </LoadingBg>
     </div>
     <ModuleCard title="Weekly Energy Sources" :loading="!stationLoading && lineChartLoading">
-      <LineChart title="Weekly Energy Sources" :xAxiosOption="xAxiosOption" :yAxiosOption="yAxiosOption" :series="overviewSeries" />
+      <LineChart
+        title="Weekly Energy Sources"
+        :xAxiosOption="xAxiosOption"
+        :yAxiosOption="yAxiosOption"
+        :series="overviewSeries"
+      />
     </ModuleCard>
   </div>
   <!-- </div> -->
-
 </template>
 
 <script setup lang="ts">
@@ -48,30 +52,30 @@ const stationOverview = ref<StationOverview>({
   essP: 0,
   essSoc: 0,
   dieselP: 0,
-  dieselOil: 0
+  dieselOil: 0,
 })
 const overviewSeries = ref<SeriesData[]>([
   {
     name: 'PV',
     data: [],
-    color: '#4FADF7'
+    color: '#4FADF7',
   },
   {
     name: 'DG',
     data: [],
-    color: '#F6C85F'
+    color: '#F6C85F',
   },
   {
     name: 'ESS',
     data: [],
-    color: '#6DD400'
-  }
+    color: '#6DD400',
+  },
 ])
 const xAxiosOption = ref<XAxisOption>({
   xAxiosData: [],
 })
 const yAxiosOption = ref<YAxisOption>({
-  yUnit: 'kWh'
+  yUnit: 'kWh',
 })
 
 const fetchStationOverviewData = async (stationId: string | number) => {
@@ -92,10 +96,12 @@ const fetchStationOverchartData = async (stationId: string | number) => {
     const res2 = await getStationOverchart(stationId)
     if (res2.code === 200) {
       // 格式化时间戳为日期格式（不包含时分秒）
-      xAxiosOption.value.xAxiosData = res2.data.guangFu.map(item => dayjs(item.ts).format('YYYY-MM-DD'))
-      overviewSeries.value[0].data = res2.data.guangFu.map(item => item.numberValue)
-      overviewSeries.value[1].data = res2.data.chaiFa.map(item => item.numberValue)
-      overviewSeries.value[2].data = res2.data.chuNeng.map(item => item.numberValue)
+      xAxiosOption.value.xAxiosData = res2.data.guangFu.map((item) =>
+        dayjs(item.ts).format('YYYY-MM-DD'),
+      )
+      overviewSeries.value[0].data = res2.data.guangFu.map((item) => item.numberValue)
+      overviewSeries.value[1].data = res2.data.chaiFa.map((item) => item.numberValue)
+      overviewSeries.value[2].data = res2.data.chuNeng.map((item) => item.numberValue)
     }
   } finally {
     lineChartLoading.value = false
@@ -111,7 +117,6 @@ watch(
   },
   { immediate: true },
 )
-
 </script>
 
 <style scoped lang="scss">
@@ -119,8 +124,6 @@ watch(
   width: 100%;
   height: 100%;
   overflow-y: auto;
-
-
 
   .overview-container__dashborad {
     width: 100%;
@@ -131,7 +134,7 @@ watch(
       font-size: 0.2rem;
       line-height: 0.22rem;
       letter-spacing: 0%;
-      color: #fff;
+      color: var(--vt-text-primary);
       margin-bottom: 0.2rem;
     }
 
@@ -152,11 +155,17 @@ watch(
     position: relative;
     width: 100%;
     height: 6rem;
-    background-color: rgba(84, 98, 140, 0.2);
+    background-color: var(--vt-bg-input);
     border: 1px solid;
 
-    border-image: linear-gradient(117.64deg, rgba(148, 166, 197, 0.3) 2.73%, rgba(148, 166, 197, 0) 31.73%, rgba(148, 166, 197, 0.103266) 71.62%, rgba(148, 166, 197, 0.3) 97.67%) 1;
-
+    border-image: linear-gradient(
+        117.64deg,
+        var(--vt-border-color) 2.73%,
+        transparent 31.73%,
+        var(--vt-border-medium) 71.62%,
+        var(--vt-border-color) 97.67%
+      )
+      1;
 
     // background-image: url('@/assets/images/tuopu-bg.png');
     // background-size: 100% 100%;
@@ -169,8 +178,6 @@ watch(
     height: calc(100% - 1.82rem);
     width: 100%;
     overflow-y: auto;
-
-
   }
 }
 </style>

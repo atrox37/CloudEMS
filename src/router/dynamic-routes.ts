@@ -1,12 +1,10 @@
-import { markRaw, defineAsyncComponent } from 'vue'
 import type { RouteItem } from '@/types/menu'
 import homeIcon from '@/assets/icons/sidebar-home.svg'
 import stationsIcon from '@/assets/icons/sidebar-stations.svg'
 import statisticsIcon from '@/assets/icons/sidebar-statistics.svg'
 import settingIcon from '@/assets/icons/sidebar-setting.svg'
 
-// 工具：安全的异步组件（避免被代理）
-
+// 宸ュ叿锛氬畨鍏ㄧ殑寮傛缁勪欢锛堥伩鍏嶈浠ｇ悊锛?
 export const dynamicRoutes: RouteItem[] = [
   {
     path: '/home',
@@ -17,7 +15,7 @@ export const dynamicRoutes: RouteItem[] = [
       activeNav: '/home',
       icon: homeIcon,
       title: 'Home',
-      roles: ['Admin', 'Operator', 'Engineer'],
+      roles: ['Admin', 'Engineer', 'Viewer'],
     },
   },
   {
@@ -29,7 +27,7 @@ export const dynamicRoutes: RouteItem[] = [
       activeNav: '/stations',
       icon: stationsIcon,
       title: 'Stations',
-      roles: ['Admin', 'Operator', 'Engineer'],
+      roles: ['Admin', 'Engineer', 'Viewer'],
     },
   },
   {
@@ -39,7 +37,7 @@ export const dynamicRoutes: RouteItem[] = [
     redirect: '/stationsDetail/overview',
     meta: {
       activeNav: '/stationsDetail',
-      roles: ['Admin', 'Operator', 'Engineer'],
+      roles: ['Admin', 'Engineer', 'Viewer'],
     },
     children: [
       {
@@ -49,57 +47,47 @@ export const dynamicRoutes: RouteItem[] = [
         meta: {
           title: 'Overview',
           activeNav: '/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
+          roles: ['Admin', 'Engineer', 'Viewer'],
         },
       },
       {
-        path:'performance/:stationId',
-        name:'Performance',
-        component:()=>import('@/views/StationsDetail/Performance/index.vue'),
-        meta:{
-          title:'Performance',
-          activeNav:'/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
+        path: 'performance/:stationId',
+        name: 'Performance',
+        component: () => import('@/views/StationsDetail/Performance/index.vue'),
+        meta: {
+          title: 'Performance',
+          activeNav: '/stations',
+          roles: ['Admin', 'Engineer', 'Viewer'],
         },
       },
       {
-        path:'analytics/:stationId',
-        name:'Analytics',
-        component:()=>import('@/views/StationsDetail/Analytics/index.vue'),
-        meta:{
-          title:'Analytics',
-          activeNav:'/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
-        }
-      },
-      {
-        path:'maintenance/:stationId',
-        name:'Maintenance',
-        component:()=>import('@/views/StationsDetail/Maintenance/index.vue'),
-        meta:{
-          title:'Maintenance',
-          activeNav:'/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
+        path: 'analytics/:stationId',
+        name: 'Analytics',
+        component: () => import('@/views/StationsDetail/Analytics/index.vue'),
+        meta: {
+          title: 'Analytics',
+          activeNav: '/stations',
+          roles: ['Admin', 'Engineer', 'Viewer'],
         },
       },
       {
-        path:'Alarm/:stationId',
-        name:'Alarm',
-        component:()=>import('@/views/StationsDetail/Alarm/index.vue'),
-        meta:{
-          title:'Alarm',
-          activeNav:'/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
+        path: 'maintenance/:stationId',
+        name: 'Maintenance',
+        component: () => import('@/views/StationsDetail/Maintenance/index.vue'),
+        meta: {
+          title: 'Maintenance',
+          activeNav: '/stations',
+          roles: ['Admin', 'Engineer', 'Viewer'],
         },
       },
       {
-        path:'forecast/:stationId',
-        name:'Forecast',
-        component:()=>import('@/views/StationsDetail/Forecast/index.vue'),
-        meta:{
-          title:'Forecast',
-          activeNav:'/stations',
-          roles: ['Admin', 'Operator', 'Engineer'],
+        path: 'Alarm/:stationId',
+        name: 'Alarm',
+        component: () => import('@/views/StationsDetail/Alarm/index.vue'),
+        meta: {
+          title: 'Alarm',
+          activeNav: '/stations',
+          roles: ['Admin', 'Engineer', 'Viewer'],
         },
       },
     ],
@@ -112,8 +100,8 @@ export const dynamicRoutes: RouteItem[] = [
       isSubMenu: false,
       activeNav: '/statistics',
       icon: statisticsIcon,
-      title: 'Statistics', 
-      roles: ['Admin', 'Operator', 'Engineer'],
+      title: 'Statistics',
+      roles: ['Admin', 'Engineer', 'Viewer'],
     },
   },
   {
@@ -155,7 +143,7 @@ export const dynamicRoutes: RouteItem[] = [
           title: 'Notification',
           activeNav: '/setting/notification',
           roles: ['Admin'],
-        }
+        },
       },
       {
         path: 'systemAndGeneral',
@@ -165,7 +153,7 @@ export const dynamicRoutes: RouteItem[] = [
           title: 'System & General',
           activeNav: '/setting/systemAndGeneral',
           roles: ['Admin'],
-        }
+        },
       },
       {
         path: 'apiManagement',
@@ -175,7 +163,7 @@ export const dynamicRoutes: RouteItem[] = [
           title: 'API Management',
           activeNav: '/setting/apiManagement',
           roles: ['Admin'],
-        }
+        },
       },
       {
         path: 'helpAndDocumentation',
@@ -185,8 +173,8 @@ export const dynamicRoutes: RouteItem[] = [
           title: 'Help&Documentation',
           activeNav: '/setting/helpAndDocumentation',
           roles: ['Admin'],
-        }
-      }
+        },
+      },
     ],
   },
 ]

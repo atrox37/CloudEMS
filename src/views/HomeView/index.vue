@@ -11,7 +11,7 @@
             :value="item.value"
             :unit="item.unit"
             :iconUrl="item.iconUrl"
-            bgColor="rgba(84, 98, 140, 0.2)"
+            bgColor="var(--vt-bg-input)"
           />
         </div>
       </div>
@@ -68,10 +68,10 @@ onMounted(async () => {
   const fetchHomeTotalData = async () => {
     const res = await getHomeTotalData()
     if (res.code === 200) {
-      dashboardData[0].value = res.data.todayEnergy 
-      dashboardData[1].value = res.data.stationOnline 
-      dashboardData[2].value = res.data.stationAlarmSum 
-      dashboardData[3].value = res.data.todayPrice 
+      dashboardData[0].value = res.data.todayEnergy
+      dashboardData[1].value = res.data.stationOnline
+      dashboardData[2].value = res.data.stationAlarmSum
+      dashboardData[3].value = res.data.todayPrice
     }
   }
 
@@ -80,15 +80,9 @@ onMounted(async () => {
     const stationsRes = await stationStore.fetchStations()
     if (stationsRes.code === 200) {
       stationsRes.data.forEach((station: Stations) => {
-        const longitude =
-          station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue ||
-          ''
-        const latitude =
-          station.wgTag.find((tag) => tag.tagKey === 'latitude')?.tagValue ||
-          ''
-        const state =
-          station.wgTag.find((tag) => tag.tagKey === 'State')?.tagValue ||
-          ''
+        const longitude = station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue || ''
+        const latitude = station.wgTag.find((tag) => tag.tagKey === 'latitude')?.tagValue || ''
+        const state = station.wgTag.find((tag) => tag.tagKey === 'State')?.tagValue || ''
         if (longitude && latitude && state) {
           powerStations.push({
             id: station.stationId,

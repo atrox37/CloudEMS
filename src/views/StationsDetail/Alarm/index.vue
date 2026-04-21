@@ -1,57 +1,63 @@
-<template>
+﻿<template>
   <div class="Alarm-container">
     <LoadingBg :loading="!stationLoading && dashboardListLoading">
-    <div class="Alarm-summary">
-      <ModuleCard title="Alarm Summary">
-        <div class="Alarm-summary__content">
-          <div v-for="item in dashboardList" :key="item.id" class="Alarm-item">
-            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" />
+      <div class="Alarm-summary">
+        <ModuleCard title="Alarm Summary">
+          <div class="Alarm-summary__content">
+            <div v-for="item in dashboardList" :key="item.id" class="Alarm-item">
+              <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" />
+            </div>
           </div>
-
-        </div>
-      </ModuleCard>
-    </div>
-    <div class="critical-Alarm">
-      <ModuleCard :title="`Critical Alarm (${stationAlarm.level1.length || 0})`">
-        <div class="critical-Alarm__content">
-          <div v-for="item in stationAlarm.level1" class="critical-Alarm__item" :key="item.alarm_id">
-            <AlarmCard :AlarmData="item" :level="1" />
+        </ModuleCard>
+      </div>
+      <div class="critical-Alarm">
+        <ModuleCard :title="`Critical Alarm (${stationAlarm.level1.length || 0})`">
+          <div class="critical-Alarm__content">
+            <div
+              v-for="item in stationAlarm.level1"
+              class="critical-Alarm__item"
+              :key="item.alarm_id"
+            >
+              <AlarmCard :AlarmData="item" :level="1" />
+            </div>
           </div>
-        </div>
-      </ModuleCard>
-    </div>
-    <div class="warning-Alarm">
-      <ModuleCard :title="`Warning Alarm (${stationAlarm.level2.length || 0})`">
-        <div class="warning-Alarm__content">
-          <div v-for="item in stationAlarm.level2" class="warning-Alarm__item" :key="item.alarm_id">
-            <AlarmCard :AlarmData="item" :level="2" />
+        </ModuleCard>
+      </div>
+      <div class="warning-Alarm">
+        <ModuleCard :title="`Warning Alarm (${stationAlarm.level2.length || 0})`">
+          <div class="warning-Alarm__content">
+            <div
+              v-for="item in stationAlarm.level2"
+              class="warning-Alarm__item"
+              :key="item.alarm_id"
+            >
+              <AlarmCard :AlarmData="item" :level="2" />
+            </div>
           </div>
-        </div>
-      </ModuleCard>
-    </div>
-    <div class="info-Alarm">
-      <ModuleCard :title="`Info Alarm (${stationAlarm.level3.length || 0})`">
-        <div class="info-Alarm__content">
-          <div v-for="item in stationAlarm.level3" class="info-Alarm__item" :key="item.alarm_id">
-            <AlarmCard :AlarmData="item" :level="3" />
+        </ModuleCard>
+      </div>
+      <div class="info-Alarm">
+        <ModuleCard :title="`Info Alarm (${stationAlarm.level3.length || 0})`">
+          <div class="info-Alarm__content">
+            <div v-for="item in stationAlarm.level3" class="info-Alarm__item" :key="item.alarm_id">
+              <AlarmCard :AlarmData="item" :level="3" />
+            </div>
           </div>
-        </div>
-      </ModuleCard>
-    </div>
-  </LoadingBg>
+        </ModuleCard>
+      </div>
+    </LoadingBg>
   </div>
-
 </template>
 
 <script setup lang="ts">
-import ModuleCard from '@/components/card/ModuleCard.vue';
+import ModuleCard from '@/components/card/ModuleCard.vue'
 import criticalIcon from '@/assets/icons/station-dashboard-critical.svg'
 import warningIcon from '@/assets/icons/station-dashboard-warning.svg'
 import infoIcon from '@/assets/icons/station-dashboard-info.svg'
 import AlarmCard from './components/AlarmCard.vue'
-import { getStationAlarm, getStationAlarmStatistics } from '@/api/station'
+import { getStationAlarmStatistics } from '@/api/station'
 import type { DashboardProps } from '@/components/card/DashboardCard.vue'
-import type { StationAlarm, StationAlarmStatistics } from '@/types/Stations'
+import type { StationAlarm } from '@/types/Stations'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
 defineProps<{
@@ -73,8 +79,7 @@ const dashboardList = ref<DashboardProps[]>([
       value: '-',
       icon: criticalIcon,
     },
-    iconBgColor: 'rgba(255, 59, 59, 0.1)'
-
+    iconBgColor: 'rgba(255, 59, 59, 0.1)',
   },
   {
     id: 2,
@@ -83,7 +88,7 @@ const dashboardList = ref<DashboardProps[]>([
       value: '-',
       icon: warningIcon,
     },
-    iconBgColor: 'rgba(255, 105, 0, 0.1)'
+    iconBgColor: 'rgba(255, 105, 0, 0.1)',
   },
   {
     id: 3,
@@ -92,7 +97,7 @@ const dashboardList = ref<DashboardProps[]>([
       value: '-',
       icon: infoIcon,
     },
-    iconBgColor: 'rgba(29, 134, 255, 0.1)'
+    iconBgColor: 'rgba(29, 134, 255, 0.1)',
   },
 ])
 
@@ -101,19 +106,19 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
     dashboardListLoading.value = true
     const res2 = await getStationAlarmStatistics(stationId)
     if (res2.code === 200) {
-      dashboardList.value[0].dashboardData.value = res2.data.level1 
-      dashboardList.value[1].dashboardData.value = res2.data.level2 
-      dashboardList.value[2].dashboardData.value = res2.data.level3 
+      dashboardList.value[0].dashboardData.value = res2.data.level1
+      dashboardList.value[1].dashboardData.value = res2.data.level2
+      dashboardList.value[2].dashboardData.value = res2.data.level3
       stationAlarm.value.level1 = res2.data.level1Data || []
       stationAlarm.value.level2 = res2.data.level2Data || []
       stationAlarm.value.level3 = res2.data.level3Data || []
-      stationAlarm.value.level1.forEach(item => {
+      stationAlarm.value.level1.forEach((item) => {
         item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
       })
-      stationAlarm.value.level2.forEach(item => {
+      stationAlarm.value.level2.forEach((item) => {
         item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
       })
-      stationAlarm.value.level3.forEach(item => {
+      stationAlarm.value.level3.forEach((item) => {
         item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
       })
     }
@@ -122,8 +127,7 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
   }
 }
 
-
-// 监听路由 params 变化触发，并在首次进入时立即执行（Alarm 使用动态路由参数）
+// 鐩戝惉璺敱 params 鍙樺寲瑙﹀彂锛屽苟鍦ㄩ娆¤繘鍏ユ椂绔嬪嵆鎵ц锛圓larm 浣跨敤鍔ㄦ€佽矾鐢卞弬鏁帮級
 watch(
   () => route.params.stationId,
   (stationId) => {

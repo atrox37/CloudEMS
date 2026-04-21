@@ -14,13 +14,21 @@
               <el-input v-model="form.account" @keyup.enter="handleLogin(formRef)" />
             </el-form-item>
             <el-form-item label="Password" prop="password">
-              <el-input v-model="form.password" type="password" @keyup.enter="handleLogin(formRef)" />
+              <el-input
+                v-model="form.password"
+                type="password"
+                @keyup.enter="handleLogin(formRef)"
+              />
             </el-form-item>
             <el-form-item label="Verify Code" prop="captcha">
               <div class="loginPage__form-captch">
                 <el-input v-model="form.captcha" @keyup.enter="handleLogin(formRef)" />
-                <el-image class="loginPage__form-captch-img" :src="captchImgUrl" alt="click to refresh"
-                  @click="getCaptchImg">
+                <el-image
+                  class="loginPage__form-captch-img"
+                  :src="captchImgUrl"
+                  alt="click to refresh"
+                  @click="getCaptchImg"
+                >
                   <template #error>
                     <div class="image-viewer-slot image-slot">
                       <el-icon class="is-loading">
@@ -32,7 +40,9 @@
                 <!-- <img :src="captchImgUrl" alt="Verify Code" /> -->
               </div>
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)"  :loading="globalStore.loading">Log in</el-button>
+            <el-button type="primary" @click="handleLogin(formRef)" :loading="globalStore.loading"
+              >Log in</el-button
+            >
           </el-form>
         </div>
       </ModuleCard>
@@ -48,6 +58,7 @@ import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'
 import { useGlobalStore } from '@/stores/global'
+import { getDefaultRoutePath } from '@/router/injector'
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loginFormContainer = ref()
@@ -93,7 +104,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             // if (redirect) {
             //   router.push({ path: redirect as string, query: query })
             // } else {
-            router.push({ path: '/' })
+            router.push({ path: getDefaultRoutePath() })
             // }
           } else {
             if (userInfo.message) ElMessage.error(userInfo.message)
@@ -107,8 +118,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       } else {
         console.log('表单校验未通过')
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error(error)
     }
   })
@@ -139,11 +149,13 @@ onMounted(() => {
   background-repeat: no-repeat;
   border: 0.01rem solid;
 
-  border-image-source: linear-gradient(117.31deg,
+  border-image-source: linear-gradient(
+    117.31deg,
     rgba(148, 166, 197, 0.3) 2.77%,
     rgba(148, 166, 197, 0) 32.18%,
     rgba(148, 166, 197, 0.103266) 72.63%,
-      rgba(148, 166, 197, 0.3) 99.05%);
+    rgba(148, 166, 197, 0.3) 99.05%
+  );
 
   // 顶部标题栏
   .loginPage__header {

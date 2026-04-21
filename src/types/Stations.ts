@@ -103,18 +103,18 @@ export interface StationAlarm {
   level3: StationAlarmItem[]
 }
 export interface StationAlarmItem {
-  point_id: number,
-  level: number,
-  source: string,
-  message: string,
-  service_type: string,
-  data_type: string,
-  alarm_id: string,
-  device: string,
-  channel_id: number,
-  value: number,
-  status: number,
-  timestamp: string,
+  point_id: number
+  level: number
+  source: string
+  message: string
+  service_type: string
+  data_type: string
+  alarm_id: string
+  device: string
+  channel_id: number
+  value: number
+  status: number
+  timestamp: string
   deviceName: string
 }
 // StationInformation 将在下方以更完整的结构重新声明

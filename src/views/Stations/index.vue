@@ -3,7 +3,7 @@
     <LoadingBg :loading="stationStore.loading">
       <div class="stations-list" v-if="localStations.length > 0">
         <div class="stations-list__item" v-for="station in localStations" :key="station.stationId">
-          <StationCard :station="station" @sync="handleSync" :loading="station.loading || false"/>
+          <StationCard :station="station" @sync="handleSync" :loading="station.loading || false" />
         </div>
       </div>
       <!-- 无数据提示 -->
@@ -42,7 +42,7 @@ const handleSync = async (stationId: number) => {
   }
   try {
     localStations.value[numIndex].loading = true
-    const res = await stationStore.fetchStations(stationId)
+    const res = await stationStore.fetchStations(stationId, { skipStoreLoading: true })
     if (res.code === 200 && res.data.length > 0) {
       localStations.value[numIndex] = { ...res.data[0], loading: false }
     }
@@ -85,7 +85,7 @@ const handleSync = async (stationId: number) => {
     .stations-empty-text {
       font-size: 0.24rem;
       line-height: 0.22rem;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--vt-white-60);
     }
   }
 }

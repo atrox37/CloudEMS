@@ -1,11 +1,5 @@
-<template>
-  <el-button
-    :type="type"
-    class="icon-button"
-    :class="customClass"
-    v-bind="attrs"
-    v-on="listeners"
-  >
+﻿<template>
+  <el-button :type="type" class="icon-button" :class="customClass" v-bind="attrs" v-on="listeners">
     <img :src="icon" class="icon-button__icon" :class="iconClass" />
     {{ text }}
   </el-button>
@@ -22,20 +16,20 @@ interface Props {
   iconClass?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   type: 'primary',
   customClass: '',
   iconClass: 'icon-button__icon',
 })
 
-// 获取所有透传的属性和事件
+// 鑾峰彇鎵€鏈夐€忎紶鐨勫睘鎬у拰浜嬩欢
 const attrs = useAttrs()
 
-// 事件监听（只保留onXxx的事件）
-const listeners = {}
-Object.keys(attrs).forEach(key => {
+// 浜嬩欢鐩戝惉锛堝彧淇濈暀onXxx鐨勪簨浠讹級
+const listeners: Record<string, unknown> = {}
+Object.keys(attrs).forEach((key) => {
   if (key.startsWith('on')) {
-    // @ts-ignore
+    // @ts-expect-error attrs is indexed dynamically for forwarded listeners
     listeners[key] = attrs[key]
   }
 })

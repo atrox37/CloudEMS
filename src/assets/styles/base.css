@@ -1,0 +1,77 @@
+html {
+  font-size: 100px;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  color: var(--vt-text-primary);
+  background: var(--vt-bg-body);
+  font-family: var(--vt-font-family-base);
+  font-size: var(--vt-font-size-base);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'],
+.selectable {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+::-webkit-scrollbar {
+  width: 0.08rem;
+  height: 0.08rem;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vt-white-40);
+  min-height: 0.08rem;
+  min-width: 0.08rem;
+  border-radius: 9999px;
+}
+
+/* Element Plus 滚动条滑块：两端圆角（与全局滚动条一致） */
+.el-scrollbar__thumb {
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}

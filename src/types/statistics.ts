@@ -5,26 +5,25 @@ export interface StatisticsTotalData {
   statisticsPv: number
 }
 export interface StorageStateData {
-    totalCharging: number
-    totalDischarging: number
-    totalIdle: number
+  totalCharging: number
+  totalDischarging: number
+  totalIdle: number
 }
 export interface EnergyStructureAnalysisData {
-    totalGF: number
-    totalCF: number
+  totalGF: number
+  totalCF: number
 }
 export interface DieselGeneratorStatusData {
-    totalRunning: number
-    totalError: number
-    totalIdle: number
+  totalRunning: number
+  totalError: number
+  totalIdle: number
 }
 export interface PowerCurveData {
-    cnResult: number[]
-    fzResult: number[]
-    cfResult: number[]
-    gfResult: number[]
+  cnResult: number[]
+  fzResult: number[]
+  cfResult: number[]
+  gfResult: number[]
 }
-
 
 // AnalyticsAllData 类型说明
 

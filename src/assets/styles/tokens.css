@@ -1,0 +1,107 @@
+:root {
+  /* Brand */
+  --vt-color-primary: #ff6900;
+  --vt-color-primary-hover: #ff8733;
+  --vt-color-primary-active: #e55f00;
+  --vt-color-success: #52c41a;
+  --vt-color-success-hover: #49aa15;
+  --vt-color-success-active: #409611;
+  --vt-color-warning: #faad14;
+  --vt-color-warning-hover: #e6a017;
+  --vt-color-warning-active: #d29213;
+  --vt-color-danger: #ff4d4f;
+  --vt-color-danger-hover: #e64447;
+  --vt-color-danger-active: #cc3b3f;
+  --vt-color-info: #8c8c8c;
+  --vt-color-info-hover: #7a7a7a;
+  --vt-color-info-active: #686868;
+
+  /* Text */
+  --vt-text-primary: #ffffff;
+  --vt-text-regular: #d7deed;
+  --vt-text-secondary: #a6b6d2;
+  --vt-text-placeholder: #a8abb2;
+  --vt-text-disabled: red;
+
+  /* Surface */
+  --vt-bg-body: #17233d;
+  --vt-bg-page: #212c49;
+  --vt-bg-panel: rgba(33, 44, 73, 0.92);
+  --vt-bg-overlay: rgba(10, 18, 33, 0.72);
+  --vt-bg-elevated: rgba(58, 82, 121, 0.32);
+  --vt-bg-input: rgba(84, 98, 140, 0.2);
+  --vt-bg-muted: rgba(255, 255, 255, 0.08);
+  --vt-bg-header: rgba(84, 98, 140, 0.3);
+  --vt-bg-header-strong: rgba(84, 98, 140, 0.5);
+  --vt-bg-sidebar: rgba(84, 98, 140, 0.4);
+  --vt-bg-sidebar-item: rgba(255, 255, 255, 0.1);
+  --vt-bg-sidebar-item-active: rgba(255, 105, 0, 0.2);
+  --vt-bg-accent-blue-soft: rgba(29, 134, 255, 0.2);
+  --vt-bg-accent-blue-soft-30: rgba(29, 134, 255, 0.3);
+  --vt-bg-success-soft: rgba(106, 193, 97, 0.2);
+  --vt-bg-danger-soft: rgba(218, 45, 44, 1);
+  --vt-bg-danger-soft-30: rgba(218, 45, 44, 0.3);
+  --vt-bg-warning-soft: rgba(201, 178, 63, 0.3);
+
+  /* White alpha helpers */
+  --vt-white-10: rgba(255, 255, 255, 0.1);
+  --vt-white-20: rgba(255, 255, 255, 0.2);
+  --vt-white-30: rgba(255, 255, 255, 0.3);
+  --vt-white-40: rgba(255, 255, 255, 0.4);
+  --vt-white-50: rgba(255, 255, 255, 0.5);
+  --vt-white-60: rgba(255, 255, 255, 0.6);
+
+  /* Border / Radius / Shadow */
+  --vt-border-color: rgba(148, 166, 197, 0.3);
+  --vt-border-strong: rgba(148, 166, 197, 0.72);
+  --vt-border-medium: rgba(148, 166, 197, 0.36);
+  --vt-radius-none: 0rem;
+  --vt-radius-sm: 0.04rem;
+  --vt-radius-round: 0.2rem;
+  --vt-radius-full: 50%;
+  --vt-shadow-base: 0 0.04rem 0.12rem rgba(0, 0, 0, 0.35);
+  --vt-shadow-dialog: 0 0.04rem 0.12rem rgba(0, 0, 0, 0.35);
+
+  /* Typography */
+  --vt-font-family-base: Arimo, sans-serif;
+  --vt-font-size-xs: 0.12rem;
+  --vt-font-size-sm: 0.13rem;
+  --vt-font-size-base: 0.14rem;
+  --vt-font-size-md: 0.16rem;
+  --vt-font-size-lg: 0.18rem;
+  --vt-font-size-xl: 0.2rem;
+  --vt-font-weight-normal: 400;
+  --vt-font-weight-medium: 500;
+  --vt-font-weight-semibold: 600;
+  --vt-font-weight-bold: 700;
+  --vt-line-height-tight: 1.2;
+  --vt-line-height-normal: 1.4;
+  --vt-line-height-relaxed: 1.5;
+  --vt-line-height-loose: 1.6;
+
+  /* Controls / Layout */
+  --vt-control-height-sm: 0.28rem;
+  --vt-control-height-base: 0.32rem;
+  --vt-control-height-lg: 0.4rem;
+  --vt-spacing-xs: 0.04rem;
+  --vt-spacing-sm: 0.08rem;
+  --vt-spacing-md: 0.16rem;
+  --vt-spacing-lg: 0.24rem;
+  --vt-spacing-xl: 0.32rem;
+  --vt-spacing-xxl: 0.48rem;
+  --vt-transition-fast: 0.15s ease;
+  --vt-transition-base: 0.3s ease;
+  --vt-transition-slow: 0.5s ease;
+  --vt-opacity-disabled: 0.6;
+  --vt-opacity-loading: 0.8;
+  --vt-opacity-hover: 0.9;
+  --vt-field-width: 2.4rem;
+  --vt-select-width: 2.4rem;
+  --vt-z-toast: 10010;
+
+  /* Status */
+  --vt-status-online: rgba(106, 193, 97, 1);
+  --vt-status-danger: rgba(218, 45, 44, 1);
+  --vt-status-warning: rgba(255, 214, 0, 1);
+  --vt-accent-blue: rgba(29, 134, 255, 1);
+}

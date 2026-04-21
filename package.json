@@ -7,13 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "build:type-check": "run-p type-check \"build-only {@}\" --",
+    "postinstall": "node scripts/setup-git-hooks.mjs",
     "preview": "vite preview",
     "test:unit": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:run": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "type-check": "vue-tsc --build",
     "type-check:only": "vue-tsc --noEmit",
-    "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit:security": "pnpm audit --audit-level=high",
+    "quality:check": "node scripts/quality-report.mjs --out reports/quality/quality-report.md",
+    "quality:report": "node scripts/quality-report.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",

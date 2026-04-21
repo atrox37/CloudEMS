@@ -1,34 +1,75 @@
 import { markRaw } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { RouteItem } from '@/types/menu'
+import { APP_ROLES, type AppRole } from '@/constants/appRoles'
 import { router } from './index'
 import { dynamicRoutes } from './dynamic-routes'
 import { useUserStore } from '@/stores/user'
 
-/**
- * 递归过滤路由，根据用户角色筛选可访问的路由
- */
-function filterByRoles(routes: RouteItem[], role: string): RouteItem[] {
-  const res: RouteItem[] = []
-  for (const r of routes) {
-    const allow = (r.meta?.roles as string[] | undefined)
-      ? (r.meta!.roles as string[]).includes(role)
-      : true // 没写 role 默认放行
-    if (!allow) continue
+/** 将后端/多语言角色名规范为 AppRole；无法识别则返回空字符串 */
+export function normalizeRole(role?: string): AppRole | '' {
+  const rawTrim = (role || '').trim()
+  const value = rawTrim.toLowerCase()
 
-    const route: RouteItem = { ...r }
-    if (route.children?.length) {
-      route.children = filterByRoles(route.children, role)
-    }
+  if (!value) return ''
 
-    // 避免被响应式代理（如果你会把 route 存到响应式容器里）
-    res.push(markRaw(route))
+  if (value === 'admin' || value === 'administrator' || value === '管理员') return 'Admin'
+  if (value === 'engineer' || value === '工程师') return 'Engineer'
+  if (
+    value === 'viewer' ||
+    value === '观看者' ||
+    value === '只读' ||
+    /** 历史角色名，映射为 Viewer */
+    value === 'operator' ||
+    value === '运维' ||
+    value === '运维员' ||
+    value === '操作员'
+  ) {
+    return 'Viewer'
   }
-  return res
+
+  if (rawTrim === 'Admin' || rawTrim === 'Engineer' || rawTrim === 'Viewer') {
+    return rawTrim
+  }
+
+  return ''
 }
 
-/**
- * 动态注入路由：通过 router.addRoute 动态添加
- */
+function getFirstNavigablePath(routes: RouteItem[]): string {
+  const [firstRoute] = routes
+
+  if (!firstRoute) {
+    return '/home'
+  }
+
+  if (firstRoute.redirect) {
+    return firstRoute.redirect.startsWith('/') ? firstRoute.redirect : `/${firstRoute.redirect}`
+  }
+
+  return firstRoute.path.startsWith('/') ? firstRoute.path : `/${firstRoute.path}`
+}
+
+function filterByRoles(routes: RouteItem[], role: AppRole): RouteItem[] {
+  const normalizedRole = role
+  const result: RouteItem[] = []
+
+  for (const routeRecord of routes) {
+    const allow = routeRecord.meta?.roles?.includes(normalizedRole) ?? true
+    if (!allow) {
+      continue
+    }
+
+    const route: RouteItem = { ...routeRecord }
+    if (route.children?.length) {
+      route.children = filterByRoles(route.children, normalizedRole)
+    }
+
+    result.push(markRaw(route))
+  }
+
+  return result
+}
+
 export async function ensureRoutesInjected(refresh = false) {
   const user = useUserStore()
   if (user.routesInjected) return
@@ -40,82 +81,57 @@ export async function ensureRoutesInjected(refresh = false) {
       return
     }
   }
-  if (!user.role) {
+
+  const userRole = normalizeRole(user.role)
+  if (!userRole) {
     user.logout()
     return
   }
-  const userRoles = user.role
-  const allowed = filterByRoles(dynamicRoutes, userRoles)
-  // 递归添加路由及其子路由
+
+  const allowed = filterByRoles(dynamicRoutes, userRole)
+  if (allowed.length === 0) {
+    console.error('[router] no accessible routes for role:', user.role)
+    user.logout()
+    return
+  }
+
   function addRouteWithChildren(route: RouteItem, parentName?: string) {
-    // 创建路由对象，移除 children 避免重复添加
     const { children, ...routeWithoutChildren } = route
 
     if (parentName) {
-      // 作为子路由添加
-      router.addRoute(parentName, routeWithoutChildren as any)
+      router.addRoute(parentName, routeWithoutChildren as never)
     } else {
-      // 作为根路由的子路由添加
-      router.addRoute('main', routeWithoutChildren as any)
+      router.addRoute('main', routeWithoutChildren as never)
     }
 
-    // 递归添加子路由
-    if (children && children.length > 0) {
-      children.forEach((child) => {
-        addRouteWithChildren(child, route.name)
-      })
+    if (children?.length) {
+      children.forEach((child) => addRouteWithChildren(child, route.name))
     }
   }
 
-  // 添加所有过滤后的路由
-  allowed.forEach((route) => {
-    addRouteWithChildren(route)
-  })
+  allowed.forEach((route) => addRouteWithChildren(route))
 
-  // 设置根路由重定向到第一个动态路由
-  if (allowed.length > 0) {
-    const firstRoute = allowed[0]
-    const rootRoute = router.getRoutes().find((route) => route.path === '/')
-    if (rootRoute) {
-      if (firstRoute.redirect) {
-        // 确保重定向路径格式正确
-        const redirectPath = firstRoute.redirect.startsWith('/')
-          ? firstRoute.redirect
-          : `/${firstRoute.redirect}`
-        rootRoute.redirect = redirectPath
-      } else {
-        // 确保路径格式正确，避免双斜杠
-        const path = firstRoute.path.startsWith('/') ? firstRoute.path : `/${firstRoute.path}`
-        rootRoute.redirect = path
-      }
-    }
+  const rootRoute = router.getRoutes().find((route) => route.path === '/')
+  if (rootRoute) {
+    rootRoute.redirect = getFirstNavigablePath(allowed)
   }
 
   user.routesInjected = true
 }
 
-/**
- * 重置动态路由
- */
 export function resetDynamicRoutes() {
-  // 获取所有动态路由的名称
   const dynamicRouteNames = getAllRouteNames(dynamicRoutes)
 
-  // 移除所有动态路由
   dynamicRouteNames.forEach((name) => {
     if (router.hasRoute(name)) {
       router.removeRoute(name)
     }
   })
 
-  // 重置用户状态
   const user = useUserStore()
   user.routesInjected = false
 }
 
-/**
- * 递归获取所有路由名称
- */
 function getAllRouteNames(routes: RouteItem[]): string[] {
   const names: string[] = []
 
@@ -123,7 +139,7 @@ function getAllRouteNames(routes: RouteItem[]): string[] {
     if (route.name) {
       names.push(route.name)
     }
-    if (route.children && route.children.length > 0) {
+    if (route.children?.length) {
       names.push(...getAllRouteNames(route.children))
     }
   })
@@ -131,12 +147,18 @@ function getAllRouteNames(routes: RouteItem[]): string[] {
   return names
 }
 
-/**
- * 获取过滤后的路由用于侧边栏
- */
 export function getFilteredRoutesForSidebar() {
   const user = useUserStore()
-  // 如果没有用户信息，使用默认的 Admin 角色
-  const userRoles = user.role || 'Admin'
-  return filterByRoles(dynamicRoutes, userRoles)
+  const userRole = normalizeRole(user.role)
+  if (!userRole) return []
+  return filterByRoles(dynamicRoutes, userRole)
+}
+
+export function getDefaultRoutePath() {
+  const user = useUserStore()
+  const userRole = normalizeRole(user.role)
+  if (!userRole) return '/login'
+  const allowed = filterByRoles(dynamicRoutes, userRole)
+  if (allowed.length === 0) return '/login'
+  return getFirstNavigablePath(allowed)
 }

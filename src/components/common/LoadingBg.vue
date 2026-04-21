@@ -90,7 +90,6 @@ onBeforeUnmount(() => {
   height: 0.3rem;
   width: 0.3rem;
   animation: loading-rotate 1.2s linear infinite;
-
 }
 
 @keyframes loading-rotate {

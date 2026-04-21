@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <FormDialog width="9.24rem" ref="dialogRef" :title="dialogTitle">
     <template #dialog-body>
       <el-form
@@ -10,18 +10,18 @@
         label-position="right"
         inline
       >
-        <el-form-item label="username" prop="username">
+        <el-form-item label="Username:" prop="username">
           <el-input
             v-model="form.username"
             placeholder="Enter username"
             :disabled="mode === 'edit'"
           />
         </el-form-item>
-        <el-form-item label="Email" prop="email">
+        <el-form-item label="Email:" prop="email">
           <el-input v-model="form.email" placeholder="Enter email" :disabled="mode === 'edit'" />
         </el-form-item>
 
-        <el-form-item label="Role" prop="roleId">
+        <el-form-item label="Role:" prop="roleId">
           <div class="role-group" ref="roleGroupRef">
             <el-select v-model="form.roleId" placeholder="Select role" :append-to="roleGroupRef">
               <el-option
@@ -34,17 +34,16 @@
           </div>
         </el-form-item>
 
-        <!-- Status 独占一行，去除 inline 并设置宽度100% -->
         <el-form-item
           v-if="mode === 'edit'"
-          label="status"
+          label="Status:"
           prop="state"
           class="user-form__status-row"
         >
           <el-switch v-model="form.state" :active-value="1" :inactive-value="0" />
         </el-form-item>
 
-        <el-form-item label="Password" prop="password">
+        <el-form-item label="Password:" prop="password">
           <el-input
             v-model="form.password"
             type="password"
@@ -53,7 +52,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="Confirm Password" prop="confirmPassword">
+        <el-form-item label="Confirm Password:" prop="confirmPassword">
           <el-input
             v-model="form.confirmPassword"
             type="password"
@@ -66,21 +65,23 @@
 
     <template #dialog-footer>
       <el-button type="warning" @click="onCancel">Cancel</el-button>
-      <el-button type="primary" @click="onSubmit" :loading="loading">Submit</el-button>
+      <el-button type="primary" :loading="loading" @click="onSubmit">Submit</el-button>
     </template>
   </FormDialog>
 </template>
 
 <script setup lang="ts">
-import type { FormInstance } from 'element-plus'
-import type { UserInfo, UserNotification } from '@/types/user'
-import { removeEmpty } from '@/utils/common'
-import { getRoleList, operationUser } from '@/api/user'
+import type { FormInstance, FormRules, FormItemRule } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import MD5 from 'crypto-js/md5'
+import { getRoleList, operationUser } from '@/api/user'
+import { removeEmpty } from '@/utils/common'
+import type { UserInfo, UserNotification } from '@/types/user'
+
 export interface UserFormModel {
   id?: number
   username?: string
-  roleId?: number | undefined
+  roleId?: number
   state?: number
   password?: string
   confirmPassword?: string
@@ -89,12 +90,17 @@ export interface UserFormModel {
   phone?: string
   metadata?: UserNotification
 }
+
 interface DialogExpose {
   dialogVisible: boolean
 }
 
-const formRef = ref<FormInstance>()
-const dialogRef = ref<DialogExpose>()
+const defaultMetadata: UserNotification = {
+  systemNotify: { sms: true, email: true },
+  reminders: { sms: true, email: true },
+  dayReport: { sms: true, email: true },
+  weekReport: { sms: true, email: true },
+}
 
 const getDefaultForm = (): UserFormModel => ({
   username: '',
@@ -106,53 +112,60 @@ const getDefaultForm = (): UserFormModel => ({
   email: '',
 })
 
-const form = ref<UserFormModel>(getDefaultForm())
+const formRef = ref<FormInstance>()
+const dialogRef = ref<DialogExpose>()
 const roleGroupRef = ref<HTMLElement>()
+const form = ref<UserFormModel>(getDefaultForm())
 const roleOptions = ref<{ label: string; value: number }[]>([])
-// 密码确认验证函数
-const validateConfirmPassword = (rule: any, value: string, callback: any) => {
-  if (mode.value === 'create' && value === '') {
+const loading = ref(false)
+const mode = ref<'create' | 'edit'>('create')
+const dialogTitle = computed(() => (mode.value === 'edit' ? 'Edit User' : 'Add User'))
+
+const validateConfirmPassword: FormItemRule['validator'] = (_, value, callback) => {
+  if (mode.value === 'create' && !value) {
     callback(new Error('Please confirm your password'))
-  } else if (value !== form.value.password) {
-    callback(new Error('Passwords do not match'))
-  } else {
-    callback()
+    return
   }
+  if (value && value !== form.value.password) {
+    callback(new Error('Passwords do not match'))
+    return
+  }
+  callback()
 }
 
-// 密码校验：6-12位，必须包含字母和数字
-// 密码校验：6-12位，必须包含字母和数字；如果有符号，只能是 @ 或 _
-const validatePassword = (rule: any, value: string, callback: any) => {
+const validatePassword: FormItemRule['validator'] = (_, value, callback) => {
   if (mode.value === 'create' && !value) {
     callback(new Error('Please input password'))
-  } else if (value && (value.length < 6 || value.length > 12)) {
+    return
+  }
+  if (value && (value.length < 6 || value.length > 12)) {
     callback(new Error('Password length must be 6-12 characters'))
+    return
   }
-  // 必须包含字母和数字（不判断符号）
-  else if (value && !/^(?=.*[A-Za-z])(?=.*\d).{6,12}$/.test(value)) {
+  if (value && !/^(?=.*[A-Za-z])(?=.*\d).{6,12}$/.test(value)) {
     callback(new Error('Password must contain both letters and numbers'))
+    return
   }
-  // 分开判断符号：如果有符号，只允许 @ 或 _
-  else if (value && /[^A-Za-z0-9@_]/.test(value)) {
+  if (value && /[^A-Za-z0-9@_]/.test(value)) {
     callback(new Error('Only @ or _ symbols are allowed'))
-  } else {
-    callback()
+    return
   }
+  callback()
 }
 
-const validateEmail = (rule: any, value: string, callback: any) => {
+const validateEmail: FormItemRule['validator'] = (_, value, callback) => {
   if (value && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
     callback(new Error('Please enter a valid email address'))
-  } else {
-    callback()
+    return
   }
+  callback()
 }
 
-const rules = computed(() => {
-  const baseRules = {
+const rules = computed<FormRules<UserFormModel>>(() => {
+  const baseRules: FormRules<UserFormModel> = {
     username: [
       { required: true, message: 'Please input username', trigger: 'blur' },
-      { min: 2, max: 20, message: 'Length should be 3 to 20 characters', trigger: 'blur' },
+      { min: 2, max: 20, message: 'Length should be 2 to 20 characters', trigger: 'blur' },
     ],
     roleId: [{ required: true, message: 'Please select role', trigger: 'change' }],
     state: [{ required: true, message: 'Please select status', trigger: 'change' }],
@@ -164,7 +177,6 @@ const rules = computed(() => {
     ],
   }
 
-  // 只在创建模式下添加密码必填验证
   if (mode.value === 'create') {
     return {
       ...baseRules,
@@ -175,38 +187,42 @@ const rules = computed(() => {
 
   return baseRules
 })
-const loading = ref(false)
-const mode = ref<'create' | 'edit'>('create')
-const dialogTitle = computed(() => (mode.value === 'edit' ? 'Edit User' : 'Add User'))
-
-async function open(userItem: UserInfo, openMode: 'create' | 'edit' = 'create') {
-  mode.value = openMode
-  form.value = getDefaultForm()
-  if (userItem) {
-    form.value.id = userItem.sysUserPo?.id
-    form.value.username = userItem.sysUserPo?.username
-    form.value.roleId = userItem.sysRolePo?.id
-    form.value.state = userItem.sysUserPo?.state
-    form.value.email = userItem.sysUserPo?.email
-    form.value.password = ''
-    form.value.confirmPassword = ''
-  }
-  nextTick(() => {
-    setTimeout(() => {
-      formRef.value?.clearValidate()
-    }, 100)
-  })
-  dialogRef.value && (dialogRef.value.dialogVisible = true)
-}
-
-function close() {
-  dialogRef.value && (dialogRef.value.dialogVisible = false)
-}
 
 const emit = defineEmits<{
   (e: 'submit', value: UserFormModel): void
   (e: 'cancel'): void
 }>()
+
+async function open(userItem?: UserInfo, openMode: 'create' | 'edit' = 'create') {
+  mode.value = openMode
+  form.value = getDefaultForm()
+
+  if (userItem) {
+    form.value = {
+      ...form.value,
+      id: userItem.sysUserPo?.id,
+      username: userItem.sysUserPo?.username,
+      roleId: userItem.sysRolePo?.id,
+      state: userItem.sysUserPo?.state,
+      email: userItem.sysUserPo?.email,
+      phone: userItem.sysUserPo?.phone,
+      password: '',
+      confirmPassword: '',
+    }
+  }
+
+  await nextTick()
+  formRef.value?.clearValidate()
+  if (dialogRef.value) {
+    dialogRef.value.dialogVisible = true
+  }
+}
+
+function close() {
+  if (dialogRef.value) {
+    dialogRef.value.dialogVisible = false
+  }
+}
 
 function onCancel() {
   close()
@@ -214,59 +230,55 @@ function onCancel() {
 }
 
 async function onSubmit() {
-  formRef.value?.validate(async (valid) => {
-    if (!valid) return
-    try {
-      loading.value = true
-      const { confirmPassword, ...submitData } = form.value
-      if (mode.value === 'create') {
-        // 只提交form中除confirmPassword以外的字段
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
 
-        const res = await operationUser({
-          ...submitData,
-          password: MD5(submitData.password as string).toString(),
-          metadata: {
-            systemNotify: { sms: true, email: true },
-            reminders: { sms: true, email: true },
-            dayReport: { sms: true, email: true },
-            weekReport: { sms: true, email: true },
-          },
-        })
-        if (res.code === 200) {
-          ElMessage.success('User added successfully')
-          emit('submit', submitData)
-        }
+  try {
+    loading.value = true
+    const { confirmPassword: _confirmPassword, ...submitData } = form.value
+
+    if (mode.value === 'create') {
+      const res = await operationUser({
+        ...submitData,
+        password: MD5(submitData.password as string).toString(),
+        metadata: defaultMetadata,
+      })
+      if (res.code === 200) {
+        ElMessage.success('User added successfully')
+        emit('submit', submitData)
         close()
-      } else if (mode.value === 'edit') {
-        if (submitData.password) {
-          submitData.password = MD5(submitData.password).toString()
-        }
-        const res = await operationUser({
-          ...removeEmpty(submitData),
-        })
-        if (res.code === 200) {
-          ElMessage.success('User updated successfully')
-          emit('submit', submitData)
-          close()
-        }
       }
-    } finally {
-      loading.value = false
+      return
     }
-  })
+
+    const updatePayload: UserFormModel = { ...submitData }
+    if (updatePayload.password) {
+      updatePayload.password = MD5(updatePayload.password).toString()
+    }
+
+    const res = await operationUser(removeEmpty(updatePayload))
+    if (res.code === 200) {
+      ElMessage.success('User updated successfully')
+      emit('submit', submitData)
+      close()
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-  // console.log(form.value, 'form')
-  getRoleList({ current: -1 }).then((res) => {
-    if (res.code === 200) {
-      roleOptions.value = res.data.records.map((item) => ({
-        label: item.sysRolePo?.roleName,
-        value: item.sysRolePo?.id,
-      }))
-    }
-  })
+onMounted(async () => {
+  const res = await getRoleList({ current: -1 })
+  if (res.code === 200) {
+    roleOptions.value = res.data.records.map((item) => ({
+      label: item.sysRolePo?.roleName,
+      value: item.sysRolePo?.id,
+    }))
+  }
 })
+
 defineExpose({ open, close })
 </script>
 
@@ -275,8 +287,9 @@ defineExpose({ open, close })
   .monitor-data-group,
   .role-group,
   .condition-group {
-    display: flex;
-    gap: 0.16rem;
+    // display: flex;
+    // gap: 0.16rem;
+    width: 100%;
   }
 
   .status-group {
@@ -288,16 +301,9 @@ defineExpose({ open, close })
     width: 2.4rem;
   }
 
-  // 让Status输入框占据整行
-  // .user-form__status-row {
-  //   width: 100%;
-  //   display: block;
-
   :deep(.el-form-item__content) {
     width: 6.6rem;
   }
-
-  // }
 
   :deep(.el-select__popper.el-popper) {
     top: 0.44rem !important;

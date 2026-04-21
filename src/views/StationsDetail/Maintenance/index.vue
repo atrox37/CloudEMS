@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="maintenance-container">
     <LoadingBg :loading="!stationLoading && loading">
       <div class="maintenance-container__station">
@@ -42,7 +42,7 @@
           <!-- <div class="network-description">
           <div class="network-description__left">
             <div class="network-description-title">Primary Connection: Ethernet</div>
-            <div class="network-description-desc">Signal strength: Strong • Last sync: 2 minutes ago</div>
+            <div class="network-description-desc">Signal strength: Strong 鈥?Last sync: 2 minutes ago</div>
           </div>
           <div class="network-description__right">
             <div class="network-description-status">
@@ -116,13 +116,9 @@ import warrantyIcon from '@/assets/icons/dashboard-warranty.svg'
 import ethernetIcon from '@/assets/icons/station-dashboard-ethernet.svg'
 import wifiIcon from '@/assets/icons/station-dashboard-wifi.svg'
 import cellularIcon from '@/assets/icons/station-dashboard-cellular.svg'
-import onlineIcon from '@/assets/icons/station-status__online.svg'
-import offlineIcon from '@/assets/icons/station-status__offline.svg'
 import { useStationStore } from '@/stores/station'
 import { storeToRefs } from 'pinia'
 import { watch, ref } from 'vue'
-import { useRoute } from 'vue-router'
-const route = useRoute()
 // import { useStationStore } from '@/stores/station'
 // const { stationDetail } = storeToRefs(useStationStore())
 defineProps<{
@@ -140,7 +136,7 @@ const dashboardList = ref([
   {
     id: 2,
     data: { title: 'Warranty Status', value: 'Active', icon: warrantyIcon },
-    valueColor: 'rgba(106, 193, 97, 1)'
+    valueColor: 'rgba(106, 193, 97, 1)',
   },
   {
     id: 3,
@@ -193,19 +189,21 @@ const NetworkDashboardList = ref([
 ])
 const loading = ref(false)
 
-// 获取 station store
+// 鑾峰彇 station store
 const stationStore = useStationStore()
 const { currentStationDetail } = storeToRefs(stationStore)
 
-// 从 store 中读取站点详情并更新 dashboardList
+// 浠?store 涓鍙栫珯鐐硅鎯呭苟鏇存柊 dashboardList
 const updateDashboardFromStore = () => {
   if (!currentStationDetail.value) {
     return
   }
 
-  // 从 wgTags 中获取对应的 tagKey
-  const wgTagsMap = new Map(currentStationDetail.value.wgTags.map((tag: any) => [tag.tagKey, tag.tagValue]))
-  
+  // 浠?wgTags 涓幏鍙栧搴旂殑 tagKey
+  const wgTagsMap = new Map(
+    currentStationDetail.value.wgTags.map((tag: any) => [tag.tagKey, tag.tagValue]),
+  )
+
   // Location (index 0)
   dashboardList.value[0].data.value = (wgTagsMap.get('Location') ?? '-') as string
   // Warranty Status (index 1) - tagKey: WarrantyStatus
@@ -231,13 +229,13 @@ const updateDashboardFromStore = () => {
 //   NetworkDashboardList.value[2].data.value = stationDetail.value.description.netCellular
 // })
 
-// 监听 store 中的站点详情变化，更新 dashboardList
+// 鐩戝惉 store 涓殑绔欑偣璇︽儏鍙樺寲锛屾洿鏂?dashboardList
 watch(
   currentStationDetail,
   () => {
     updateDashboardFromStore()
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 )
 
 // const systemDashboardList = ref([

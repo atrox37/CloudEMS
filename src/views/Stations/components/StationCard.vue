@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class station-card">
     <!-- Header Section -->
     <div class="station-card__header">
@@ -80,8 +80,6 @@ import batteryIcon from '@/assets/icons/station-battery.svg'
 import efficiencyIcon from '@/assets/icons/station-efficiency.svg'
 import todayEnergyIcon from '@/assets/icons/station-energy.svg'
 import temperatureIcon from '@/assets/icons/station-temperature.svg'
-import buttonSyncIcon from '@/assets/icons/button-synced.svg'
-import detailIcon from '@/assets/icons/button-detail.svg'
 import pvIcon from '@/assets/icons/station-pv.svg'
 import essIcon from '@/assets/icons/station-ess.svg'
 import ValueCard from './ValueCard.vue'
@@ -190,7 +188,6 @@ const handleSync = () => {
   emit('sync', props.station.stationId)
 }
 const handleDetail = () => {
-  // 跳转到 Overview 页面，使用动态路由参数
   router.push({ name: 'Overview', params: { stationId: props.station.stationId } })
 }
 const emit = defineEmits<{
@@ -202,15 +199,15 @@ const emit = defineEmits<{
 .voltage-class .station-card {
   height: 100%;
   width: 100%;
-  background: rgba(84, 98, 140, 0.2);
+  background: var(--vt-bg-input);
   border: 0.01rem solid;
 
   border-image: linear-gradient(
       117.06deg,
-      rgba(148, 166, 197, 0.3) 2.78%,
+      var(--vt-border-color) 2.78%,
       rgba(148, 166, 197, 0) 32.23%,
       rgba(148, 166, 197, 0.103266) 72.75%,
-      rgba(148, 166, 197, 0.3) 99.21%
+      var(--vt-border-color) 99.21%
     )
     1;
   padding: 0.2rem;
@@ -226,7 +223,7 @@ const emit = defineEmits<{
     align-items: flex-start;
     margin-bottom: 0.2rem;
     padding-bottom: 0.2rem;
-    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    border-bottom: 0.01rem solid var(--vt-white-10);
 
     .station-card__title-section {
       height: 100%;
@@ -239,7 +236,7 @@ const emit = defineEmits<{
         font-size: 0.26rem;
         line-height: 0.26rem;
         letter-spacing: 0%;
-        color: #ffffff;
+        color: var(--vt-text-primary);
       }
 
       .station-card__status {
@@ -259,7 +256,7 @@ const emit = defineEmits<{
           font-size: 0.16rem;
           line-height: 100%;
           letter-spacing: 0%;
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--vt-white-60);
         }
       }
     }
@@ -288,11 +285,11 @@ const emit = defineEmits<{
         font-size: 0.3rem;
         line-height: 0.3rem;
         letter-spacing: 0%;
-        color: #ffffff;
+        color: var(--vt-text-primary);
 
         span {
           font-size: 0.16rem;
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--vt-white-60);
         }
       }
 
@@ -301,7 +298,7 @@ const emit = defineEmits<{
         font-size: 0.16rem;
         line-height: 0.16rem;
         letter-spacing: 0%;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--vt-white-60);
       }
     }
   }
@@ -318,13 +315,13 @@ const emit = defineEmits<{
       font-size: 0.16rem;
       line-height: 0.16rem;
       letter-spacing: 0%;
-      color: #fff;
+      color: var(--vt-text-primary);
     }
 
     .station-card__power-bar {
       flex: 1;
       height: 0.12rem;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--vt-white-10);
       overflow: hidden;
 
       .station-card__power-bar-fill {
@@ -339,7 +336,7 @@ const emit = defineEmits<{
       font-size: 0.16rem;
       line-height: 0.16rem;
       letter-spacing: 0%;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--vt-white-60);
     }
   }
 

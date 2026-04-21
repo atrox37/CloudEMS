@@ -1,5 +1,12 @@
 import Request, { type ApiResponse } from '@/utils/request'
-import type { StatisticsTotalData,StorageStateData,EnergyStructureAnalysisData,DieselGeneratorStatusData,PowerCurveData,AnalyticsAllData     } from '@/types/statistics'
+import type {
+  StatisticsTotalData,
+  StorageStateData,
+  EnergyStructureAnalysisData,
+  DieselGeneratorStatusData,
+  PowerCurveData,
+  AnalyticsAllData,
+} from '@/types/statistics'
 export const getStatisticsTotalData = (): Promise<ApiResponse<StatisticsTotalData>> => {
   return Request.get('/user-app/station/statisticsTotal')
 }
@@ -8,7 +15,9 @@ export const getStorageStateData = (): Promise<ApiResponse<StorageStateData>> =>
   return Request.get('/user-app/station/statisticsBPCharts')
 }
 
-export  const getEnergyStructureAnalysisData = (): Promise<ApiResponse<EnergyStructureAnalysisData>> => {
+export const getEnergyStructureAnalysisData = (): Promise<
+  ApiResponse<EnergyStructureAnalysisData>
+> => {
   return Request.get('/user-app/station/statisticsPvCharts')
 }
 

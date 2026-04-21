@@ -14,14 +14,12 @@
     </div>
 
     <transition name="dialog-fade">
-      <div
-        v-show="isDialogVisible"
-        class="ai-assistant__dialog"
-        :style="dialogPositionStyle"
-      >
+      <div v-show="isDialogVisible" class="ai-assistant__dialog" :style="dialogPositionStyle">
         <div
           class="ai-assistant__dialog-header"
-          :class="{ 'ai-assistant__dialog-header--resizable': quadrant === 'tl' || quadrant === 'tr' }"
+          :class="{
+            'ai-assistant__dialog-header--resizable': quadrant === 'tl' || quadrant === 'tr',
+          }"
           @mousedown.stop="onHeaderMouseDown"
           @touchstart.stop.prevent="onHeaderMouseDown"
         >
@@ -76,17 +74,17 @@
             @keydown="handleKeydown"
             @input="autoResize"
           ></textarea>
-          <el-button 
-            class="ai-assistant__send-button" 
+          <el-button
+            class="ai-assistant__send-button"
             :disabled="!isAILoading && !messageInput.trim()"
-            @click="isAILoading ? cancelRequest() : sendMessage()" 
+            @click="isAILoading ? cancelRequest() : sendMessage()"
             :title="isAILoading ? 'Cancel' : 'Send'"
           >
             <template v-if="!isAILoading">Send</template>
             <template v-else>
               <svg class="ai-assistant__pause-icon" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16" rx="1"/>
-                <rect x="14" y="4" width="4" height="16" rx="1"/>
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             </template>
           </el-button>
@@ -194,7 +192,7 @@ onMounted(() => {
   const size = getIconSize()
   iconX.value = vw - size - PADDING
   iconY.value = vh - size - PADDING - 20
-  
+
   // 首次加载完成后，检测是否需要吸附到边缘
   nextTick(() => {
     debouncedCheckAndApplySnap()
@@ -215,13 +213,13 @@ const snappedIconPosition = computed(() => {
   if (!isSnapped.value || !snapDirection.value || isIconHovered.value || isDraggingIcon.value) {
     return { x: iconX.value, y: iconY.value }
   }
-  
+
   const size = getIconSize()
   const hiddenOffset = size * SNAP_OFFSET_RATIO
-  
+
   let x = iconX.value
   let y = iconY.value
-  
+
   switch (snapDirection.value) {
     case 'left':
       x = -hiddenOffset
@@ -236,7 +234,7 @@ const snappedIconPosition = computed(() => {
       y = window.innerHeight - size + hiddenOffset
       break
   }
-  
+
   return { x, y }
 })
 
@@ -244,13 +242,13 @@ const snappedIconPosition = computed(() => {
 const iconStyle = computed(() => {
   const pos = snappedIconPosition.value
   const shouldAnimate = !isDraggingIcon.value
-  
+
   return {
     position: 'fixed' as const,
     left: pos.x + 'px',
     top: pos.y + 'px',
     transition: shouldAnimate ? 'left 0.3s ease, top 0.3s ease, transform 0.3s ease' : 'none',
-    transform: isDraggingIcon.value ? 'none' : undefined
+    transform: isDraggingIcon.value ? 'none' : undefined,
   }
 })
 
@@ -316,7 +314,7 @@ const dialogPositionStyle = computed(() => {
 
   // 水平定位
   const spaceRight = vw - PADDING - (iconRight + GAP)
-  const spaceLeft = (iconLeft - GAP) - PADDING
+  const spaceLeft = iconLeft - GAP - PADDING
   const preferRight = quadrant.value === 'tl' || quadrant.value === 'bl'
   const canPlaceRight = spaceRight >= dialogWidth
   const canPlaceLeft = spaceLeft >= dialogWidth
@@ -333,14 +331,14 @@ const dialogPositionStyle = computed(() => {
     position: 'fixed' as const,
     left: `${left}px`,
     top: `${top}px`,
-    height: `${h / getCurrentFontSize()}rem`
+    height: `${h / getCurrentFontSize()}rem`,
   }
 })
 
 // 切换对话框显示
 const toggleDialog = () => {
   const wasVisible = isDialogVisible.value
-  
+
   if (!isDialogVisible.value) {
     dialogHeight.value = calculateInitialDialogHeight()
     dialogTopOverride.value = null
@@ -362,7 +360,7 @@ const toggleDialog = () => {
 // 关闭对话框
 const closeDialog = () => {
   isDialogVisible.value = false
-  
+
   // 关闭对话框后，检测图标是否需要吸附到边缘
   nextTick(() => {
     debouncedCheckAndApplySnap()
@@ -377,7 +375,7 @@ const sendMessage = async () => {
   const newMessage: Message = {
     id: Date.now(),
     content,
-    type: 'user'
+    type: 'user',
   }
 
   messages.value.push(newMessage)
@@ -385,7 +383,7 @@ const sendMessage = async () => {
 
   nextTick(() => {
     const textarea = document.querySelector(
-      '.ai-assistant__input-textarea'
+      '.ai-assistant__input-textarea',
     ) as HTMLTextAreaElement | null
     if (textarea) {
       textarea.style.height = 'auto'
@@ -398,22 +396,21 @@ const sendMessage = async () => {
 
   try {
     const response = await getAIAssistantAnswer(content, abortController.value.signal)
-    
+
     // 检查请求是否已被取消
     if (abortController.value?.signal.aborted) {
       return
     }
-    
-    if (response.code === 200 && response.data?.data?.response) {
+    if (response.code === 200 && response.data?.response) {
       // 读取嵌套的 response 字段
       // JSON.parse 会自动将 JSON 字符串中的 \n 转换为实际的换行符
       const aiMessage: Message = {
         id: Date.now() + 1,
-        content: response.data.data.response,
-        type: 'ai'
+        content: response.data.response,
+        type: 'ai',
       }
       messages.value.push(aiMessage)
-      
+
       nextTick(() => {
         scrollToBottom()
       })
@@ -422,33 +419,37 @@ const sendMessage = async () => {
       if (abortController.value?.signal.aborted) {
         return
       }
-      
+
       const errorMessage: Message = {
         id: Date.now() + 1,
         content: 'Request failed. Please try again later.',
-        type: 'ai'
+        type: 'ai',
       }
       messages.value.push(errorMessage)
-      
+
       nextTick(() => {
         scrollToBottom()
       })
     }
   } catch (error: any) {
     // 如果是主动取消的请求，不显示任何错误提示
-    if (abortController.value?.signal.aborted || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+    if (
+      abortController.value?.signal.aborted ||
+      error.name === 'AbortError' ||
+      error.code === 'ERR_CANCELED'
+    ) {
       console.log('请求已主动取消')
       return
     }
-    
+
     console.error('AI助手请求失败:', error)
     const errorMessage: Message = {
       id: Date.now() + 1,
       content: 'Request failed. Please try again later.',
-      type: 'ai'
+      type: 'ai',
     }
     messages.value.push(errorMessage)
-    
+
     nextTick(() => {
       scrollToBottom()
     })
@@ -464,15 +465,15 @@ const cancelRequest = () => {
     abortController.value.abort()
     abortController.value = null
     isAILoading.value = false
-    
+
     // 添加暂停提示消息
     const cancelMessage: Message = {
       id: Date.now() + 1,
       content: 'Request canceled by user.',
-      type: 'ai'
+      type: 'ai',
     }
     messages.value.push(cancelMessage)
-    
+
     nextTick(() => {
       scrollToBottom()
     })
@@ -514,13 +515,13 @@ const getPoint = (e: MouseEvent | TouchEvent) => {
 const startDragIcon = (e: MouseEvent | TouchEvent) => {
   e.preventDefault()
   const point = getPoint(e)
-  
+
   // 如果处于吸附状态，先将图标位置调整到可见位置
   if (isSnapped.value && snapDirection.value) {
     const size = getIconSize()
     const vw = window.innerWidth
     const vh = window.innerHeight
-    
+
     switch (snapDirection.value) {
       case 'left':
         iconX.value = PADDING
@@ -535,12 +536,12 @@ const startDragIcon = (e: MouseEvent | TouchEvent) => {
         iconY.value = vh - size - PADDING
         break
     }
-    
+
     // 取消吸附状态
     isSnapped.value = false
     snapDirection.value = null
   }
-  
+
   isDraggingIcon.value = true
   hasMoved.value = false
   dragOffsetX.value = point.clientX - iconX.value
@@ -603,23 +604,23 @@ const checkAndApplySnap = () => {
   const iconRight = iconX.value + size
   const iconBottom = iconY.value + size
   const snapThreshold = getSnapThreshold() // 获取响应式阈值
-  
+
   // 检测各边缘的距离
   const distanceLeft = iconX.value
   const distanceRight = vw - iconRight
   const distanceTop = iconY.value
   const distanceBottom = vh - iconBottom
-  
+
   // 找出最近的边缘
   const distances = [
     { dir: 'left' as SnapDirection, dist: distanceLeft },
     { dir: 'right' as SnapDirection, dist: distanceRight },
     { dir: 'top' as SnapDirection, dist: distanceTop },
-    { dir: 'bottom' as SnapDirection, dist: distanceBottom }
+    { dir: 'bottom' as SnapDirection, dist: distanceBottom },
   ]
-  
-  const nearest = distances.reduce((a, b) => a.dist < b.dist ? a : b)
-  
+
+  const nearest = distances.reduce((a, b) => (a.dist < b.dist ? a : b))
+
   // 如果最近的边缘小于阈值，则吸附
   if (nearest.dist < snapThreshold) {
     isSnapped.value = true
@@ -636,7 +637,7 @@ const debouncedCheckAndApplySnap = () => {
   if (snapDebounceTimer !== null) {
     clearTimeout(snapDebounceTimer)
   }
-  
+
   // 设置新的定时器
   snapDebounceTimer = setTimeout(() => {
     checkAndApplySnap()
@@ -648,11 +649,11 @@ const debouncedCheckAndApplySnap = () => {
 const stopDragAndResize = () => {
   const wasDraggingIcon = isDraggingIcon.value
   const hadMoved = hasMoved.value
-  
+
   isDraggingIcon.value = false
   isResizing.value = false
   removeGlobalDragListeners()
-  
+
   // 如果是拖动图标结束
   if (wasDraggingIcon) {
     if (hadMoved) {
@@ -665,7 +666,7 @@ const stopDragAndResize = () => {
         const size = getIconSize()
         const vw = window.innerWidth
         const vh = window.innerHeight
-        
+
         switch (snapDirection.value) {
           case 'left':
             iconX.value = PADDING
@@ -680,7 +681,7 @@ const stopDragAndResize = () => {
             iconY.value = vh - size - PADDING
             break
         }
-        
+
         isSnapped.value = false
         snapDirection.value = null
       }
@@ -732,7 +733,8 @@ const startResize = (e: MouseEvent | TouchEvent) => {
 const onHeaderMouseDown = (e: MouseEvent | TouchEvent) => {
   if (!(quadrant.value === 'tl' || quadrant.value === 'tr')) return
 
-  const target = 'touches' in e ? (e.touches[0].target as EventTarget | null) : (e.target as EventTarget | null)
+  const target =
+    'touches' in e ? (e.touches[0].target as EventTarget | null) : (e.target as EventTarget | null)
   if (target && target instanceof HTMLElement) {
     if (target.closest('.ai-assistant__dialog-close')) return
   }
@@ -794,7 +796,8 @@ const onIconMouseLeave = () => {
   }
 
   @keyframes snapped-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.7;
     }
     50% {
@@ -902,7 +905,7 @@ const onIconMouseLeave = () => {
       }
 
       .ai-assistant__message-bubble {
-        border-radius:  0 0.15rem;
+        border-radius: 0 0.15rem;
         border: 0.03rem solid transparent;
         background:
           linear-gradient(#ffffff, #ffffff) padding-box,
@@ -943,22 +946,23 @@ const onIconMouseLeave = () => {
   .ai-assistant__loading-dot {
     animation: loading-dot-fade 1.4s infinite;
     opacity: 0;
-    
+
     &:nth-child(2) {
       animation-delay: 0s;
     }
-    
+
     &:nth-child(3) {
       animation-delay: 0.2s;
     }
-    
+
     &:nth-child(4) {
       animation-delay: 0.4s;
     }
   }
 
   @keyframes loading-dot-fade {
-    0%, 20% {
+    0%,
+    20% {
       opacity: 0;
     }
     50% {

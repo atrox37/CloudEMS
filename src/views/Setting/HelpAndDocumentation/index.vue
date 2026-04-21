@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="help-and-documentation">
     <HeaderCard
       title="Help & Documentation"
@@ -104,23 +104,15 @@
 
 <script setup lang="ts">
 import HeaderCard from '@/components/card/headerCard.vue'
-import VideoCard from './components/VideoCard.vue'
 import HelpCard from './components/helpCard.vue'
 
 import shareIcon from '@/assets/icons/button-share.svg'
 import guideIcon from '@/assets/icons/header-guide.svg'
-import videoIcon from '@/assets/icons/header-video.svg'
 import questionIcon from '@/assets/icons/header-q&a.svg'
 import helpIcon from '@/assets/icons/header-help.svg'
 
-import video1 from '@/assets/icons/default-video1.svg'
-import video2 from '@/assets/icons/default-video2.svg'
-import video3 from '@/assets/icons/default-video3.svg'
-import video4 from '@/assets/icons/default-video4.svg'
-
 import mailIcon from '@/assets/icons/card-mail.svg'
 import phoneIcon from '@/assets/icons/card-phone.svg'
-import chatIcon from '@/assets/icons/card-chat.svg'
 
 const activeNames = ref([])
 
@@ -164,7 +156,7 @@ const helpList = ref([
   {
     icon: phoneIcon,
     title: 'Phone Support',
-    desc: '+1 （555） 123-4567',
+    desc: '+1(555)123-4567',
   },
 
   // {
@@ -172,28 +164,6 @@ const helpList = ref([
   //   title: 'Chat Support',
   //   desc: 'Available 247',
   // },
-])
-const videoList = ref([
-  {
-    title: 'Getting Started with Your Dashboard',
-    desc: 'Learn how to navigate and use the main dashboard',
-    icon: video1,
-  },
-  {
-    title: 'Setting Up Your First Station',
-    desc: 'Step-by-step guide to configure a new energy station',
-    icon: video2,
-  },
-  {
-    title: 'Understanding Energy Flow Charts',
-    desc: 'How to read and interpret energy flow visualizations',
-    icon: video3,
-  },
-  {
-    title: 'Managing Storage Systems',
-    desc: 'Best practices for battery management and optimization',
-    icon: video4,
-  },
 ])
 </script>
 
@@ -248,13 +218,13 @@ const videoList = ref([
     .info-title {
       font-size: 0.14rem;
       line-height: 100%;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--vt-white-60);
     }
 
     .info-value {
       font-size: 0.18rem;
       line-height: 100%;
-      color: #ffffff;
+      color: var(--vt-text-primary);
     }
   }
 
@@ -269,13 +239,17 @@ const videoList = ref([
     background-color: transparent;
     height: 0.22rem !important;
   }
-
+  :deep(.el-collapse-item__title){
+    font-size: 0.18rem;
+  }
   :deep(.el-collapse-item__content) {
     background-color: transparent;
     font-size: 0.18rem;
-    line-height: 100%;
+    line-height: 1.2;
     letter-spacing: 0%;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--vt-white-60);
+    padding-left:0.3rem;
+    padding-right:2.2rem;
   }
 
   :deep(.el-collapse .el-collapse-item__wrap) {
