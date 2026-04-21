@@ -73,18 +73,18 @@ const statesData = ref<StateMapData | null>(null)
 // 定义Alaska和Hawaii的真实边界范围（完全基于USAOutlineMap.json中的实际坐标数据）
 // Alaska: 从文件中提取的精确边界值
 const ALASKA_BOUNDS = {
-  minLng: -187.357983,  // 最西端（阿留申群岛）
-  maxLng: -129.986323,  // 最东端（东南部）
-  minLat: 51.678463,    // 最南端
-  maxLat: 71.351633,    // 最北端
+  minLng: -187.357983, // 最西端（阿留申群岛）
+  maxLng: -129.986323, // 最东端（东南部）
+  minLat: 51.678463, // 最南端
+  maxLat: 71.351633, // 最北端
 }
 
 // Hawaii: 从文件中提取的精确边界值
 const HAWAII_BOUNDS = {
-  minLng: -159.764448,  // 最西端岛屿
-  maxLng: -154.807817,  // 最东端（大岛）
-  minLat: 18.948267,    // 最南端
-  maxLat: 22.228955,    // 最北端
+  minLng: -159.764448, // 最西端岛屿
+  maxLng: -154.807817, // 最东端（大岛）
+  minLat: 18.948267, // 最南端
+  maxLat: 22.228955, // 最北端
 }
 
 // 判断坐标是否在指定区域内
@@ -93,42 +93,50 @@ const isInRegion = (
   bounds: { minLng: number; maxLng: number; minLat: number; maxLat: number },
 ): boolean => {
   const [lng, lat] = coord
-  return lng >= bounds.minLng && lng <= bounds.maxLng && lat >= bounds.minLat && lat <= bounds.maxLat
+  return (
+    lng >= bounds.minLng && lng <= bounds.maxLng && lat >= bounds.minLat && lat <= bounds.maxLat
+  )
 }
 
 // 转换Alaska和Hawaii的坐标以适配ECharts的布局变换
-const transformCoordinatesForLayout = (
-  coordinates: [number, number],
-): [number, number] => {
+const transformCoordinatesForLayout = (coordinates: [number, number]): [number, number] => {
   const [lng, lat] = coordinates
 
   // 判断是否在Alaska范围内
   if (isInRegion(coordinates, ALASKA_BOUNDS)) {
     // Alaska布局参数: { left: -130, top: 20, width: 25 }
     // 原始Alaska经度范围约50度,被压缩到25度宽
-    const scale = 25 / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng)
     // 计算相对于原始边界的位置比例
     const relativeX = (lng - ALASKA_BOUNDS.minLng) / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng)
     const relativeY = (lat - ALASKA_BOUNDS.minLat) / (ALASKA_BOUNDS.maxLat - ALASKA_BOUNDS.minLat)
-    
+
     // 应用布局变换: left: -130表示新的左边界, width: 25表示新的宽度
     const newLng = -130 + relativeX * 25
     // top: 20表示向下移动, 需要保持纵横比
-    const newLat = 20 + relativeY * 25 * ((ALASKA_BOUNDS.maxLat - ALASKA_BOUNDS.minLat) / (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng))
-    
+    const newLat =
+      20 +
+      relativeY *
+        25 *
+        ((ALASKA_BOUNDS.maxLat - ALASKA_BOUNDS.minLat) /
+          (ALASKA_BOUNDS.maxLng - ALASKA_BOUNDS.minLng))
+
     return [newLng, newLat]
   }
 
   // 判断是否在Hawaii范围内
   if (isInRegion(coordinates, HAWAII_BOUNDS)) {
     // Hawaii布局参数: { left: -95, top: 20, width: 5 }
-    const scale = 5 / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng)
     const relativeX = (lng - HAWAII_BOUNDS.minLng) / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng)
     const relativeY = (lat - HAWAII_BOUNDS.minLat) / (HAWAII_BOUNDS.maxLat - HAWAII_BOUNDS.minLat)
-    
+
     const newLng = -95 + relativeX * 5
-    const newLat = 20 + relativeY * 5 * ((HAWAII_BOUNDS.maxLat - HAWAII_BOUNDS.minLat) / (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng))
-    
+    const newLat =
+      20 +
+      relativeY *
+        5 *
+        ((HAWAII_BOUNDS.maxLat - HAWAII_BOUNDS.minLat) /
+          (HAWAII_BOUNDS.maxLng - HAWAII_BOUNDS.minLng))
+
     return [newLng, newLat]
   }
 
@@ -302,7 +310,7 @@ const initUSAMap = async () => {
     }
 
     chart.value?.setOption(option as any)
-    
+
     chart.value?.off('click')
     chart.value?.on('click', (params: EChartsClickParams) => {
       if (params.componentType === 'geo' && params.name) {

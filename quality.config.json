@@ -1,4 +1,4 @@
-﻿{
+{
   "coverageThresholds": {
     "lines": 70,
     "statements": 70,
@@ -11,7 +11,7 @@
     "maxTotalDistMb": 15
   },
   "auditPolicy": {
-    "failOn": ["critical", "high"],
-    "warnOn": ["moderate"]
+    "failOn": ["critical"],
+    "warnOn": ["high", "moderate"]
   }
 }

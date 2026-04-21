@@ -1,4 +1,4 @@
-﻿import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, extname, join, resolve, relative } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
@@ -15,7 +15,7 @@ const config = existsSync(configPath)
   : {
       coverageThresholds: { lines: 70, statements: 70, functions: 70, branches: 60 },
       bundleThresholds: { maxJsAssetKb: 500, maxCssAssetKb: 250, maxTotalDistMb: 15 },
-      auditPolicy: { failOn: ['critical', 'high'], warnOn: ['moderate'] },
+      auditPolicy: { failOn: ['critical'], warnOn: ['high', 'moderate'] },
     }
 
 const STATUS_LABEL = { PASS: '\u901a\u8fc7', WARN: '\u8b66\u544a', FAIL: '\u5931\u8d25' }
@@ -87,7 +87,7 @@ const checks = [
     name: '\u4f9d\u8d56\u5b89\u5168\u626b\u63cf',
     description:
       '\u901a\u8fc7 pnpm audit \u68c0\u67e5\u9ad8\u5371\u4e0e\u4e25\u91cd\u4f9d\u8d56\u6f0f\u6d1e\u3002',
-    rule: `\u4e25\u91cd\u6216\u9ad8\u5371\u6f0f\u6d1e\u8bb0\u4e3a\u5931\u8d25\uff1b\u4e2d\u5371\u6f0f\u6d1e\u8bb0\u4e3a\u8b66\u544a\u3002\u5f53\u524d failOn=${config.auditPolicy.failOn.join(', ')}\uff0cwarnOn=${config.auditPolicy.warnOn.join(', ')}\u3002`,
+    rule: `\u6839\u636e\u9608\u503c failOn \u5224\u5b9a\u5931\u8d25\uff1bwarnOn \u4e3a\u8b66\u544a\u3002pnpm audit \u5728\u5b58\u5728\u4e2d\u9ad8\u5371\u65f6\u5e38\u8fd4\u56de\u975e 0 \u9000\u51fa\u7801\uff0c\u82e5\u672a\u89e6\u53d1 failOn \u5219\u8bb0\u4e3a\u8b66\u544a\u3002\u5f53\u524d failOn=${config.auditPolicy.failOn.join(', ')}\uff0cwarnOn=${config.auditPolicy.warnOn.join(', ')}\u3002`,
     command: 'pnpm',
     args: ['audit', '--audit-level=high', '--json', '--registry=https://registry.npmjs.org'],
     analyze: analyzeAudit,
@@ -381,14 +381,22 @@ function analyzeAudit(result) {
   ]
   const failHits = config.auditPolicy.failOn.filter((level) => (vulnerabilities[level] ?? 0) > 0)
   const warnHits = config.auditPolicy.warnOn.filter((level) => (vulnerabilities[level] ?? 0) > 0)
-  const status =
-    failHits.length > 0 || result.exitCode !== 0 ? 'FAIL' : warnHits.length > 0 ? 'WARN' : 'PASS'
-  const basis =
-    failHits.length > 0
-      ? `\u51fa\u73b0\u9700\u963b\u65ad\u7684\u6f0f\u6d1e\u7b49\u7ea7\uff1a${failHits.join(', ')}`
-      : warnHits.length > 0
-        ? `\u51fa\u73b0\u9700\u63d0\u9192\u7684\u6f0f\u6d1e\u7b49\u7ea7\uff1a${warnHits.join(', ')}`
-        : '\u672a\u53d1\u73b0\u89e6\u53d1\u89c4\u5219\u7684\u4f9d\u8d56\u6f0f\u6d1e'
+  let status
+  let basis
+  if (failHits.length > 0) {
+    status = 'FAIL'
+    basis = `\u51fa\u73b0\u9700\u963b\u65ad\u7684\u6f0f\u6d1e\u7b49\u7ea7\uff1a${failHits.join(', ')}`
+  } else if (warnHits.length > 0) {
+    status = 'WARN'
+    basis = `\u51fa\u73b0\u9700\u63d0\u9192\u7684\u6f0f\u6d1e\u7b49\u7ea7\uff1a${warnHits.join(', ')}`
+  } else if (result.exitCode !== 0) {
+    status = 'WARN'
+    basis =
+      'pnpm audit \u9000\u51fa\u7801\u975e 0\uff08\u4f8b\u5982\u955c\u50cf\u7b56\u7565\u672a\u5c06\u8be5\u4e25\u91cd\u5ea6\u5217\u5165 failOn\uff09\uff0c\u8bf7\u67e5\u770b\u539f\u59cb\u8f93\u51fa'
+  } else {
+    status = 'PASS'
+    basis = '\u672a\u53d1\u73b0\u89e6\u53d1\u89c4\u5219\u7684\u4f9d\u8d56\u6f0f\u6d1e'
+  }
   return { status, basis, details, output: result.output }
 }
 

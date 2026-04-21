@@ -13,8 +13,14 @@
         </el-icon>
       </div>
     </div>
-    <FullSceenDialog ref="fullScreenDialogRef" :title="props.title || 'Forecast Chart Full Screen'" fullscreen :append-to-body="true"
-      :modal-append-to-body="true" :close-on-click-modal="false">
+    <FullSceenDialog
+      ref="fullScreenDialogRef"
+      :title="props.title || 'Forecast Chart Full Screen'"
+      fullscreen
+      :append-to-body="true"
+      :modal-append-to-body="true"
+      :close-on-click-modal="false"
+    >
       <template #dialog-body>
         <div class="forecast-line-chart-full-screen">
           <div class="forecast-line-chart-full-screen__container" ref="fullScreenChartRef"></div>
@@ -27,7 +33,14 @@
 <script setup lang="ts">
 import * as echarts from 'echarts/core'
 import { LineChart, BarChart } from 'echarts/charts'
-import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, ToolboxComponent, MarkLineComponent } from 'echarts/components'
+import {
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  DataZoomComponent,
+  ToolboxComponent,
+  MarkLineComponent,
+} from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useGlobalStore } from '@/stores/global'
 import { pxToResponsive } from '@/utils/responsive'
@@ -40,17 +53,27 @@ const fullScreenChartRef = ref<HTMLDivElement | null>(null)
 const globalStore = useGlobalStore()
 let fullScreenChartInstance: echarts.ECharts | null = null
 
-echarts.use([LineChart, BarChart, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer, DataZoomComponent, ToolboxComponent, MarkLineComponent])
+echarts.use([
+  LineChart,
+  BarChart,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  CanvasRenderer,
+  DataZoomComponent,
+  ToolboxComponent,
+  MarkLineComponent,
+])
 
 /**
  * 分段数据接口
  * 支持多段数据，每段有独立的名称、数据和颜色
  */
 export interface SegmentData {
-  name: string           // 段名称（如 "History", "Forecast"）
-  data: number[]         // 该段的数据
-  color: string          // 该段的颜色
-  lineType?: 'solid' | 'dashed' | 'dotted'  // 线条类型，默认 solid
+  name: string // 段名称（如 "History", "Forecast"）
+  data: number[] // 该段的数据
+  color: string // 该段的颜色
+  lineType?: 'solid' | 'dashed' | 'dotted' // 线条类型，默认 solid
 }
 
 /**
@@ -58,7 +81,7 @@ export interface SegmentData {
  * 一个系列可以有多个分段
  */
 export interface ForecastSeriesData {
-  name: string           // 系列名称（如 "PV Power"）
+  name: string // 系列名称（如 "PV Power"）
   segments: SegmentData[] // 分段数据数组
 }
 
@@ -82,46 +105,49 @@ export interface GridConfig {
  * 分界线配置
  */
 export interface SplitLineConfig {
-  index: number          // 分界点在 X 轴数据中的索引
-  label?: string         // 分界线标签
+  index: number // 分界点在 X 轴数据中的索引
+  label?: string // 分界线标签
 }
 
-const props = withDefaults(defineProps<{
-  xAxiosOption: XAxisOption
-  yAxiosOption: YAxisOption
-  series: ForecastSeriesData[]
-  // 分界线配置数组（支持多个分界线）
-  splitLines?: SplitLineConfig[]
-  // Grid配置参数
-  gridConfig?: GridConfig
-  // 全屏模式Grid配置参数
-  fullScreenGridConfig?: GridConfig
-  // 按钮显示控制
-  showToolbox?: boolean
-  showFullScreen?: boolean
-  showDownload?: boolean
-  title?: string
-  // 是否显示区域填充颜色
-  showAreaStyle?: boolean
-}>(), {
-  gridConfig: () => ({
-    left: 0,
-    right: 0,
-    top: 45,
-    bottom: 10
-  }),
-  fullScreenGridConfig: () => ({
-    left: 50,
-    right: 50,
-    top: 90,
-    bottom: 50
-  }),
-  showToolbox: true,
-  showFullScreen: true,
-  showDownload: true,
-  showAreaStyle: true,
-  splitLines: () => []
-})
+const props = withDefaults(
+  defineProps<{
+    xAxiosOption: XAxisOption
+    yAxiosOption: YAxisOption
+    series: ForecastSeriesData[]
+    // 分界线配置数组（支持多个分界线）
+    splitLines?: SplitLineConfig[]
+    // Grid配置参数
+    gridConfig?: GridConfig
+    // 全屏模式Grid配置参数
+    fullScreenGridConfig?: GridConfig
+    // 按钮显示控制
+    showToolbox?: boolean
+    showFullScreen?: boolean
+    showDownload?: boolean
+    title?: string
+    // 是否显示区域填充颜色
+    showAreaStyle?: boolean
+  }>(),
+  {
+    gridConfig: () => ({
+      left: 0,
+      right: 0,
+      top: 45,
+      bottom: 10,
+    }),
+    fullScreenGridConfig: () => ({
+      left: 50,
+      right: 50,
+      top: 90,
+      bottom: 50,
+    }),
+    showToolbox: true,
+    showFullScreen: true,
+    showDownload: true,
+    showAreaStyle: true,
+    splitLines: () => [],
+  },
+)
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
@@ -175,20 +201,19 @@ function customTooltipFormatter(
     dotSize: number
     gap: number
   },
-  yUnit: string
+  yUnit: string,
 ) {
   const { width, fontSize, itemFontSize, itemLineHeight, dotSize, gap } = sizeConfig
   const name = params[0]?.axisValueLabel || params[0]?.name || ''
-  
+
   // 过滤掉 null 值和背景系列
-  const validParams = params.filter((item: any) => 
-    item.value !== null && 
-    item.value !== undefined && 
-    item.seriesName !== 'background'
+  const validParams = params.filter(
+    (item: any) =>
+      item.value !== null && item.value !== undefined && item.seriesName !== 'background',
   )
-  
+
   if (validParams.length === 0) return ''
-  
+
   let html = `
     <div style="
       max-width:${width}px;
@@ -239,18 +264,19 @@ function customTooltipFormatter(
 
 // Grid配置转换函数
 function getGridConfig(isFullScreen: boolean) {
-  return isFullScreen ?
-    {
-      left: pxToResponsive(props.fullScreenGridConfig.left || 50),
-      right: pxToResponsive(props.fullScreenGridConfig.right || 50),
-      top: pxToResponsive(props.fullScreenGridConfig.top || 90),
-      bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 50),
-    } : {
-      left: pxToResponsive(props.gridConfig.left || 0),
-      right: pxToResponsive(props.gridConfig.right || 0),
-      top: pxToResponsive(props.gridConfig.top || 45),
-      bottom: pxToResponsive(props.gridConfig.bottom || 15),
-    }
+  return isFullScreen
+    ? {
+        left: pxToResponsive(props.fullScreenGridConfig.left || 50),
+        right: pxToResponsive(props.fullScreenGridConfig.right || 50),
+        top: pxToResponsive(props.fullScreenGridConfig.top || 90),
+        bottom: pxToResponsive(props.fullScreenGridConfig.bottom || 50),
+      }
+    : {
+        left: pxToResponsive(props.gridConfig.left || 0),
+        right: pxToResponsive(props.gridConfig.right || 0),
+        top: pxToResponsive(props.gridConfig.top || 45),
+        bottom: pxToResponsive(props.gridConfig.bottom || 15),
+      }
 }
 
 // 统一生成option的方法
@@ -258,43 +284,29 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
   const xUnit = props.xAxiosOption.xUnit ?? ''
   const yUnit = props.yAxiosOption.yUnit ?? ''
 
-  // 背景数据 - 取每个索引位置上的最大值
-  const totalData = props.xAxiosOption.xAxiosData.map((_, index: number) => {
-    let maxVal = 0
-    props.series.forEach(s => {
-      s.segments.forEach(seg => {
-        const val = seg.data[index]
-        if (val !== null && val !== undefined && val > maxVal) {
-          maxVal = val
-        }
-      })
-    })
-    return maxVal
-  })
-
   // Tooltip样式参数
   const tooltipSize = isFullScreen
     ? {
-      width: pxToResponsive(300),
-      fontSize: pxToResponsive(32),
-      itemFontSize: pxToResponsive(24),
-      itemLineHeight: pxToResponsive(32),
-      dotSize: pxToResponsive(20),
-      gap: pxToResponsive(16),
-    }
+        width: pxToResponsive(300),
+        fontSize: pxToResponsive(32),
+        itemFontSize: pxToResponsive(24),
+        itemLineHeight: pxToResponsive(32),
+        dotSize: pxToResponsive(20),
+        gap: pxToResponsive(16),
+      }
     : {
-      width: pxToResponsive(220),
-      fontSize: pxToResponsive(14),
-      itemFontSize: pxToResponsive(12),
-      itemLineHeight: pxToResponsive(18),
-      dotSize: pxToResponsive(8),
-      gap: pxToResponsive(8),
-    }
+        width: pxToResponsive(220),
+        fontSize: pxToResponsive(14),
+        itemFontSize: pxToResponsive(12),
+        itemLineHeight: pxToResponsive(18),
+        dotSize: pxToResponsive(8),
+        gap: pxToResponsive(8),
+      }
 
   // 生成图例数据
   const legendData: string[] = []
-  props.series.forEach(s => {
-    s.segments.forEach(seg => {
+  props.series.forEach((s) => {
+    s.segments.forEach((seg) => {
       const legendName = `${s.name} (${seg.name})`
       if (!legendData.includes(legendName)) {
         legendData.push(legendName)
@@ -305,154 +317,154 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
   // legend样式参数
   const legend = isFullScreen
     ? {
-      icon: 'circle',
-      show: true,
-      type: 'plain',
-      orient: 'horizontal',
-      right: pxToResponsive(50),
-      top: pxToResponsive(40),
-      itemWidth: pxToResponsive(20),
-      itemHeight: pxToResponsive(20),
-      itemGap: pxToResponsive(40),
-      textStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: pxToResponsive(18),
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-      },
-      data: legendData,
-    }
+        icon: 'circle',
+        show: true,
+        type: 'plain',
+        orient: 'horizontal',
+        right: pxToResponsive(50),
+        top: pxToResponsive(40),
+        itemWidth: pxToResponsive(20),
+        itemHeight: pxToResponsive(20),
+        itemGap: pxToResponsive(40),
+        textStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: pxToResponsive(18),
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+        },
+        data: legendData,
+      }
     : {
-      icon: 'circle',
-      show: true,
-      type: 'plain',
-      orient: 'horizontal',
-      right: 0,
-      top: pxToResponsive(10),
-      itemWidth: pxToResponsive(12),
-      itemHeight: pxToResponsive(12),
-      itemGap: pxToResponsive(25),
-      textStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: pxToResponsive(12),
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-      },
-      data: legendData,
-    }
+        icon: 'circle',
+        show: true,
+        type: 'plain',
+        orient: 'horizontal',
+        right: 0,
+        top: pxToResponsive(10),
+        itemWidth: pxToResponsive(12),
+        itemHeight: pxToResponsive(12),
+        itemGap: pxToResponsive(25),
+        textStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: pxToResponsive(12),
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+        },
+        data: legendData,
+      }
 
   const grid = getGridConfig(isFullScreen)
 
   const xAxis = isFullScreen
     ? {
-      type: 'category',
-      name: xUnit,
-      nameTextStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(16),
-        padding: [pxToResponsive(15), 0, 0, 0],
-      },
-      data: props.xAxiosOption.xAxiosData,
-      axisTick: {
-        alignWithLabel: true,
-        lineStyle: { color: '#fff' },
-      },
-      axisLine: { show: false },
-      axisLabel: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(16),
-      },
-      splitLine: { show: false },
-      boundaryGap: true,
-    }
+        type: 'category',
+        name: xUnit,
+        nameTextStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(16),
+          padding: [pxToResponsive(15), 0, 0, 0],
+        },
+        data: props.xAxiosOption.xAxiosData,
+        axisTick: {
+          alignWithLabel: true,
+          lineStyle: { color: '#fff' },
+        },
+        axisLine: { show: false },
+        axisLabel: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(16),
+        },
+        splitLine: { show: false },
+        boundaryGap: true,
+      }
     : {
-      type: 'category',
-      name: xUnit,
-      nameTextStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(12),
-        padding: [pxToResponsive(10), 0, 0, 0],
-      },
-      data: props.xAxiosOption.xAxiosData,
-      axisTick: {
-        alignWithLabel: true,
-        lineStyle: { color: '#fff' },
-      },
-      axisLine: { show: false },
-      axisLabel: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(12),
-      },
-      splitLine: { show: false },
-      boundaryGap: true,
-    }
+        type: 'category',
+        name: xUnit,
+        nameTextStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+          padding: [pxToResponsive(10), 0, 0, 0],
+        },
+        data: props.xAxiosOption.xAxiosData,
+        axisTick: {
+          alignWithLabel: true,
+          lineStyle: { color: '#fff' },
+        },
+        axisLine: { show: false },
+        axisLabel: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+        },
+        splitLine: { show: false },
+        boundaryGap: true,
+      }
 
   const yAxis = isFullScreen
     ? {
-      type: 'value',
-      name: yUnit,
-      nameTextStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(16),
-        align: 'right',
-        padding: [0, pxToResponsive(12), 0, 0],
-      },
-      axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(16),
-      },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: '#fff',
-          type: 'dashed',
-          opacity: 0.2,
+        type: 'value',
+        name: yUnit,
+        nameTextStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(16),
+          align: 'right',
+          padding: [0, pxToResponsive(12), 0, 0],
         },
-      },
-    }
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(16),
+        },
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: '#fff',
+            type: 'dashed',
+            opacity: 0.2,
+          },
+        },
+      }
     : {
-      type: 'value',
-      name: yUnit,
-      nameTextStyle: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(12),
-        align: 'right',
-        padding: [0, pxToResponsive(8), 0, 0],
-      },
-      axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(12),
-      },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: '#fff',
-          type: 'dashed',
-          opacity: 0.2,
-          width: pxToResponsive(1),
+        type: 'value',
+        name: yUnit,
+        nameTextStyle: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+          align: 'right',
+          padding: [0, pxToResponsive(8), 0, 0],
         },
-      },
-    }
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+        },
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: '#fff',
+            type: 'dashed',
+            opacity: 0.2,
+            width: pxToResponsive(1),
+          },
+        },
+      }
 
   // 生成系列数据
   const seriesData: any[] = [
@@ -512,12 +524,15 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
         seriesItem.areaStyle = {
           color: {
             type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: adjustColorOpacity(seg.color, 0.3) },
-              { offset: 1, color: adjustColorOpacity(seg.color, 0.05) }
-            ]
-          }
+              { offset: 1, color: adjustColorOpacity(seg.color, 0.05) },
+            ],
+          },
         }
       }
 
@@ -539,15 +554,17 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
             fontFamily: 'Arimo',
             fontWeight: 600,
             backgroundColor: 'rgba(63, 79, 117, 0.9)',
-            padding: isFullScreen ? [pxToResponsive(6), pxToResponsive(10)] : [pxToResponsive(4), pxToResponsive(8)],
+            padding: isFullScreen
+              ? [pxToResponsive(6), pxToResponsive(10)]
+              : [pxToResponsive(4), pxToResponsive(8)],
             borderRadius: pxToResponsive(4),
           },
-          data: props.splitLines.map(sl => ({
+          data: props.splitLines.map((sl) => ({
             xAxis: sl.index,
             label: {
-              formatter: sl.label ?? ''
-            }
-          }))
+              formatter: sl.label ?? '',
+            },
+          })),
         }
         markLineAdded = true
       }
@@ -559,104 +576,108 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
   // tooltip
   const tooltip = isFullScreen
     ? {
-      trigger: 'axis',
-      confine: true,
-      backgroundColor: '#3f4f75',
-      borderColor: 'rgba(255,255,255,0.12)',
-      borderWidth: pxToResponsive(2),
-      padding: [pxToResponsive(30), pxToResponsive(40), pxToResponsive(30), pxToResponsive(40)],
-      extraCssText: `
+        trigger: 'axis',
+        confine: true,
+        backgroundColor: '#3f4f75',
+        borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: pxToResponsive(2),
+        padding: [pxToResponsive(30), pxToResponsive(40), pxToResponsive(30), pxToResponsive(40)],
+        extraCssText: `
           border-radius: ${pxToResponsive(24)}px;
           box-shadow: 0 ${pxToResponsive(16)}px ${pxToResponsive(32)}px 0 rgba(0,0,0,0.15);
           max-width: ${pxToResponsive(500)}px;
         `,
-      textStyle: {
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(24),
-        color: 'rgba(255,255,255,0.85)',
-        lineHeight: pxToResponsive(32),
-      },
-      axisPointer: {
-        type: 'shadow',
-        shadowStyle: {
-          color: 'rgba(79, 173, 247, 0.08)',
+        textStyle: {
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(24),
+          color: 'rgba(255,255,255,0.85)',
+          lineHeight: pxToResponsive(32),
         },
-        lineStyle: {
-          width: pxToResponsive(2),
+        axisPointer: {
+          type: 'shadow',
+          shadowStyle: {
+            color: 'rgba(79, 173, 247, 0.08)',
+          },
+          lineStyle: {
+            width: pxToResponsive(2),
+          },
         },
-      },
-      formatter: (params: any) => customTooltipFormatter(params, tooltipSize, yUnit),
-    }
+        formatter: (params: any) => customTooltipFormatter(params, tooltipSize, yUnit),
+      }
     : {
-      trigger: 'axis',
-      confine: true,
-      backgroundColor: '#3f4f75',
-      borderColor: 'rgba(255,255,255,0.12)',
-      borderWidth: pxToResponsive(1),
-      padding: [pxToResponsive(10), pxToResponsive(16), pxToResponsive(10), pxToResponsive(16)],
-      extraCssText: `
+        trigger: 'axis',
+        confine: true,
+        backgroundColor: '#3f4f75',
+        borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: pxToResponsive(1),
+        padding: [pxToResponsive(10), pxToResponsive(16), pxToResponsive(10), pxToResponsive(16)],
+        extraCssText: `
           border-radius: ${pxToResponsive(8)}px;
           box-shadow: 0 ${pxToResponsive(4)}px ${pxToResponsive(16)}px 0 rgba(0,0,0,0.12);
           max-width: ${pxToResponsive(220)}px;
         `,
-      textStyle: {
-        fontFamily: 'Arimo',
-        fontWeight: 400,
-        fontSize: pxToResponsive(12),
-        color: 'rgba(255,255,255,0.85)',
-        lineHeight: pxToResponsive(18),
-      },
-      axisPointer: {
-        type: 'shadow',
-        shadowStyle: {
-          color: 'rgba(79, 173, 247, 0.08)',
+        textStyle: {
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+          color: 'rgba(255,255,255,0.85)',
+          lineHeight: pxToResponsive(18),
         },
-        lineStyle: {
-          width: pxToResponsive(1),
+        axisPointer: {
+          type: 'shadow',
+          shadowStyle: {
+            color: 'rgba(79, 173, 247, 0.08)',
+          },
+          lineStyle: {
+            width: pxToResponsive(1),
+          },
         },
-      },
-      formatter: (params: any) => customTooltipFormatter(params, tooltipSize, yUnit),
-    }
-
-  const dataZoom = [{
-    type: 'inside',
-    show: true,
-  }]
-
-  const toolbox = isFullScreen ? {
-    itemSize: pxToResponsive(20),
-    itemGap: pxToResponsive(26),
-    top: pxToResponsive(-10),
-    right: pxToResponsive(40),
-    iconStyle: {
-      borderColor: '#fff',
-      borderWidth: pxToResponsive(1),
-    },
-    emphasis: {
-      iconStyle: {
-        borderColor: '#fff',
-        borderWidth: pxToResponsive(1),
+        formatter: (params: any) => customTooltipFormatter(params, tooltipSize, yUnit),
       }
+
+  const dataZoom = [
+    {
+      type: 'inside',
+      show: true,
     },
-    textStyle: {
-      fontFamily: 'Arimo',
-      fontWeight: 400,
-      fontSize: pxToResponsive(12),
-      color: 'rgba(255,255,255,1)',
-    },
-    feature: {
-      myDownload: {
-        show: true,
-        title: '',
-        icon: 'path:// M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-253.696 236.288-236.352 45.248 45.248L508.8 704 192 387.2l45.248-45.248L480 584.704V128h64z',
-        onclick: handleExport,
+  ]
+
+  const toolbox = isFullScreen
+    ? {
+        itemSize: pxToResponsive(20),
+        itemGap: pxToResponsive(26),
+        top: pxToResponsive(-10),
+        right: pxToResponsive(40),
         iconStyle: {
-          color: '#fff',
+          borderColor: '#fff',
+          borderWidth: pxToResponsive(1),
+        },
+        emphasis: {
+          iconStyle: {
+            borderColor: '#fff',
+            borderWidth: pxToResponsive(1),
+          },
+        },
+        textStyle: {
+          fontFamily: 'Arimo',
+          fontWeight: 400,
+          fontSize: pxToResponsive(12),
+          color: 'rgba(255,255,255,1)',
+        },
+        feature: {
+          myDownload: {
+            show: true,
+            title: '',
+            icon: 'path:// M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-253.696 236.288-236.352 45.248 45.248L508.8 704 192 387.2l45.248-45.248L480 584.704V128h64z',
+            onclick: handleExport,
+            iconStyle: {
+              color: '#fff',
+            },
+          },
         },
       }
-    }
-  } : {}
+    : {}
 
   return {
     legend,
@@ -707,9 +728,11 @@ const handleExport = () => {
 
   // 添加表头
   const headers: (string | number)[] = ['time']
-  props.series.forEach(s => {
-    s.segments.forEach(seg => {
-      headers.push(`${s.name} (${seg.name})${props.yAxiosOption.yUnit ? ' (' + props.yAxiosOption.yUnit + ')' : ''}`)
+  props.series.forEach((s) => {
+    s.segments.forEach((seg) => {
+      headers.push(
+        `${s.name} (${seg.name})${props.yAxiosOption.yUnit ? ' (' + props.yAxiosOption.yUnit + ')' : ''}`,
+      )
     })
   })
   exportData.push(headers)
@@ -717,8 +740,8 @@ const handleExport = () => {
   // 添加数据
   props.xAxiosOption.xAxiosData.forEach((time: string, index: number) => {
     const row: (string | number)[] = [time]
-    props.series.forEach(s => {
-      s.segments.forEach(seg => {
+    props.series.forEach((s) => {
+      s.segments.forEach((seg) => {
         row.push(seg.data[index] ?? '')
       })
     })
@@ -812,4 +835,3 @@ onBeforeUnmount(() => {
   }
 }
 </style>
-
