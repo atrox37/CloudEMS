@@ -83,7 +83,10 @@ describe('router/injector.ts', () => {
     expect(getFilteredRoutesForSidebar().map((route) => route.name)).toEqual([])
 
     mockUserStore.role = 'Admin'
-    expect(getFilteredRoutesForSidebar().map((route) => route.name)).toEqual(['reports', 'dashboard'])
+    expect(getFilteredRoutesForSidebar().map((route) => route.name)).toEqual([
+      'reports',
+      'dashboard',
+    ])
   })
 
   it('injects allowed routes and updates the root redirect', async () => {

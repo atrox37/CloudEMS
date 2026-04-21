@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="dashboard-card"
-    :style="{ backgroundColor: props.bgColor || 'var(--vt-bg-input)' }"
-  >
+  <div class="dashboard-card" :style="{ backgroundColor: props.bgColor || 'var(--vt-bg-input)' }">
     <div class="card-main">
       <div class="card-left">
         <div

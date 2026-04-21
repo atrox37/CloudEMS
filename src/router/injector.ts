@@ -1,7 +1,6 @@
 import { markRaw } from 'vue'
-import { ElMessage } from 'element-plus'
 import type { RouteItem } from '@/types/menu'
-import { APP_ROLES, type AppRole } from '@/constants/appRoles'
+import type { AppRole } from '@/constants/appRoles'
 import { router } from './index'
 import { dynamicRoutes } from './dynamic-routes'
 import { useUserStore } from '@/stores/user'

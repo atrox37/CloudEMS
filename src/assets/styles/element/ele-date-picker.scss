@@ -250,7 +250,7 @@
             background: rgba(39, 68, 113, 1);
             color: var(--vt-text-primary);
             font-weight: 600;
-            box-shadow:none;
+            box-shadow: none;
           }
 
           &.is-disabled {
@@ -365,7 +365,7 @@
     &:hover {
       box-shadow: none;
     }
-    &.is-active{
+    &.is-active {
       box-shadow: none;
     }
     .el-range__icon,

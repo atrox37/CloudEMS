@@ -8,11 +8,27 @@ fi
 
 echo "Running staged-file quality checks before commit..."
 
-ESLINT_FILES=$(echo "$STAGED_FILES" | grep -E '\.(ts|mts|tsx|js|mjs|cjs|vue)$')
-PRETTIER_FILES=$(echo "$STAGED_FILES" | grep -E '\.(ts|mts|tsx|js|mjs|cjs|vue|json|md|css|scss|html|yml|yaml)$')
+# 排除 eslint 全局 ignore 的生成文件；仅检查工作区仍存在的路径（避免已删文件进暂存导致 prettier 报错）
+ESLINT_FILES=$(
+  echo "$STAGED_FILES" |
+    grep -E '\.(ts|mts|tsx|js|mjs|cjs|vue)$' |
+    grep -Ev '(^|/)auto-imports\.d\.ts$' |
+    grep -Ev '(^|/)components\.d\.ts$' |
+    while IFS= read -r f; do
+      [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
+    done
+)
+
+PRETTIER_FILES=$(
+  echo "$STAGED_FILES" |
+    grep -E '\.(ts|mts|tsx|js|mjs|cjs|vue|json|md|css|scss|html|yml|yaml)$' |
+    while IFS= read -r f; do
+      [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
+    done
+)
 
 if [ -n "$ESLINT_FILES" ]; then
-  echo "$ESLINT_FILES" | xargs pnpm exec eslint --max-warnings=0
+  echo "$ESLINT_FILES" | xargs pnpm exec eslint --max-warnings=0 --no-warn-ignored
 fi
 
 if [ -n "$PRETTIER_FILES" ]; then

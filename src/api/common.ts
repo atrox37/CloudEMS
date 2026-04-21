@@ -5,10 +5,8 @@ import type { ApiResponse } from '@/utils/request'
  * AI助手响应数据结构
  */
 interface AIAssistantResponseData {
-
-    message: string
-    response: string
-  
+  message: string
+  response: string
 }
 
 /**

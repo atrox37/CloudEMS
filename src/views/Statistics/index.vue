@@ -4,8 +4,12 @@
       <LoadingBg :loading="statisticsTotalLoading">
         <div class="statisticsTotal">
           <div class="statisticsTotal__item" v-for="item in statisticsTotalList" :key="item.id">
-            <DashboardCard :dashboardData="item.dashboardData" :iconBgColor="item.iconBgColor" :isDesc="true"
-              title="" />
+            <DashboardCard
+              :dashboardData="item.dashboardData"
+              :iconBgColor="item.iconBgColor"
+              :isDesc="true"
+              title=""
+            />
           </div>
         </div>
       </LoadingBg>
@@ -20,8 +24,14 @@
       </el-col>
       <el-col :span="8">
         <div class="statistics__content-item">
-          <ModuleCard title="Energy Structure Analysis(Today)" :loading="energyStructureAnalysisLoading">
-            <DoughnutChart :series="EnergyStructureAnalysisSeries" title="Energy Structure Analysis(Today)" />
+          <ModuleCard
+            title="Energy Structure Analysis(Today)"
+            :loading="energyStructureAnalysisLoading"
+          >
+            <DoughnutChart
+              :series="EnergyStructureAnalysisSeries"
+              title="Energy Structure Analysis(Today)"
+            />
           </ModuleCard>
         </div>
       </el-col>
@@ -37,17 +47,27 @@
       <el-col :span="12">
         <div class="statistics__content-item">
           <ModuleCard title="Power Curve (Today)" :loading="powerCurveLoading">
-            <LineChart :xAxiosOption="powerCurveData.xAxiosOption" :yAxiosOption="powerCurveData.yAxiosOption"
-              :series="powerCurveData.series" title="Power Curve (Today)" />
+            <LineChart
+              :xAxiosOption="powerCurveData.xAxiosOption"
+              :yAxiosOption="powerCurveData.yAxiosOption"
+              :series="powerCurveData.series"
+              title="Power Curve (Today)"
+            />
           </ModuleCard>
         </div>
       </el-col>
       <el-col :span="12">
         <div class="statistics__content-item">
-          <ModuleCard title="Self-sufficiency rate curve (hourly)" :loading="energyConsumptionLoading">
-            <LineChart :xAxiosOption="energyConsumptionData.xAxiosOption"
-              :yAxiosOption="energyConsumptionData.yAxiosOption" :series="energyConsumptionData.series"
-              title="Self-sufficiency rate curve (hourly)" />
+          <ModuleCard
+            title="Self-sufficiency rate curve (hourly)"
+            :loading="energyConsumptionLoading"
+          >
+            <LineChart
+              :xAxiosOption="energyConsumptionData.xAxiosOption"
+              :yAxiosOption="energyConsumptionData.yAxiosOption"
+              :series="energyConsumptionData.series"
+              title="Self-sufficiency rate curve (hourly)"
+            />
           </ModuleCard>
         </div>
       </el-col>
@@ -75,8 +95,13 @@
       <div class="statistic__list-header">
         <div class="header__title">Analytics Dashboard</div>
         <div class="header__btn">
-          <IconButton :icon="refreshIcon" type="warning" text="refresh" :disabled="analyticsLineLoading"
-            @click="getAnalyticsLine" />
+          <IconButton
+            :icon="refreshIcon"
+            type="warning"
+            text="refresh"
+            :disabled="analyticsLineLoading"
+            @click="getAnalyticsLine"
+          />
         </div>
       </div>
       <div class="statistic__list-content">
@@ -95,7 +120,10 @@
               <template #default="scope">
                 <div class="status-container">
                   <!-- <div class="statistic__list-content-item-status"> -->
-                  <img :src="scope.row.status === 'online' ? onlineIcon : offlineIcon" style="margin-right: 0.03rem" />
+                  <img
+                    :src="scope.row.status === 'online' ? onlineIcon : offlineIcon"
+                    style="margin-right: 0.03rem"
+                  />
                   <div style="">{{ scope.row.status }}</div>
                 </div>
               </template>
@@ -416,7 +444,8 @@ onMounted(() => {
     }
   }
 
-  .statistics__content {}
+  .statistics__content {
+  }
 
   .statistics__content-item {
     height: 2.98rem;
@@ -444,7 +473,7 @@ onMounted(() => {
 
     .statistic__list-content {
       .status-container,
-      .address-container{
+      .address-container {
         height: 100%;
         display: flex;
         align-items: center;

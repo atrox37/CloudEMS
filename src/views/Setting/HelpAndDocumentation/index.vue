@@ -239,7 +239,7 @@ const helpList = ref([
     background-color: transparent;
     height: 0.22rem !important;
   }
-  :deep(.el-collapse-item__title){
+  :deep(.el-collapse-item__title) {
     font-size: 0.18rem;
   }
   :deep(.el-collapse-item__content) {
@@ -248,8 +248,8 @@ const helpList = ref([
     line-height: 1.2;
     letter-spacing: 0%;
     color: var(--vt-white-60);
-    padding-left:0.3rem;
-    padding-right:2.2rem;
+    padding-left: 0.3rem;
+    padding-right: 2.2rem;
   }
 
   :deep(.el-collapse .el-collapse-item__wrap) {

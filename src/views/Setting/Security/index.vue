@@ -134,7 +134,7 @@ const twoFactorForm = ref({
         margin-bottom: 0;
       }
     }
-    :deep(.el-input){
+    :deep(.el-input) {
       width: 2.4rem;
     }
   }

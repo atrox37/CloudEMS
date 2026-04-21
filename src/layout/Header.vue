@@ -348,6 +348,6 @@ const handleAlarmDropdownChange = (visible: boolean) => {
   &--empty {
     justify-content: center;
     color: var(--vt-white-50);
-}
+  }
 }
 </style>
