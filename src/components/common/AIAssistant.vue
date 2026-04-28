@@ -142,6 +142,7 @@ const messageInput = ref('')
 const messages = ref<Message[]>([])
 const messageListRef = ref<HTMLElement | null>(null)
 const abortController = ref<AbortController | null>(null)
+const sessionId = ref<string | null>(null)
 
 // 图标位置（初始化为右下角，避免登录后从左上角飞入的动画）
 const getInitialIconPosition = () => {
@@ -395,15 +396,17 @@ const sendMessage = async () => {
   abortController.value = new AbortController()
 
   try {
-    const response = await getAIAssistantAnswer(content, abortController.value.signal)
+    const response = await getAIAssistantAnswer(content, sessionId.value, abortController.value.signal)
 
     // 检查请求是否已被取消
     if (abortController.value?.signal.aborted) {
       return
     }
     if (response.code === 200 && response.data?.response) {
-      // 读取嵌套的 response 字段
-      // JSON.parse 会自动将 JSON 字符串中的 \n 转换为实际的换行符
+      if (response.data.sessionId) {
+        sessionId.value = response.data.sessionId
+      }
+
       const aiMessage: Message = {
         id: Date.now() + 1,
         content: response.data.response,
