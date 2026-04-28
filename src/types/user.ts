@@ -1,3 +1,28 @@
+// 登录接口返回的权限条目
+export interface LoginAuthority {
+  authority: string
+}
+
+// 登录接口返回的用户信息
+export interface LoginUserData {
+  userId: number
+  username: string
+  roleId: number
+  dimensionId: number
+  childDimension: number[]
+  authorities: LoginAuthority[]
+  enabled: boolean
+  accountNonExpired: boolean
+  accountNonLocked: boolean
+  credentialsNonExpired: boolean
+}
+
+// 登录接口 data 字段结构
+export interface LoginResponseData {
+  user: LoginUserData
+  token: string
+}
+
 // 用户信息接口（根据后端实际返回结构调整）
 export interface UserRole {
   id: number

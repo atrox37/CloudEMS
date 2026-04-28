@@ -1,6 +1,7 @@
-﻿import { defineStore } from 'pinia'
+import { defineStore } from 'pinia'
+import { ElMessage } from 'element-plus'
 import type { UserInfo, LoginParams } from '@/types/user'
-import { userLogin, userGetUserInfo, refreshToken } from '@/api/user'
+import { userLogin, userLogout, userGetUserInfo, refreshToken } from '@/api/user'
 import MD5 from 'crypto-js/md5'
 import { useRouter } from 'vue-router'
 import { staticRoutes } from '@/router/static-routes'
@@ -54,7 +55,7 @@ export const useUserStore = defineStore(
         const response = await userLogin(encryptedParams)
 
         if (response.code === 200) {
-          token.value = response.data
+          token.value = response.data.token
           return { success: true, message: response.msg || 'Login successful' }
         }
 
@@ -64,8 +65,14 @@ export const useUserStore = defineStore(
       }
     }
 
-    const logout = () => {
-      clearUserData()
+    const logout = async () => {
+      try {
+        const response = await userLogout()
+        ElMessage.success(response.msg || '退出成功')
+      } catch {
+        // 忽略登出接口错误，继续执行本地清理
+      }
+      await clearUserData()
       router.push('/login')
     }
 

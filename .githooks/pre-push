@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo "Skipping pre-push checks temporarily."
-exit 0
+echo "Running full quality report before push..."
+pnpm quality:report -- --out .git/quality-reports/pre-push-report.md

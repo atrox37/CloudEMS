@@ -1,5 +1,11 @@
 import Request, { type ApiResponse } from '@/utils/request'
-import type { LoginParams, UserInfo, RoleList, UserNotification } from '@/types/user'
+import type {
+  LoginParams,
+  LoginResponseData,
+  UserInfo,
+  RoleList,
+  UserNotification,
+} from '@/types/user'
 import type { UserFormModel } from '@/views/Setting/UserManagement/UserOperationForm.vue'
 // 用户相关API接口
 
@@ -14,9 +20,9 @@ export const getVerifyCode = (): Promise<Blob> => {
 /**
  * 用户登录
  * @param params 登录参数
- * @returns 登录响应
+ * @returns 登录响应，data 包含 user 信息和 token
  */
-export const userLogin = (params: LoginParams): Promise<ApiResponse<string>> => {
+export const userLogin = (params: LoginParams): Promise<ApiResponse<LoginResponseData>> => {
   return Request.post('/user-app/login', params)
 }
 export const refreshToken = (): Promise<
@@ -29,7 +35,7 @@ export const refreshToken = (): Promise<
  * @returns 登出响应
  */
 export const userLogout = (): Promise<ApiResponse<null>> => {
-  return Request.post('/user-app/auth/logout')
+  return Request.post('/sys-app/logout')
 }
 
 /**

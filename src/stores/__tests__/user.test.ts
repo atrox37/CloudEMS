@@ -11,6 +11,7 @@ const routerMocks = vi.hoisted(() => ({
 
 const apiMocks = vi.hoisted(() => ({
   userLogin: vi.fn(),
+  userLogout: vi.fn(),
   userGetUserInfo: vi.fn(),
   refreshToken: vi.fn(),
 }))
@@ -26,7 +27,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/api/user', () => ({
   userLogin: apiMocks.userLogin,
-  userLogout: vi.fn(),
+  userLogout: apiMocks.userLogout,
   userGetUserInfo: apiMocks.userGetUserInfo,
   refreshToken: apiMocks.refreshToken,
 }))
@@ -48,6 +49,7 @@ describe('stores/user.ts', () => {
     localStorage.clear()
     vi.clearAllMocks()
     routerMocks.hasRoute.mockReturnValue(true)
+    apiMocks.userLogout.mockResolvedValue({ code: 200, msg: '退出成功', data: null })
   })
 
   it('logs in successfully, hashes the password, and stores the token', async () => {
@@ -55,7 +57,21 @@ describe('stores/user.ts', () => {
 
     apiMocks.userLogin.mockResolvedValue({
       code: 200,
-      data: 'token-123',
+      data: {
+        user: {
+          userId: 1,
+          username: 'alice',
+          roleId: 1,
+          dimensionId: 1,
+          childDimension: [1],
+          authorities: [{ authority: 'device:read' }],
+          enabled: true,
+          accountNonExpired: true,
+          accountNonLocked: true,
+          credentialsNonExpired: true,
+        },
+        token: 'token-123',
+      },
       msg: 'ok',
     })
 
@@ -80,7 +96,7 @@ describe('stores/user.ts', () => {
 
     apiMocks.userLogin.mockResolvedValue({
       code: 401,
-      data: '',
+      data: { user: null, token: '' },
       msg: 'invalid credentials',
     })
 
@@ -169,7 +185,7 @@ describe('stores/user.ts', () => {
       msg: 'expired',
       data: {},
     })
-    routerMocks.hasRoute.mockReturnValueOnce(true).mockReturnValueOnce(false)
+    routerMocks.hasRoute.mockReturnValue(true).mockReturnValueOnce(true).mockReturnValueOnce(false)
 
     const result = await store.refreshUserToken()
 
