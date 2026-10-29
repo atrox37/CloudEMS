@@ -130,7 +130,9 @@ const sides = [
 
   &.is-active {
     border-color: var(--device-accent);
-    box-shadow: 0 0 0 1px var(--device-accent), 0 8px 24px #0b142452;
+    box-shadow:
+      0 0 0 1px var(--device-accent),
+      0 8px 24px #0b142452;
   }
 
   :deep(.vue-flow__handle) {

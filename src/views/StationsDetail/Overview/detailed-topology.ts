@@ -175,10 +175,7 @@ export type TopologyDeviceMap = Record<string, TopologyDeviceInfo>
 export const TOPOLOGY_MEASUREMENT_CATEGORY = 'Measurement'
 
 /** 与边端物模型一致：tagId=M 或点位 id 为 M1、M2… */
-export function isMeasurementProperty(property: {
-  id: string
-  tagId?: string | null
-}): boolean {
+export function isMeasurementProperty(property: { id: string; tagId?: string | null }): boolean {
   return property.tagId?.toUpperCase() === 'M' || /^M\d+$/i.test(property.id)
 }
 

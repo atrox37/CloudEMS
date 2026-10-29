@@ -116,7 +116,12 @@
             table-layout="fixed"
             class="no-rem-topology-points-dialog__table"
           >
-            <el-table-column prop="point" label="Point Name" min-width="220" show-overflow-tooltip />
+            <el-table-column
+              prop="point"
+              label="Point Name"
+              min-width="220"
+              show-overflow-tooltip
+            />
             <el-table-column prop="value" label="Value" width="120" align="right" />
             <el-table-column prop="unit" label="Unit" width="70" />
           </el-table>
@@ -523,18 +528,3 @@ watch(
   overflow-wrap: anywhere;
 }
 </style>
-
-</style>
-
-</style>
-
-</style>
-
-</style>
-
-</style>
-
-</style>
-
-
-

@@ -57,13 +57,21 @@
             fill="black"
           />
         </g>
-        <g class="energy-flow-path" :class="flowClass(dieselFlow)" filter="url(#filter2_ddi_1145_2968)">
+        <g
+          class="energy-flow-path"
+          :class="flowClass(dieselFlow)"
+          filter="url(#filter2_ddi_1145_2968)"
+        >
           <path
             d="M849 424.235L952.5 483.5V469L862.2 418L849 424.235Z"
             fill="url(#paint1_linear_1145_2968)"
           />
         </g>
-        <g class="energy-flow-path" :class="flowClass(loadFlow)" filter="url(#filter3_ddi_1145_2968)">
+        <g
+          class="energy-flow-path"
+          :class="flowClass(loadFlow)"
+          filter="url(#filter3_ddi_1145_2968)"
+        >
           <path
             d="M737.017 401L651.2 455.243L651.2 456L651.2 470L749.5 407.5L737.017 401Z"
             fill="url(#paint2_linear_1145_2968)"
@@ -167,7 +175,9 @@
           <text x="0" y="-12" class="topology-metric-card__title">PV</text>
           <text x="0" y="16" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">P:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.pvP) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.pvP) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">kW</tspan>
           </text>
         </g>
@@ -198,7 +208,9 @@
           <text x="0" y="-12" class="topology-metric-card__title">Load</text>
           <text x="0" y="16" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">P:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.loadP) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.loadP) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">kW</tspan>
           </text>
         </g>
@@ -229,12 +241,16 @@
           <text x="0" y="-22" class="topology-metric-card__title">Diesel</text>
           <text x="0" y="2" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">P:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.dieselP) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.dieselP) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">kW</tspan>
           </text>
           <text x="0" y="24" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">Oil:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.dieselOil) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.dieselOil) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">%</tspan>
           </text>
         </g>
@@ -265,12 +281,16 @@
           <text x="0" y="-22" class="topology-metric-card__title">ESS</text>
           <text x="0" y="2" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">P:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.essP) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.essP) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">kW</tspan>
           </text>
           <text x="0" y="24" class="topology-metric-card__line">
             <tspan class="topology-metric-card__name">SOC:</tspan>
-            <tspan dx="8" class="topology-metric-card__value">{{ metricValue(props.data.essSoc) }}</tspan>
+            <tspan dx="8" class="topology-metric-card__value">
+              {{ metricValue(props.data.essSoc) }}
+            </tspan>
             <tspan dx="4" class="topology-metric-card__unit">%</tspan>
           </text>
         </g>
@@ -737,9 +757,7 @@ onUnmounted(() => {
   if (clock) clearInterval(clock)
 })
 
-const isFresh = computed(
-  () => props.updatedAt != null && now.value - props.updatedAt <= 30_000,
-)
+const isFresh = computed(() => props.updatedAt != null && now.value - props.updatedAt <= 30_000)
 
 const metricValue = (value: number | null) => {
   if (!isFresh.value || value === null || !Number.isFinite(value)) return '-'
