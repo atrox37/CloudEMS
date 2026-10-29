@@ -16,40 +16,44 @@
 
 <script setup lang="ts">
 import StationCard from './components/StationCard.vue'
-import type { Stations } from '@/types/Stations'
 import LoadingBg from '@/components/common/LoadingBg.vue'
 import { useStationStore } from '@/stores/station'
 
 const stationStore = useStationStore()
 
-// 本地站点列表（带loading状态）
-const localStations = ref<(Stations & { loading?: boolean })[]>([])
+/** 正在单独同步的站点 id 列表 */
+const syncingIds = ref<number[]>([])
+
+// 直接消费 store 的站点列表：MainLayout 轮询或其他页面刷新 store 后这里自动更新，
+// 即使本页的请求失败/被取消也能自愈，不再出现永远的 "No station data"
+const localStations = computed(() =>
+  stationStore.stations.map((station) => ({
+    ...station,
+    loading: syncingIds.value.includes(station.stationId),
+  })),
+)
 
 onMounted(async () => {
-  const res = await stationStore.fetchStations()
-  if (res.code === 200) {
-    localStations.value = res.data.map((station) => ({
-      ...station,
-      loading: false,
-    }))
+  try {
+    // store 已有数据时静默刷新，不触发整页 loading
+    await stationStore.fetchStations(undefined, {
+      skipStoreLoading: stationStore.stations.length > 0,
+    })
+  } catch {
+    // 失败由 MainLayout 的轮询兜底，store 更新后页面自动恢复
   }
 })
 
 const handleSync = async (stationId: number) => {
-  const numIndex = localStations.value.findIndex((station) => station.stationId === stationId)
-  if (numIndex === -1) {
+  if (syncingIds.value.includes(stationId)) {
     return
   }
+  syncingIds.value.push(stationId)
   try {
-    localStations.value[numIndex].loading = true
-    const res = await stationStore.fetchStations(stationId, { skipStoreLoading: true })
-    if (res.code === 200 && res.data.length > 0) {
-      localStations.value[numIndex] = { ...res.data[0], loading: false }
-    }
+    // updateStation 会把单站点结果合并回 store 列表，computed 自动刷新卡片
+    await stationStore.updateStation(stationId)
   } finally {
-    if (numIndex !== -1) {
-      localStations.value[numIndex].loading = false
-    }
+    syncingIds.value = syncingIds.value.filter((id) => id !== stationId)
   }
 }
 </script>

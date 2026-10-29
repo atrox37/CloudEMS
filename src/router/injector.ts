@@ -74,9 +74,9 @@ export async function ensureRoutesInjected(refresh = false) {
   if (user.routesInjected) return
 
   if (refresh) {
-    const res = await user.refreshUserToken()
+    const res = await user.refreshUserToken({ logoutOnFail: false })
     if (!res.success) {
-      user.logout()
+      await user.clearUserData()
       return
     }
   }

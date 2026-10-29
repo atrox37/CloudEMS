@@ -16,8 +16,14 @@
 </template>
 
 <script setup lang="ts">
-import * as echarts from 'echarts'
+// 按需引入 echarts（首屏图表，全量引入约 1MB，按需后大幅减小首屏包体积）
+import * as echarts from 'echarts/core'
+import { ScatterChart } from 'echarts/charts'
+import { GeoComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { pxToResponsive } from '@/utils/responsive'
+
+echarts.use([ScatterChart, GeoComponent, TooltipComponent, CanvasRenderer])
 
 const mapPointImage = new URL('@/assets/icons/map-point.svg', import.meta.url).href
 

@@ -40,7 +40,17 @@
           >
             <div class="ai-assistant__message-wrapper">
               <div class="ai-assistant__message-bubble">
-                <div class="ai-assistant__message-content">{{ message.content }}</div>
+                <div
+                  v-if="message.type === 'ai'"
+                  class="ai-assistant__message-content ai-assistant__message-content--markdown"
+                  v-html="renderMarkdown(message.content)"
+                ></div>
+                <div
+                  v-else
+                  class="ai-assistant__message-content ai-assistant__message-content--plain"
+                >
+                  {{ message.content }}
+                </div>
               </div>
             </div>
           </div>
@@ -112,8 +122,17 @@
  * 5. 响应式布局，基于rem单位
  */
 import { ref, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
+import MarkdownIt from 'markdown-it'
 import { getCurrentFontSize, pxToResponsive } from '@/utils/responsive'
 import { getAIAssistantAnswer } from '@/api/common'
+
+const markdown = new MarkdownIt({
+  html: false,
+  breaks: true,
+  linkify: true,
+})
+
+const renderMarkdown = (content: string) => markdown.render(content)
 
 interface Message {
   id: number
@@ -129,6 +148,7 @@ const getIconSize = () => getCurrentFontSize() * ICON_REM
 const PADDING = 16
 const GAP = 10
 const MIN_DIALOG_HEIGHT = 260
+const DEFAULT_BOTTOM_OFFSET = 96
 const SNAP_THRESHOLD_DESIGN = 20 // 吸附阈值（设计稿中的px值）
 const SNAP_OFFSET_RATIO = 0.5 // 吸附后隐藏的比例（0.5表示隐藏一半）
 
@@ -152,7 +172,7 @@ const getInitialIconPosition = () => {
   const size = getIconSize()
   return {
     x: vw - size - PADDING,
-    y: vh - size - PADDING - 20,
+    y: vh - size - PADDING - DEFAULT_BOTTOM_OFFSET,
   }
 }
 const { x: initX, y: initY } = getInitialIconPosition()
@@ -192,7 +212,7 @@ onMounted(() => {
   const vh = window.innerHeight
   const size = getIconSize()
   iconX.value = vw - size - PADDING
-  iconY.value = vh - size - PADDING - 20
+  iconY.value = vh - size - PADDING - DEFAULT_BOTTOM_OFFSET
 
   // 首次加载完成后，检测是否需要吸附到边缘
   nextTick(() => {
@@ -396,7 +416,11 @@ const sendMessage = async () => {
   abortController.value = new AbortController()
 
   try {
-    const response = await getAIAssistantAnswer(content, sessionId.value, abortController.value.signal)
+    const response = await getAIAssistantAnswer(
+      content,
+      sessionId.value,
+      abortController.value.signal,
+    )
 
     // 检查请求是否已被取消
     if (abortController.value?.signal.aborted) {
@@ -935,7 +959,111 @@ const onIconMouseLeave = () => {
     font-size: 0.12rem;
     line-height: 1.4;
     color: rgba(4, 20, 40, 1);
-    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    &--plain {
+      white-space: pre-wrap;
+    }
+
+    &--markdown {
+      font-weight: 500;
+      white-space: normal;
+      overflow-x: auto;
+
+      :deep(p) {
+        margin: 0 0 0.08rem;
+      }
+
+      :deep(p:last-child) {
+        margin-bottom: 0;
+      }
+
+      :deep(h1),
+      :deep(h2),
+      :deep(h3),
+      :deep(h4),
+      :deep(h5),
+      :deep(h6) {
+        margin: 0.12rem 0 0.06rem;
+        line-height: 1.3;
+      }
+
+      :deep(h1:first-child),
+      :deep(h2:first-child),
+      :deep(h3:first-child),
+      :deep(h4:first-child),
+      :deep(h5:first-child),
+      :deep(h6:first-child) {
+        margin-top: 0;
+      }
+
+      :deep(ul),
+      :deep(ol) {
+        margin: 0.06rem 0 0.08rem;
+        padding-left: 0.2rem;
+      }
+
+      :deep(li + li) {
+        margin-top: 0.03rem;
+      }
+
+      :deep(blockquote) {
+        margin: 0.08rem 0;
+        padding: 0.04rem 0.1rem;
+        border-left: 0.03rem solid #ff6900;
+        color: rgba(4, 20, 40, 0.72);
+        background: rgba(255, 105, 0, 0.06);
+      }
+
+      :deep(code) {
+        padding: 0.01rem 0.04rem;
+        border-radius: 0.03rem;
+        background: rgba(4, 20, 40, 0.08);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.11rem;
+      }
+
+      :deep(pre) {
+        margin: 0.08rem 0;
+        padding: 0.1rem;
+        overflow-x: auto;
+        border-radius: 0.06rem;
+        background: rgba(4, 20, 40, 0.92);
+        color: #ffffff;
+      }
+
+      :deep(pre code) {
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        white-space: pre;
+      }
+
+      :deep(a) {
+        color: #035def;
+        text-decoration: underline;
+        text-underline-offset: 0.02rem;
+      }
+
+      :deep(table) {
+        width: 100%;
+        margin: 0.08rem 0;
+        border-collapse: collapse;
+        font-size: 0.11rem;
+      }
+
+      :deep(th),
+      :deep(td) {
+        padding: 0.05rem 0.07rem;
+        border: 1px solid rgba(4, 20, 40, 0.16);
+        text-align: left;
+      }
+
+      :deep(th) {
+        background: rgba(4, 20, 40, 0.06);
+        font-weight: 700;
+      }
+    }
   }
 
   .ai-assistant__loading {

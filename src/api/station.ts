@@ -1,5 +1,6 @@
 import Request, { type ApiResponse } from '@/utils/request'
 import { toNumericStationId } from '@/utils/stationId'
+import { toUtcQuery } from '@/utils/time'
 import type {
   Stations,
   StationOverview,
@@ -7,6 +8,8 @@ import type {
   Overviewchart,
   Performancechart,
   StationInformation,
+  StationInformationPayload,
+  StationKVTag,
   StationAlarm,
   StationAlarmStatistics,
   StationListItem,
@@ -25,7 +28,9 @@ export const getStations = (stationId?: number): Promise<ApiResponse<Stations[]>
     stationId !== undefined && stationId !== null
       ? { stationId: toNumericStationId(stationId) }
       : {}
-  return Request.post('/user-app/station/_page_station', body)
+  // skipRouteCancel：站点列表是跨页面共享的应用级数据，路由跳转不应取消，
+  // 否则慢网络下"请求在途 + 任意导航"会导致页面静默拿不到站点
+  return Request.post('/user-app/station/_page_station', body, { skipRouteCancel: true })
 }
 export const getStationsSkipCancel = (stationId?: number): Promise<ApiResponse<Stations[]>> => {
   const body =
@@ -81,7 +86,41 @@ export const getPerformanceView = (
 export const getStationDetail = (
   stationId: string | number,
 ): Promise<ApiResponse<StationInformation>> => {
-  return Request.post(`/user-app/station/_information`, {
+  return Request.post<StationInformation | StationInformationPayload>(
+    `/user-app/station/_information`,
+    { stationId: toNumericStationId(stationId) },
+  ).then((response) => {
+    const data = response.data
+    if ('deviceInstancePo' in data) return response as ApiResponse<StationInformation>
+
+    let tagId = 0
+    const collectTags = (devices: StationInformationPayload['gf']): StationKVTag[] =>
+      devices.flatMap((device) =>
+        (device.deviceInstancePo.metadata?.tags ?? []).map((tag) => ({
+          id: ++tagId,
+          deviceId: device.deviceInstancePo.id,
+          tagKey: tag.tagKey,
+          tagValue: tag.tagValue,
+        })),
+      )
+
+    return {
+      ...response,
+      data: {
+        deviceInstancePo: data.station.deviceInstancePo,
+        wgTags: collectTags([data.station]),
+        gfTags: collectTags(data.gf ?? []),
+        cnTags: collectTags(data.cn ?? []),
+      },
+    }
+  })
+}
+
+/** 获取站点拓扑中绑定的子设备及其产品定义。 */
+export const getStationChildren = (
+  stationId: string | number,
+): Promise<ApiResponse<StationListItem[]>> => {
+  return Request.post(`/user-app/station/_children`, {
     stationId: toNumericStationId(stationId),
   })
 }
@@ -118,6 +157,8 @@ export const getAnalyticsData = (
   return Request.post(`/user-app/station/_analytics`, {
     ...params,
     stationId: toNumericStationId(params.stationId),
+    startTime: toUtcQuery(params.startTime),
+    endTime: toUtcQuery(params.endTime),
   })
 }
 export const getMainteranceData = (deviceId: number): Promise<ApiResponse<MainteranceData[]>> => {

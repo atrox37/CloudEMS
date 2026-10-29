@@ -68,7 +68,7 @@
           <ModuleCard title="Power Monitoring" :loading="!stationLoading && chart2Loading">
             <LineChart
               title="Power Monitoring"
-              :xAxiosOption="xAxiosOption"
+              :xAxiosOption="chart2XAxisOption"
               :yAxiosOption="poweryAxiosOption"
               :series="chart2Series"
             />
@@ -81,7 +81,7 @@
           >
             <LineAndBarChart
               title="Energy Storage Operation Status"
-              :xAxiosOption="xAxiosOption"
+              :xAxiosOption="chart3XAxisOption"
               :yAxiosOption="EssyAxiosOption"
               :lineSeries="chart3Series.lineSeries"
               :barSeries="chart3Series.barSeries"
@@ -95,7 +95,7 @@
           >
             <MultiBarChar
               title="Electricity Generation Statistics"
-              :xAxiosOption="xAxiosOption"
+              :xAxiosOption="chart4XAxisOption"
               :yAxiosOption="generateyAxiosOption"
               :series="chart4Series"
             />
@@ -108,7 +108,7 @@
           >
             <MultiBarChar
               title="Energy Supply And Demand Balance"
-              :xAxiosOption="xAxiosOption"
+              :xAxiosOption="chart5XAxisOption"
               :yAxiosOption="energyyAxiosOption"
               :series="chart5Series"
             />
@@ -118,7 +118,7 @@
           <ModuleCard title="Economic Benefit Analysis" :loading="!stationLoading && chart6Loading">
             <SingleBarChart
               title="Economic Benefit Analysis"
-              :xAxiosOption="xAxiosOption"
+              :xAxiosOption="chart6XAxisOption"
               :yAxiosOption="economicyAxiosOption"
               :series="economicSeries"
             />
@@ -133,7 +133,7 @@
 // import PVEnergy from '@/assets/icons/PVEnergy.svg'
 // import ESS from '@/assets/icons/ESSEnergy.svg'
 // import DG from '@/assets/icons/DGEnergy.svg'
-import { getTimeRangeArray, calculateAutoInterval } from '@/utils/time'
+import { getTimeRangeArray, calculateAutoInterval, format } from '@/utils/time'
 import { getAnalyticsData } from '@/api/station'
 import { useRoute } from 'vue-router'
 import { cancelAllPendingRequests } from '@/utils/request'
@@ -314,10 +314,17 @@ const economicSeries = ref([
 const economicyAxiosOption = {
   yUnit: '$',
 }
-const xAxiosOption = ref({
-  xAxiosData: [] as string[],
-})
+const createXAxisOption = () => ({ xAxiosData: [] as string[] })
+const chart2XAxisOption = ref(createXAxisOption())
+const chart3XAxisOption = ref(createXAxisOption())
+const chart4XAxisOption = ref(createXAxisOption())
+const chart5XAxisOption = ref(createXAxisOption())
+const chart6XAxisOption = ref(createXAxisOption())
 const rangeArray = ref<string[]>([])
+let analyticsTimer: ReturnType<typeof setTimeout> | null = null
+let analyticsRequestVersion = 0
+
+const isCurrentRequest = (requestVersion: number) => requestVersion === analyticsRequestVersion
 
 // 浜嬩欢浠ｇ悊澶勭悊鏃堕棿鎸夐挳鐐瑰嚮
 const handleTimeBtnClick = (event: MouseEvent) => {
@@ -335,12 +342,9 @@ const handleTimeBtnClick = (event: MouseEvent) => {
     }
   }
 }
-const fetchChart1Data = async () => {
+const fetchChart1Data = async (requestVersion: number) => {
   try {
     chart1Loading.value = true
-    chart1Series.value.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART1',
       stationId: Number(stationId.value),
@@ -348,21 +352,18 @@ const fetchChart1Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
       chart1Series.value[0].value = (res.data.data1 as number) || 0
       chart1Series.value[1].value = (res.data.data2 as number) || 0
       chart1Series.value[2].value = (res.data.data3 as number) || 0
     }
   } finally {
-    chart1Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart1Loading.value = false
   }
 }
-const fetchChart2Data = async () => {
+const fetchChart2Data = async (requestVersion: number) => {
   try {
     chart2Loading.value = true
-    chart2Series.value.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART2',
       stationId: Number(stationId.value),
@@ -370,31 +371,26 @@ const fetchChart2Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
-      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
-        item.ts.replace(' ', '\n'),
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
+      chart2XAxisOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
-      chart2Series.value.forEach((item: any, seriesIndex: number) => {
+      chart2Series.value = chart2Series.value.map((item, seriesIndex) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
-        if (res.data[dataKey] && Array.isArray(res.data[dataKey])) {
-          item.data = (res.data[dataKey] as any[]).map((item: any) => item.numberValue)
+        const data = res.data[dataKey]
+        return {
+          ...item,
+          data: Array.isArray(data) ? data.map((point: any) => point.numberValue) : [],
         }
       })
     }
   } finally {
-    chart2Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart2Loading.value = false
   }
 }
-const fetchChart3Data = async () => {
+const fetchChart3Data = async (requestVersion: number) => {
   try {
     chart3Loading.value = true
-    chart3Series.value.barSeries.forEach((item: any) => {
-      item.data = []
-    })
-    chart3Series.value.lineSeries.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART3',
       stationId: Number(stationId.value),
@@ -402,9 +398,9 @@ const fetchChart3Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
-        item.ts.replace(' ', '\n'),
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
+      chart3XAxisOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       chart3Series.value.barSeries.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 2}` as keyof AnalyticsIntervalData
@@ -420,15 +416,12 @@ const fetchChart3Data = async () => {
       })
     }
   } finally {
-    chart3Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart3Loading.value = false
   }
 }
-const fetchChart4Data = async () => {
+const fetchChart4Data = async (requestVersion: number) => {
   try {
     chart4Loading.value = true
-    chart4Series.value.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART4',
       stationId: Number(stationId.value),
@@ -436,10 +429,9 @@ const fetchChart4Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
-      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
-        item.ts.replace(' ', '\n'),
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
+      chart4XAxisOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       chart4Series.value.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
@@ -451,15 +443,12 @@ const fetchChart4Data = async () => {
       // chart4Series.value[1].data = (res.data as AnalyticsIntervalData).data2.map((item: any) => item.numberValue || 0)
     }
   } finally {
-    chart4Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart4Loading.value = false
   }
 }
-const fetchChart5Data = async () => {
+const fetchChart5Data = async (requestVersion: number) => {
   try {
     chart5Loading.value = true
-    chart5Series.value.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART5',
       stationId: Number(stationId.value),
@@ -467,10 +456,9 @@ const fetchChart5Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
-      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
-        item.ts.replace(' ', '\n'),
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
+      chart5XAxisOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       chart5Series.value.forEach((item1: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
@@ -480,15 +468,12 @@ const fetchChart5Data = async () => {
       })
     }
   } finally {
-    chart5Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart5Loading.value = false
   }
 }
-const fetchChart6Data = async () => {
+const fetchChart6Data = async (requestVersion: number) => {
   try {
     chart6Loading.value = true
-    economicSeries.value.forEach((item: any) => {
-      item.data = []
-    })
     const res = await getAnalyticsData({
       chartType: 'CHART6',
       stationId: Number(stationId.value),
@@ -496,10 +481,9 @@ const fetchChart6Data = async () => {
       endTime: rangeArray.value[1],
       intervalModel: intervalModel.value,
     })
-    if (res.code === 200) {
-      // 淇鏁版嵁鏇存柊閫昏緫锛氱洿鎺ユ洿鏂版瘡涓郴鍒楃殑data鏁扮粍
-      xAxiosOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
-        item.ts.replace(' ', '\n'),
+    if (res.code === 200 && isCurrentRequest(requestVersion)) {
+      chart6XAxisOption.value.xAxiosData = (res.data['data1'] as any[]).map((item: any) =>
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       economicSeries.value.forEach((item: any, seriesIndex: number) => {
         const dataKey = `data${seriesIndex + 1}` as keyof AnalyticsIntervalData
@@ -510,14 +494,18 @@ const fetchChart6Data = async () => {
       // economicSeries.value[0].data = (res.data as AnalyticsIntervalData).data1.map((item: any) => item.numberValue || 0)
     }
   } finally {
-    chart6Loading.value = false
+    if (isCurrentRequest(requestVersion)) chart6Loading.value = false
   }
 }
 
 const getAllAnalyticsData = () => {
+  analyticsRequestVersion += 1
+  const requestVersion = analyticsRequestVersion
   cancelAllPendingRequests()
+  if (analyticsTimer) clearTimeout(analyticsTimer)
 
-  setTimeout(() => {
+  analyticsTimer = setTimeout(() => {
+    analyticsTimer = null
     if (selectedTimeBtn.value === 'custom') {
       // Custom 模式下需要先选完整时间范围
       if (rangeArray.value.every((item: string) => item === '')) {
@@ -545,12 +533,12 @@ const getAllAnalyticsData = () => {
       }
     }
 
-    fetchChart1Data()
-    fetchChart2Data()
-    fetchChart3Data()
-    fetchChart4Data()
-    fetchChart5Data()
-    fetchChart6Data()
+    void fetchChart1Data(requestVersion)
+    void fetchChart2Data(requestVersion)
+    void fetchChart3Data(requestVersion)
+    void fetchChart4Data(requestVersion)
+    void fetchChart5Data(requestVersion)
+    void fetchChart6Data(requestVersion)
   }, 100)
 }
 
@@ -566,6 +554,11 @@ watch(
   },
   { immediate: true },
 )
+
+onBeforeUnmount(() => {
+  analyticsRequestVersion += 1
+  if (analyticsTimer) clearTimeout(analyticsTimer)
+})
 </script>
 
 <style scoped lang="scss">

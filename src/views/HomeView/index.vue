@@ -29,14 +29,36 @@ import LoadingBg from '@/components/common/LoadingBg.vue'
 import { getHomeTotalData } from '@/api/home'
 import { useGlobalStore } from '@/stores/global'
 import { useStationStore } from '@/stores/station'
-import type { Stations } from '@/types/Stations'
 import type { EnergyCardProps } from '@/components/card/EnergyCard.vue'
 
 const globalStore = useGlobalStore()
 const stationStore = useStationStore()
 
-// 发电站数据
-const powerStations = reactive<PowerStation[]>([])
+// 发电站数据：直接由 store 站点列表派生，store 更新（含 MainLayout 轮询兜底）后自动刷新
+const powerStations = computed<PowerStation[]>(() =>
+  stationStore.stations.flatMap((station) => {
+    const longitude = station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue || ''
+    const latitude = station.wgTag.find((tag) => tag.tagKey === 'latitude')?.tagValue || ''
+    const state = station.wgTag.find((tag) => tag.tagKey === 'State')?.tagValue || ''
+    if (!longitude || !latitude || !state) {
+      return []
+    }
+    return [
+      {
+        id: station.stationId,
+        name: station.stationName,
+        status: station.stationStatus as 'online' | 'offline',
+        coordinates: [parseFloat(longitude), parseFloat(latitude)] as [number, number],
+        state: state,
+        powerValue: station.pv_power,
+        powerUnit: 'KWh',
+        socValue: station.soc,
+        socUnit: '%',
+        Alarm: station.alarmCount,
+      },
+    ]
+  }),
+)
 
 const dashboardData = reactive<EnergyCardProps[]>([
   {
@@ -63,46 +85,27 @@ const dashboardData = reactive<EnergyCardProps[]>([
   },
 ])
 
-onMounted(async () => {
+onMounted(() => {
   // 获取首页总数据
   const fetchHomeTotalData = async () => {
-    const res = await getHomeTotalData()
-    if (res.code === 200) {
-      dashboardData[0].value = res.data.todayEnergy
-      dashboardData[1].value = res.data.stationOnline
-      dashboardData[2].value = res.data.stationAlarmSum
-      dashboardData[3].value = res.data.todayPrice
-    }
-  }
-
-  // 获取所有发电站数据（使用 stationStore）
-  const fetchStationsData = async () => {
-    const stationsRes = await stationStore.fetchStations()
-    if (stationsRes.code === 200) {
-      stationsRes.data.forEach((station: Stations) => {
-        const longitude = station.wgTag.find((tag) => tag.tagKey === 'longitude')?.tagValue || ''
-        const latitude = station.wgTag.find((tag) => tag.tagKey === 'latitude')?.tagValue || ''
-        const state = station.wgTag.find((tag) => tag.tagKey === 'State')?.tagValue || ''
-        if (longitude && latitude && state) {
-          powerStations.push({
-            id: station.stationId,
-            name: station.stationName,
-            status: station.stationStatus as 'online' | 'offline',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
-            state: state,
-            powerValue: station.pv_power,
-            powerUnit: 'KWh',
-            socValue: station.soc,
-            socUnit: '%',
-            Alarm: station.alarmCount,
-          })
-        }
-      })
+    try {
+      const res = await getHomeTotalData()
+      if (res.code === 200) {
+        dashboardData[0].value = res.data.todayEnergy
+        dashboardData[1].value = res.data.stationOnline
+        dashboardData[2].value = res.data.stationAlarmSum
+        dashboardData[3].value = res.data.todayPrice
+      }
+    } catch {
+      // 失败保持 '-' 占位，不产生未处理的 Promise 拒绝
     }
   }
 
   fetchHomeTotalData()
-  fetchStationsData()
+  // 站点数据由 computed 从 store 派生；这里只负责触发刷新，失败由 MainLayout 轮询兜底
+  stationStore
+    .fetchStations(undefined, { skipStoreLoading: stationStore.stations.length > 0 })
+    .catch(() => {})
 })
 </script>
 

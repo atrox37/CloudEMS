@@ -65,7 +65,7 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://192.168.30.10:9100/',
+        target: 'http://192.168.30.210:9100/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         ws: true, // 启用 WebSocket 代理支持
@@ -116,7 +116,7 @@ export default defineConfig({
           replace: true, // 是否替换原来的值
           mediaQuery: false, // 是否转换媒体查询中的 px
           minPixelValue: 1, // 小于这个值的 px 不转换
-          exclude: /EnergyBg\.vue/i, // 排除 node_modules 文件夹和 EnergyBg.vue 文件
+          exclude: /EnergyBg\.vue|[\\/]@vue-flow[\\/]/i, // Vue Flow 使用 px 坐标，保留其原始尺寸
         }),
       ],
     },
@@ -137,6 +137,18 @@ export default defineConfig({
       compress: {
         drop_console: true, // 移除console
         drop_debugger: true, // 移除debugger
+      },
+    },
+    rollupOptions: {
+      output: {
+        // 大依赖拆分独立 chunk：利用浏览器并行加载与长效缓存，减小首屏主包
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia', 'pinia-plugin-persistedstate'],
+          'vendor-element-plus': ['element-plus', '@element-plus/icons-vue'],
+          'vendor-echarts': ['echarts'],
+          'vendor-stomp': ['@stomp/stompjs', 'sockjs-client'],
+          'vendor-xlsx': ['xlsx'],
+        },
       },
     },
   },

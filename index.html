@@ -5,6 +5,36 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOSS Solar</title>
+    <style>
+      /* 启动期即时生效（JS/CSS 包未加载前）：避免白屏，背景色与应用 --vt-bg-body 一致 */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #17233d;
+      }
+      .boot-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #17233d;
+      }
+      .boot-splash__spinner {
+        width: 42px;
+        height: 42px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: rgba(255, 255, 255, 0.75);
+        border-radius: 50%;
+        animation: boot-splash-spin 0.8s linear infinite;
+      }
+      @keyframes boot-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
     <script>
       // 设置rem基准值，确保在不同设备上正确显示
       ;(function () {
@@ -26,7 +56,10 @@
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- 启动占位：Vue 挂载时会被自动替换掉 -->
+      <div class="boot-splash"><div class="boot-splash__spinner"></div></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -77,7 +77,7 @@
                 <div class="header-station-info__time">
                   <img :src="timeIcon" class="header-station-info__time-icon" />
                   <div class="header-station-info__time-text">
-                    {{ stationDetail.deviceInstancePo.statusTime ?? '-' }}
+                    {{ format(stationDetail.deviceInstancePo.statusTime) }}
                   </div>
                 </div>
                 <div class="header-station-info__address">
@@ -169,6 +169,7 @@
 </template>
 
 <script setup lang="ts">
+import { format } from '@/utils/time'
 // 资源引入
 // import backIcon from '@/assets/icons/button-arrow-left.svg'
 import pvIcon from '@/assets/icons/station-pv.svg'
@@ -371,10 +372,11 @@ watch(
   async () => {
     stationLoading.value = true
     try {
-      if (stationsList.value.length === 0) {
-        await fetchStationList()
-      }
-      await fetchStationDetailByRoute()
+      // 列表与详情无依赖，并行请求缩短首屏等待
+      await Promise.all([
+        stationsList.value.length === 0 ? fetchStationList() : Promise.resolve(),
+        fetchStationDetailByRoute(),
+      ])
     } finally {
       stationLoading.value = false
     }

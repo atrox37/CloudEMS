@@ -50,16 +50,18 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="sysUserPo.updateTime" label="Updated At" show-overflow-tooltip>
-            <!-- <template #default="{ row }">
-              {{ row.sysUserPo?.updateTime }}
-            </template> -->
-          </el-table-column>
-          <el-table-column prop="sysUserPo.createTime" label="Created At" show-overflow-tooltip>
-            <!-- <template #default="{ row }">
-            {{ row.sysRolePo?.updateTime }}
-          </template> -->
-          </el-table-column>
+          <el-table-column
+            prop="sysUserPo.updateTime"
+            label="Updated At"
+            show-overflow-tooltip
+            :formatter="tableTimeFormatter"
+          />
+          <el-table-column
+            prop="sysUserPo.createTime"
+            label="Created At"
+            show-overflow-tooltip
+            :formatter="tableTimeFormatter"
+          />
           <el-table-column label="Operation" fixed="right" min-width="50">
             <template #default="{ row }">
               <div class="user-management__operation">
@@ -104,6 +106,7 @@ import type { UserInfo } from '@/types/user'
 // import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import UserOperationForm from './UserOperationForm.vue'
+import { tableTimeFormatter } from '@/utils/time'
 
 // 琛ㄦ牸閰嶇疆
 const tableConfig: TableConfig = {

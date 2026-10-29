@@ -28,7 +28,9 @@ export const userLogin = (params: LoginParams): Promise<ApiResponse<LoginRespons
 export const refreshToken = (): Promise<
   ApiResponse<{ role: string; token: string; username: string }>
 > => {
-  return Request.get('/sys-app/common/refresh')
+  // skipCancel：刷新请求不参与去重（store 的 refreshInFlight 已去重），
+  // 且不能被路由守卫的 cancelAllPendingRequests 取消，否则刷新中途导航会被误判为失败并强制登出
+  return Request.get('/sys-app/common/refresh', undefined, { skipCancel: true })
 }
 /**
  * 用户登出

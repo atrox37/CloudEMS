@@ -9,6 +9,58 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.extend(relativeTime)
 
+export type TimeValue = string | number | Date | ReturnType<typeof dayjs> | null | undefined
+
+/**
+ * 将后端时间解析为 UTC 时间点。
+ * 后端未携带 Z 或偏移量的时间字符串也按 UTC 处理，避免被浏览器误认为本地时间。
+ */
+export function parseTime(value: TimeValue): Date | null {
+  if (value == null || value === '') return null
+  if (dayjs.isDayjs(value)) return value.toDate()
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  if (typeof value === 'number') {
+    const timestamp = value > 0 && value < 1e12 ? value * 1000 : value
+    const date = new Date(timestamp)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const source = value.trim()
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(source)
+    ? `${source}T00:00:00Z`
+    : /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(source)
+      ? `${source.replace(' ', 'T')}Z`
+      : source
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+/** 将后端 UTC 时间显示为浏览器当前时区。 */
+export function format(date: TimeValue, formatStr: string = 'YYYY-MM-DD HH:mm:ss'): string {
+  const parsed = parseTime(date)
+  return parsed ? dayjs(parsed).format(formatStr) : '-'
+}
+
+/** Element Plus 表格时间 formatter。 */
+export function tableTimeFormatter(_row: unknown, _column: unknown, value: TimeValue): string {
+  return format(value)
+}
+
+/** 将浏览器本地时间转换为后端查询使用的 UTC 字符串。 */
+export function toUtcQuery(value: string | Date): string {
+  const localTime = value instanceof Date ? dayjs(value) : dayjs(value.trim())
+  if (!localTime.isValid()) return ''
+  return localTime.toDate().toISOString().slice(0, 19).replace('T', ' ')
+}
+
+/** 将浏览器本地时间范围转换为 UTC 查询范围。 */
+export function toUtcRange(
+  range: readonly [string | Date, string | Date] | null | undefined,
+): [string, string] | [] {
+  if (!range?.[0] || !range[1]) return []
+  return [toUtcQuery(range[0]), toUtcQuery(range[1])]
+}
+
 /**
  * 获取最近6小时的每小时时间点数组
  * @returns {string[]} 形如 ['2024-06-01 HH:mm:ss', '2024-06-01 HH:mm:ss']
@@ -65,19 +117,6 @@ export function getTimeRangeArray(type: '6hours' | '1day' | '1week' | '1month'):
     default:
       throw new Error(`不支持的时间段类型: ${type}`)
   }
-}
-
-/**
- * 格式化时间为指定格式
- * @param date 日期对象或字符串
- * @param formatStr 格式字符串，默认为 'YYYY-MM-DD HH:mm:ss'
- * @returns 格式化后的时间字符串
- */
-export function format(
-  date: string | Date | ReturnType<typeof dayjs>,
-  formatStr: string = 'YYYY-MM-DD HH:mm:ss',
-) {
-  return dayjs(date).format(formatStr)
 }
 
 // /**

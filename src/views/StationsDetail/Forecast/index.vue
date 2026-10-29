@@ -59,6 +59,7 @@ import ForecastLineChart, {
   type ForecastSeriesData,
   type SplitLineConfig,
 } from '@/components/charts/ForecastLineChart.vue'
+import { format } from '@/utils/time'
 
 defineProps<{
   stationLoading: boolean
@@ -177,19 +178,6 @@ const getAsOfTime = (): string => {
  * 格式化时间戳为显示格式
  * 格式：YYYY-MM-DD \n HH:MM:SS
  */
-const formatTimestamp = (ts: string): string => {
-  const date = new Date(ts)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-
-  // 使用换行符分隔日期和时间
-  return `${year}-${month}-${day}\n${hours}:${minutes}:${seconds}`
-}
-
 // 事件代理处理时间按钮点击
 const handleTimeBtnClick = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -227,7 +215,7 @@ const processDataSegments = (predictions: { ts: string; value: number }[]) => {
   const splitIndex = Math.floor(totalLength * 0.25)
 
   // 时间轴数据
-  const xAxisData = predictions.map((item) => formatTimestamp(item.ts))
+  const xAxisData = predictions.map((item) => format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'))
 
   // 历史数据（前四分之一 + 分界点）
   const historyData = predictions.map((item, idx) =>

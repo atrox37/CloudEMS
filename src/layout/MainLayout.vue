@@ -17,7 +17,7 @@
 import { ElNotification } from 'element-plus'
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
-import stompManager from '@/utils/stomp'
+import stompManager, { userAppStompManager } from '@/utils/stomp'
 import { useGlobalStore } from '@/stores/global'
 import { useStationStore } from '@/stores/station'
 import { useUserStore } from '@/stores/user'
@@ -200,7 +200,8 @@ const alarmCb = (alarm: AlarmMessageItem[]) => {
 const fetchStationsAndSubscribe = async () => {
   try {
     const res = await stationStore.fetchStationsSkipCancel()
-    if (res.code === 200 && res.data?.length) {
+    // 请求成功即停止轮询：空列表也是合法结果（各页面进入时会自行刷新，无需常驻轮询）
+    if (res.code === 200) {
       clearStationPolling()
       return true
     }
@@ -234,15 +235,15 @@ const initStomp = async () => {
     onError: (error) => console.error('[MainLayout] STOMP error:', error),
   })
 
+  // STOMP 连接与站点列表请求无依赖，并行执行；
+  // 即使站点请求失败，告警通道也必须连接（订阅会在连接建立后由 pendingSubscriptions 自动补发）
+  stompManager.connect().catch((error) => {
+    console.error('[MainLayout] initial STOMP connect failed:', error)
+  })
+
   const success = await fetchStationsAndSubscribe()
   if (!success) {
     startStationPolling()
-  }
-
-  try {
-    await stompManager.connect()
-  } catch (error) {
-    console.error('[MainLayout] initial STOMP connect failed:', error)
   }
 }
 
@@ -262,7 +263,7 @@ watch(
       clearStationPolling()
       stationStore.clearStations()
       try {
-        await stompManager.disconnect()
+        await Promise.all([stompManager.disconnect(), userAppStompManager.disconnect()])
       } catch (error) {
         console.error('[MainLayout] failed to disconnect STOMP:', error)
       }

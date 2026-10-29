@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
+import { format } from '@/utils/time'
 import DashboardCard, { type DashboardProps } from '@/components/card/DashboardCard.vue'
 import ModuleCard from '@/components/card/ModuleCard.vue'
 import MultiBarChar, {
@@ -144,9 +144,7 @@ const fetchPerformanceChartData = async (stationId: string | number) => {
     chartLoading.value = true
     const res = await getPerformancechart(stationId)
     if (res.code === 200) {
-      xAxiosOption.value.xAxiosData = res.data.guangFu.map((item) =>
-        dayjs(item.ts).format('YYYY-MM-DD'),
-      )
+      xAxiosOption.value.xAxiosData = res.data.guangFu.map((item) => format(item.ts, 'YYYY-MM-DD'))
       series.value[0].data = res.data.guangFu.map((item) => item.numberValue)
       series.value[1].data = res.data.chaiFa.map((item) => item.numberValue)
     }

@@ -9,7 +9,7 @@
       <div class="card-left">
         <div class="Alarm-message">{{ AlarmData.message }}</div>
 
-        <div class="Alarm-time">{{ AlarmData.timestamp }}</div>
+        <div class="Alarm-time">{{ format(AlarmData.timestamp) }}</div>
       </div>
       <!-- <div v-if="AlarmData.level !== 2" class="card-right">
                 <el-button v-if="AlarmData.level === 0" type="primary">Urgent Action</el-button>
@@ -20,6 +20,7 @@
 </template>
 <script setup lang="ts">
 import type { StationAlarmItem } from '@/types/Stations'
+import { format } from '@/utils/time'
 interface AlarmProps {
   AlarmData: StationAlarmItem
   level: number

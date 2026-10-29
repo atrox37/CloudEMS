@@ -22,6 +22,8 @@ vi.mock('vue-router', () => ({
     hasRoute: routerMocks.hasRoute,
     removeRoute: routerMocks.removeRoute,
     addRoute: routerMocks.addRoute,
+    // store.logout 会读取 currentRoute.value.path 判断是否已在登录页
+    currentRoute: { value: { path: '/' } },
   }),
 }))
 

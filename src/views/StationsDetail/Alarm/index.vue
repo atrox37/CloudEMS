@@ -59,7 +59,6 @@ import { getStationAlarmStatistics } from '@/api/station'
 import type { DashboardProps } from '@/components/card/DashboardCard.vue'
 import type { StationAlarm } from '@/types/Stations'
 import { useRoute } from 'vue-router'
-import dayjs from 'dayjs'
 defineProps<{
   stationLoading: boolean
 }>()
@@ -112,15 +111,6 @@ const fetchStationAlarmStatisticsData = async (stationId: string | number) => {
       stationAlarm.value.level1 = res2.data.level1Data || []
       stationAlarm.value.level2 = res2.data.level2Data || []
       stationAlarm.value.level3 = res2.data.level3Data || []
-      stationAlarm.value.level1.forEach((item) => {
-        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
-      })
-      stationAlarm.value.level2.forEach((item) => {
-        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
-      })
-      stationAlarm.value.level3.forEach((item) => {
-        item.timestamp = dayjs(item.timestamp).format('YYYY-MM-DD HH:mm:ss')
-      })
     }
   } finally {
     dashboardListLoading.value = false

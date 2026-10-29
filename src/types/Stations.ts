@@ -25,12 +25,13 @@ export interface Stations {
   loading?: boolean
 }
 export interface StationOverview {
-  pvP: number
-  loadP: number
-  essP: number
-  essSoc: number
-  dieselP: number
-  dieselOil: number
+  /** 无数据时为 null，拓扑卡片展示 '-' */
+  pvP: number | null
+  loadP: number | null
+  essP: number | null
+  essSoc: number | null
+  dieselP: number | null
+  dieselOil: number | null
 }
 
 export interface Devicechart {
@@ -167,12 +168,19 @@ export interface DeviceValueType {
   unit: string
 }
 
+export interface DevicePropertyAttribute {
+  id: string
+  name: string
+  value: string
+}
+
 export interface DevicePropertyMeta {
   id: string
   name: string
   tagId: string
   rw: 'none' | 'r' | 'w' | 'rw' | string
   valueType: DeviceValueType
+  attribute?: DevicePropertyAttribute[]
 }
 
 export interface PropertyTagMeta {
@@ -190,10 +198,13 @@ export interface MetadataTagMeta {
   tagKey: string
   tagName: string
   tagValue: string
+  unit?: string
   optional: boolean
 }
 
 export interface DeviceMetadata {
+  /** iotcloud 将边端 flow_json 保存为 struct.node；由详细拓扑组件校验结构。 */
+  struct?: { type: 'node'; node: unknown } | { type: 'tree'; tree: TreeNodeMeta[] }
   properties: DevicePropertyMeta[]
   functions: any[]
   propertyTags: PropertyTagMeta[]
@@ -286,4 +297,15 @@ export interface StationListItem {
   productPo: ProductPo
   sysDimensionPo: SysDimensionPo
   sysUserPo: SysUserPo
+}
+
+export interface StationDeviceDetail extends StationListItem {
+  networkConfigPo?: unknown
+}
+
+/** user-app /station/_information 当前返回结构。 */
+export interface StationInformationPayload {
+  station: StationDeviceDetail
+  gf: StationDeviceDetail[]
+  cn: StationDeviceDetail[]
 }

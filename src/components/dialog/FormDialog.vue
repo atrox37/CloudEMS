@@ -7,6 +7,7 @@
     :close-on-click-modal="false"
     :append-to-body="false"
     :modal-append-to-body="false"
+    @closed="emit('closed')"
   >
     <!-- dialog-head插槽，默认显示标题 -->
     <template #header>
@@ -24,7 +25,7 @@
     </template>
 
     <!-- dialog-footer插槽，默认显示底部按钮 -->
-    <template #footer>
+    <template v-if="$slots['dialog-footer']" #footer>
       <slot name="dialog-footer"> </slot>
     </template>
   </el-dialog>
@@ -34,6 +35,9 @@
 const props = defineProps<{
   title: string
   width: number | string
+}>()
+const emit = defineEmits<{
+  closed: []
 }>()
 const dialogVisible = ref(false)
 // 暴露方法和属性

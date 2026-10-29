@@ -47,6 +47,7 @@ import { pxToResponsive } from '@/utils/responsive'
 import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
 import { ZoomIn, Download } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx'
+import { format } from '@/utils/time'
 
 const fullScreenDialogRef = ref()
 const fullScreenChartRef = ref<HTMLDivElement | null>(null)
@@ -751,7 +752,7 @@ const handleExport = () => {
   const wb = XLSX.utils.book_new()
   const ws = XLSX.utils.aoa_to_sheet(exportData)
   XLSX.utils.book_append_sheet(wb, ws, 'forecast_chart_data')
-  const fileName = `forecast_chart_data_${new Date().toISOString().slice(0, 10)}.xlsx`
+  const fileName = `forecast_chart_data_${format(new Date(), 'YYYY-MM-DD')}.xlsx`
   XLSX.writeFile(wb, fileName)
 }
 

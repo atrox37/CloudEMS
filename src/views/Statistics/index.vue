@@ -173,6 +173,7 @@ import onlineIcon from '@/assets/icons/station-status__online.svg'
 import offlineIcon from '@/assets/icons/station-status__offline.svg'
 import addressIcon from '@/assets/icons/address.svg'
 import type { DashboardProps } from '@/components/card/DashboardCard.vue'
+import { format } from '@/utils/time'
 // import { getEnergyConsumptionData } from '@/api/statistics'
 interface TableData {
   id: number
@@ -358,7 +359,7 @@ const getPowerCurve = async () => {
     const res = await getPowerCurveData()
     if (res.code === 200) {
       powerCurveData.value.xAxiosOption.xAxiosData = res.data.gfResult.map((item: any) =>
-        item.ts.replace(' ', '\n'),
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       powerCurveData.value.series[0].data = res.data.gfResult.map((item: any) => item.numberValue)
       powerCurveData.value.series[1].data = res.data.cnResult.map((item: any) => item.numberValue)
@@ -375,7 +376,7 @@ const getEnergyConsumption = async () => {
     const res = await getEnergyConsumptionData()
     if (res.code === 200) {
       energyConsumptionData.value.xAxiosOption.xAxiosData = res.data.map((item: any) =>
-        item.ts.replace(' ', '\n'),
+        format(item.ts, 'YYYY-MM-DD\nHH:mm:ss'),
       )
       energyConsumptionData.value.series[0].data = res.data.map((item: any) => item.numberValue)
     }
@@ -397,7 +398,7 @@ const getAnalyticsLine = async () => {
         status: item.deviceInstancePo.status,
         'battery(soc)': item.batteryRate,
         Alarm: item.alarmCount,
-        lastUpdate: item.deviceInstancePo.statusTime,
+        lastUpdate: format(item.deviceInstancePo.statusTime),
         loadPower: item.loadPower,
         dieselPower: item.dieselPower,
       }))

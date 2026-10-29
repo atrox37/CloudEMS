@@ -46,25 +46,12 @@ import { pxToResponsive } from '@/utils/responsive'
 import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
 import { ZoomIn, Download } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx'
+import { format } from '@/utils/time'
 
 const fullScreenDialogRef = ref()
 const fullScreenChartRef = ref<HTMLDivElement | null>(null)
 const globalStore = useGlobalStore()
 let fullScreenChartInstance: echarts.ECharts | null = null
-
-// 监听侧边栏折叠状态变化
-watch(
-  () => globalStore.isCollapse,
-  () => {
-    // 延迟重新绘制，确保DOM更新完成
-    nextTick(() => {
-      setTimeout(() => {
-        chartInstance?.dispose()
-        initChart()
-      }, 300)
-    })
-  },
-)
 
 echarts.use([
   LineChart,
@@ -561,14 +548,30 @@ function getChartOption({ isFullScreen = false }: { isFullScreen?: boolean }) {
 // 初始化echarts
 const initChart = () => {
   if (!chartRef.value) return
-  if (chartInstance) {
-    chartInstance.dispose()
-  }
+  if (chartInstance && !chartInstance.isDisposed()) return
   chartInstance = echarts.init(chartRef.value, {
     renderer: 'canvas',
     devicePixelRatio: window.devicePixelRatio,
   })
   chartInstance.setOption(getChartOption({ isFullScreen: false }))
+}
+
+const updateChart = () => {
+  if (!chartInstance || chartInstance.isDisposed()) {
+    initChart()
+    return
+  }
+  chartInstance.setOption(getChartOption({ isFullScreen: false }), {
+    notMerge: true,
+    lazyUpdate: true,
+  })
+
+  if (fullScreenChartInstance && !fullScreenChartInstance.isDisposed()) {
+    fullScreenChartInstance.setOption(getChartOption({ isFullScreen: true }), {
+      notMerge: true,
+      lazyUpdate: true,
+    })
+  }
 }
 
 // 初始化全屏图表
@@ -621,7 +624,7 @@ const handleExport = () => {
   XLSX.utils.book_append_sheet(wb, ws, 'line_chart_data')
 
   // 生成文件名
-  const fileName = `line_chart_data_${new Date().toISOString().slice(0, 10)}.xlsx`
+  const fileName = `line_chart_data_${format(new Date(), 'YYYY-MM-DD')}.xlsx`
 
   // 导出文件
   XLSX.writeFile(wb, fileName)
@@ -633,8 +636,7 @@ watch(
   () => {
     nextTick(() => {
       setTimeout(() => {
-        chartInstance?.dispose()
-        initChart()
+        chartInstance?.resize()
       }, 300)
     })
   },
@@ -658,7 +660,7 @@ const resizeChart = () => {
 watch(
   () => [props.xAxiosOption.xAxiosData, props.series],
   () => {
-    initChart()
+    updateChart()
   },
   { deep: true },
 )

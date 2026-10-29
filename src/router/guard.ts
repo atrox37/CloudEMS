@@ -12,17 +12,42 @@ router.beforeEach(async (to, from, next) => {
   const user = useUserStore()
   const globalStore = useGlobalStore()
 
-  if (!user.token) {
-    if (WHITE_LIST.includes(to.path)) {
-      return next()
+  // 登录页：Cookie 仍有效时静默恢复；主动退出后不再尝试 refresh
+  if (WHITE_LIST.includes(to.path)) {
+    if (user.token) {
+      return next({ path: '/', replace: true })
     }
-    return next({ path: '/login' })
+    if (!user.skipSilentRefresh) {
+      const restored = await user.refreshUserToken({ logoutOnFail: false })
+      if (restored.success) {
+        return next({ path: '/', replace: true })
+      }
+    }
+    return next()
   }
 
   try {
+    // 内存无 token：用 HttpOnly Cookie 尝试恢复（冷启动 / 刷新页面）
+    if (!user.token) {
+      globalStore.appInitializing = true
+      try {
+        await ensureRoutesInjected(true)
+        if (!user.token || !user.routesInjected) {
+          globalStore.appInitializing = false
+          return next({ path: '/login', replace: true })
+        }
+        if (to.path === '/') {
+          return next({ path: getDefaultRoutePath(), replace: true })
+        }
+        return next({ ...to, replace: true })
+      } catch (innerErr) {
+        globalStore.appInitializing = false
+        throw innerErr
+      }
+    }
+
     if (!user.routesInjected) {
-      // 从登录页首次进入：只做路由注入，不盖骨架屏（避免「已登录却先闪骨架」）
-      // 骨架屏仅用于非登录入口：刷新 token、带 token 直开业务页等冷启动
+      // 从登录页首次进入：只做路由注入，不盖骨架屏
       if (from.path === '/login') {
         globalStore.appInitializing = false
       } else {
@@ -36,8 +61,6 @@ router.beforeEach(async (to, from, next) => {
           await ensureRoutesInjected(true)
         }
 
-        // token 刷新失败或角色无效时 ensureRoutesInjected 内会 logout，不会注入路由；
-        // 登录页无 MainLayout，不会执行 onMounted 里关闭骨架屏，需在此显式关闭
         if (!user.token || !user.routesInjected) {
           globalStore.appInitializing = false
           return next({ path: '/login', replace: true })
@@ -61,7 +84,7 @@ router.beforeEach(async (to, from, next) => {
     next()
   } catch {
     globalStore.appInitializing = false
-    user.clearUserData()
+    await user.clearUserData()
     next('/login')
   }
 })

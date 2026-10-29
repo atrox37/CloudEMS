@@ -39,6 +39,7 @@ interface GlobalListeners {
 interface SubscriptionRecord {
   id: string
   destination: string
+  config: SubscriptionConfig
   subscription: StompSubscription
   listener: MessageListener
 }
@@ -47,6 +48,7 @@ export class StompManager {
   private client: Client | null = null
   private readonly config: Required<StompConfig>
   private reconnectAttempts = 0
+  private connectionPromise: Promise<void> | null = null
   private readonly maxReconnectAttempts = Infinity
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private globalListeners: GlobalListeners = {}
@@ -105,8 +107,9 @@ export class StompManager {
         this.status.value = 'connected'
         this.reconnectAttempts = 0
         this.connectionStats.connectTime = Date.now()
-        this.globalListeners.onConnect?.()
+        this.restoreSubscriptions()
         this.processPendingSubscriptions()
+        this.globalListeners.onConnect?.()
       },
       onDisconnect: () => {
         this.status.value = 'disconnected'
@@ -144,22 +147,27 @@ export class StompManager {
     if (this.client?.connected) {
       return Promise.resolve()
     }
+    if (this.connectionPromise) {
+      return this.connectionPromise
+    }
 
     this.status.value = this.reconnectAttempts > 0 ? 'reconnecting' : 'connecting'
     this.connectionStats.connectTime = Date.now()
     this.client = this.createClient()
 
-    return new Promise((resolve, reject) => {
+    this.connectionPromise = new Promise((resolve, reject) => {
       const client = this.client!
       const originalConnect = client.onConnect
       const originalError = client.onWebSocketError
 
       client.onConnect = (frame) => {
         originalConnect?.(frame)
+        this.connectionPromise = null
         resolve()
       }
       client.onWebSocketError = (error) => {
         originalError?.(error)
+        this.connectionPromise = null
         reject(error)
       }
 
@@ -168,9 +176,11 @@ export class StompManager {
       } catch (error) {
         this.status.value = 'error'
         this.connectionStats.errorCount += 1
+        this.connectionPromise = null
         reject(error)
       }
     })
+    return this.connectionPromise
   }
 
   private processPendingSubscriptions() {
@@ -180,6 +190,17 @@ export class StompManager {
         this.pendingSubscriptions.delete(id)
       } catch (error) {
         console.error('[STOMP] failed to process pending subscription:', error)
+      }
+    })
+  }
+
+  /** STOMP broker subscriptions belong to a single connection; restore them after reconnect. */
+  private restoreSubscriptions() {
+    Array.from(this.subscriptions.values()).forEach((record) => {
+      try {
+        this.subscribeInternal(record.id, record.config, record.listener)
+      } catch (error) {
+        console.error('[STOMP] failed to restore subscription:', error)
       }
     })
   }
@@ -207,6 +228,7 @@ export class StompManager {
     this.subscriptions.set(id, {
       id,
       destination: config.destination,
+      config,
       subscription,
       listener,
     })
@@ -294,6 +316,7 @@ export class StompManager {
     }
 
     this.status.value = 'disconnected'
+    this.connectionPromise = null
     this.reconnectAttempts = 0
     this.connectionStats.disconnectTime = Date.now()
     this.globalListeners.onDisconnect?.()
@@ -327,3 +350,18 @@ const stompManager = new StompManager({
 })
 
 export default stompManager
+
+/** user-app STOMP — 站点 MQTT 实时属性经 RabbitMQ amq.topic 转发 */
+export const userAppStompManager = new StompManager({
+  brokerURL: '/api/user-app/socket',
+  reconnectDelay: 5000,
+  heartbeatIncoming: 2000,
+  heartbeatOutgoing: 2000,
+  debug: true,
+  useSockJS: true,
+})
+
+/** 站点 MQTT 属性（property/MonarchHub/{stationSn}）对应的 STOMP 订阅地址 */
+export function mqttPropertyDestination(stationSn: string): string {
+  return `/topic/mqtt_property_${stationSn}`
+}

@@ -11,6 +11,7 @@ const mockUserStore = {
   routesInjected: false,
   refreshUserToken: vi.fn(async () => ({ success: true })),
   logout: vi.fn(),
+  clearUserData: vi.fn(async () => undefined),
 }
 
 const mockDynamicRoutes: RouteItem[] = [
@@ -70,6 +71,7 @@ describe('router/injector.ts', () => {
     mockUserStore.refreshUserToken.mockReset()
     mockUserStore.refreshUserToken.mockResolvedValue({ success: true })
     mockUserStore.logout.mockReset()
+    mockUserStore.clearUserData.mockReset()
     rootRoute.redirect = ''
   })
 
@@ -119,14 +121,14 @@ describe('router/injector.ts', () => {
     expect(mockUserStore.routesInjected).toBe(true)
   })
 
-  it('stops injection and logs out when token refresh fails', async () => {
+  it('stops injection and clears session when token refresh fails', async () => {
     const { ensureRoutesInjected } = await loadModule()
 
     mockUserStore.refreshUserToken.mockResolvedValue({ success: false })
 
     await ensureRoutesInjected(true)
 
-    expect(mockUserStore.logout).toHaveBeenCalledTimes(1)
+    expect(mockUserStore.clearUserData).toHaveBeenCalledTimes(1)
     expect(mockAddRoute).not.toHaveBeenCalled()
     expect(mockUserStore.routesInjected).toBe(false)
   })

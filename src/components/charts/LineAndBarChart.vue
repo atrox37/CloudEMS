@@ -50,6 +50,7 @@ import FullSceenDialog from '@/components/dialog/fullSceenDialog.vue'
 import { ZoomIn, Download } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx'
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { format } from '@/utils/time'
 
 const fullScreenDialogRef = ref()
 const fullScreenChartRef = ref<HTMLDivElement | null>(null)
@@ -879,7 +880,7 @@ const handleExport = () => {
   XLSX.utils.book_append_sheet(wb, ws, 'line_and_bar_chart_data')
 
   // 生成文件名
-  const fileName = `line_and_bar_chart_data_${new Date().toISOString().slice(0, 10)}.xlsx`
+  const fileName = `line_and_bar_chart_data_${format(new Date(), 'YYYY-MM-DD')}.xlsx`
 
   // 导出文件
   XLSX.writeFile(wb, fileName)
